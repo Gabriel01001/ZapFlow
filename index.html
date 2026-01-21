@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZapFlow | Gestão V31</title>
+    <title>ZapFlow | Gestão V32</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><path d=%22M55 20 L35 50 L50 50 L45 80 L65 50 L50 50 L55 20 Z%22 fill=%22white%22/></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* ESTILOS V31 */
+        /* ESTILOS V32 */
         :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; }
         * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -43,7 +43,6 @@
         .user-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 5px; }
         .user-actions { display: flex; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 8px; flex-wrap: wrap; gap: 5px; }
 
-        /* Badge de Valor */
         .value-badge { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #86efac; margin-left: 5px; }
 
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 20px; background: #ecfdf5; position: relative; overflow: hidden; }
@@ -66,7 +65,7 @@
             <h2 style="margin: 0 0 20px;">Acesso Restrito</h2>
             <input type="text" id="user" placeholder="Usuário">
             <input type="password" id="pass" placeholder="Senha">
-            <button onclick="conectarBanco()">Entrar</button>
+            <button type="button" onclick="conectarBanco()">Entrar</button>
             <div id="loading" class="loader"></div>
             <p id="msg-login" style="color: red; margin-top: 10px; font-size: 14px;"></p>
             <div style="margin-top: 30px; font-size: 12px; color: #888;">
@@ -120,11 +119,9 @@
         <div class="modal-content">
             <span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span>
             <h2 style="color: var(--dark); margin-top:0;">⚙️ Admin Master</h2>
-            
             <button onclick="window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank')" class="sheet-btn">📂 Abrir Minha Planilha</button>
-
             <h4>Usuários</h4>
-            <div id="admin-users-list" style="max-height: 400px; overflow-y: auto;">Carregando...</div>
+            <div id="admin-users-list" style="max-height: 300px; overflow-y: auto;">Carregando...</div>
         </div>
     </div>
 
@@ -132,22 +129,12 @@
         <div class="modal-content">
             <span class="close-modal" onclick="fecharModal('modal-edit-user')">&times;</span>
             <h3>✏️ Editar Usuário</h3>
-            <p style="color:#666; font-size:12px;">Todos os dados serão gerados para você colar na planilha.</p>
-            
             <label>Usuário</label><input type="text" id="edit-name">
             <label>Senha</label><input type="text" id="edit-pass">
-            
             <div style="display: flex; gap: 10px;">
-                <div style="flex: 1;">
-                    <label>WhatsApp</label>
-                    <input type="text" id="edit-wa" placeholder="2199...">
-                </div>
-                <div style="flex: 1;">
-                    <label>Valor (R$)</label>
-                    <input type="text" id="edit-val" placeholder="30,00">
-                </div>
+                <div style="flex: 1;"><label>WhatsApp</label><input type="text" id="edit-wa"></div>
+                <div style="flex: 1;"><label>Valor (R$)</label><input type="text" id="edit-val"></div>
             </div>
-
             <div style="background: #f0fdf4; padding:10px; border-radius:8px; border:1px solid #10b981; margin: 15px 0;">
                 <label style="margin:0; color:#064e3b;">Validade</label>
                 <input type="date" id="edit-date" style="margin:0;">
@@ -156,7 +143,6 @@
                     <button onclick="somarDiasEdicao(15)" class="secondary btn-small">+15</button>
                 </div>
             </div>
-
             <button onclick="copiarLinhaPlanilha()" class="admin-btn">💾 Copiar Linha Completa</button>
             <div id="manual-copy-box" class="copy-box"></div>
         </div>
@@ -165,24 +151,15 @@
     <div id="modal-renovar" class="modal-overlay">
         <div class="modal-content" style="max-width: 400px;">
             <span class="close-modal" onclick="fecharModal('modal-renovar')">&times;</span>
-            
             <div style="text-align:center; margin-bottom:20px;">
                 <h2 style="color:var(--primary); margin:0;">💎 Renovar Acesso</h2>
-                <p style="color:#666; margin-top:5px;">Liberação imediata após envio do comprovante.</p>
             </div>
-
             <div class="pay-card">
                 <div style="font-weight:bold; color:var(--dark); margin-bottom:5px;">CHAVE PIX (CPF)</div>
                 <div class="pay-key" id="pix-text">144.352.427-10</div>
-                
-                <div class="pay-info">
-                    ✅ <strong>Favorecido:</strong> Gabriel Martins Barbosa<br>
-                    🏛️ <strong>Banco:</strong> Nu Bank
-                </div>
-
-                <button onclick="copiarPix()" class="chat-btn" style="border-radius:50px;">📋 Copiar Chave Pix</button>
+                <div class="pay-info">✅ <strong>Gabriel Martins Barbosa</strong><br>🏛️ <strong>Nu Bank</strong></div>
+                <button onclick="copiarPix()" class="chat-btn" style="border-radius:50px;">📋 Copiar Chave</button>
             </div>
-
             <div class="pay-steps">
                 <button class="secondary" onclick="fecharModal('modal-renovar')">Fechar</button>
                 <button class="vip-btn" onclick="enviarComprovante()">📤 Enviar Comprovante</button>
@@ -193,7 +170,7 @@
     <script>
         // CONFIGURAÇÃO
         const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/export?format=csv';
-        const DB_KEY = 'zapflow_v31';
+        const DB_KEY = 'zapflow_v32';
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         let currentUser = null;
         let adminCache = [];
@@ -203,71 +180,69 @@
         // --- TRATAMENTO DATA ---
         function parseDataBR(dataStr) {
             if (!dataStr) return new Date();
-            let clean = dataStr.replace(/['"]+/g, '').trim();
+            let clean = dataStr.toString().replace(/['"]+/g, '').trim();
             if (clean.includes('/')) {
                 const parts = clean.split('/');
                 if (parts.length === 3) {
-                    const dia = parseInt(parts[0], 10);
-                    const mes = parseInt(parts[1], 10) - 1;
-                    const ano = parseInt(parts[2], 10);
-                    return new Date(ano, mes, dia);
+                    const d = parseInt(parts[0], 10);
+                    const m = parseInt(parts[1], 10) - 1;
+                    const a = parseInt(parts[2], 10);
+                    return new Date(a, m, d);
                 }
             }
             if (clean.includes('-')) return new Date(clean + 'T00:00:00');
             return new Date(clean);
         }
 
-        function formatDateParaInput(dateObj) {
-            if(isNaN(dateObj.getTime())) return '';
-            return dateObj.toISOString().split('T')[0];
-        }
-
-        // --- CONEXÃO ---
-        function conectarBanco() {
+        // --- CONEXÃO (FIXED) ---
+        async function conectarBanco() {
             const btn = document.querySelector('#login-screen button');
             const loader = document.getElementById('loading');
             const msg = document.getElementById('msg-login');
-            const u = document.getElementById('user').value.trim();
-            const p = document.getElementById('pass').value.trim();
+            const uInput = document.getElementById('user').value.trim().toLowerCase();
+            const pInput = document.getElementById('pass').value.trim();
 
-            if(!u || !p) { msg.innerText = "Preencha tudo."; return; }
+            if(!uInput || !pInput) { msg.innerText = "Preencha todos os campos."; return; }
 
-            btn.style.display = 'none'; loader.style.display = 'block'; msg.innerText = "";
+            btn.style.display = 'none'; loader.style.display = 'block'; msg.innerText = "Conectando...";
 
-            fetch(PLANILHA_URL).then(r => {
-                if(!r.ok) throw new Error("Planilha inacessível.");
-                return r.text();
-            }).then(d => {
-                const linhas = d.split('\n');
+            try {
+                const response = await fetch(PLANILHA_URL + '&cache=' + new Date().getTime());
+                if(!response.ok) throw new Error("Planilha não acessível.");
+                
+                const csvData = await response.text();
+                const linhas = csvData.split(/\r?\n/);
                 let achou = null;
                 adminCache = [];
 
                 for (let i = 1; i < linhas.length; i++) {
-                    const line = linhas[i].trim();
-                    if(!line) continue;
-
-                    const cols = line.split(',');
+                    if (!linhas[i].trim()) continue;
+                    const cols = linhas[i].split(',');
                     if (cols.length >= 3) {
-                        const pu = cols[0].replace(/['"]+/g, '').trim();
-                        const pp = cols[1].replace(/['"]+/g, '').trim();
-                        const pd = cols[2].replace(/['"]+/g, '').trim();
-                        const pwa = cols[3] ? cols[3].replace(/['"]+/g, '').trim() : '';
-                        const pval = cols[4] ? cols[4].replace(/['"]+/g, '').trim() : ''; // COLUNA 5 = VALOR
+                        const pu = (cols[0] || '').replace(/['"]+/g, '').trim();
+                        const pp = (cols[1] || '').replace(/['"]+/g, '').trim();
+                        const pd = (cols[2] || '').replace(/['"]+/g, '').trim();
+                        const pwa = (cols[3] || '').replace(/['"]+/g, '').trim();
+                        const pval = (cols[4] || '').replace(/['"]+/g, '').trim();
 
                         if(pu) adminCache.push({user: pu, pass: pp, date: pd, zap: pwa, val: pval});
-                        if (pu === u && pp === p) achou = { user: pu, validade: pd };
+                        if (pu.toLowerCase() === uInput && pp === pInput) {
+                            achou = { user: pu, validade: pd };
+                        }
                     }
                 }
 
-                if (achou) validarAcesso(achou);
-                else {
+                if (achou) {
+                    validarAcesso(achou);
+                } else {
                     msg.innerText = "Usuário ou senha incorretos.";
                     btn.style.display = 'block'; loader.style.display = 'none';
                 }
-            }).catch(err => {
-                msg.innerText = "Erro: " + err.message;
+            } catch (err) {
+                console.error("Erro no login:", err);
+                msg.innerText = "Erro ao conectar com a planilha. Verifique o compartilhamento.";
                 btn.style.display = 'block'; loader.style.display = 'none';
-            });
+            }
         }
 
         function validarAcesso(dados) {
@@ -275,14 +250,14 @@
             const validade = parseDataBR(dados.validade);
             
             if (isNaN(validade.getTime())) {
-                document.getElementById('msg-login').innerText = "Erro: Data inválida na planilha.";
+                document.getElementById('msg-login').innerText = "Erro de data na planilha.";
                 document.querySelector('#login-screen button').style.display = 'block';
                 document.getElementById('loading').style.display = 'none';
                 return;
             }
 
             if (dados.user !== 'admin' && hoje > validade) {
-                document.getElementById('msg-login').innerText = "Acesso vencido.";
+                document.getElementById('msg-login').innerText = "Acesso expirado! Renove o plano.";
                 document.querySelector('#login-screen button').style.display = 'block';
                 document.getElementById('loading').style.display = 'none';
                 return;
@@ -299,23 +274,15 @@
             document.getElementById('ola-user').innerText = "Olá, " + user;
             
             if (user === 'admin') {
-                document.getElementById('status-acesso').innerText = "Admin Master";
-                document.getElementById('vencimento-alert').style.display = 'none';
+                document.getElementById('status-acesso').innerText = "Painel Master";
                 document.getElementById('btn-open-admin').classList.remove('hidden');
             } else {
                 const diff = Math.ceil((dataValidade - new Date()) / (1000 * 60 * 60 * 24));
-                const dia = String(dataValidade.getDate()).padStart(2, '0');
-                const mes = String(dataValidade.getMonth() + 1).padStart(2, '0');
-                const ano = dataValidade.getFullYear();
-                
-                document.getElementById('status-acesso').innerText = `Vence: ${dia}/${mes}/${ano}`;
+                document.getElementById('status-acesso').innerText = `Vence em: ${dataValidade.toLocaleDateString('pt-BR')}`;
                 document.getElementById('btn-open-admin').classList.add('hidden');
-                
                 if (diff <= 5) {
                     document.getElementById('vencimento-alert').style.display = 'flex';
                     document.getElementById('dias-restantes').innerText = diff;
-                } else {
-                    document.getElementById('vencimento-alert').style.display = 'none';
                 }
             }
             renderizar();
@@ -329,157 +296,100 @@
 
             adminCache.forEach((u, index) => {
                 if(u.user === 'admin') return;
-                
                 const val = parseDataBR(u.date);
                 const diff = Math.ceil((val - new Date()) / (1000 * 60 * 60 * 24));
-                const sttColor = diff > 0 ? 'green' : 'red';
-                const sttText = diff > 0 ? `${diff} dias` : 'Vencido';
-                
                 const zapLimpo = (u.zap || '').replace(/\D/g, '');
-                let btns = '';
-                
-                // VISUALIZAÇÃO DO VALOR
                 let valBadge = u.val ? `<span class="value-badge">R$ ${u.val}</span>` : '';
-
-                if(zapLimpo.length >= 8) {
-                    btns = `
-                        <button class="chat-btn btn-auto btn-small" onclick="window.open('https://wa.me/55${zapLimpo}', '_blank')">💬 Chat</button>
-                        <button class="vip-btn btn-auto btn-small" onclick="enviarDadosZap('${u.user}', '${u.pass}', '${u.date}', '${zapLimpo}', '${u.val}')">📨 Dados</button>
-                    `;
-                } else {
-                    btns = `<button class="secondary btn-auto btn-small" onclick="prepararEdicao(${index})">➕ Add Zap</button>`;
-                }
 
                 const div = document.createElement('div');
                 div.className = 'user-row';
                 div.innerHTML = `
                     <div class="user-head">
-                        <div>
-                            <strong>${u.user}</strong>
-                            ${valBadge}
-                        </div>
-                        <span style="color:${sttColor}; font-weight:bold; font-size:12px;">${sttText}</span>
+                        <div><strong>${u.user}</strong>${valBadge}</div>
+                        <span style="color:${diff>0?'green':'red'}; font-size:12px; font-weight:bold;">${diff>0?diff+'d':'EXP'}</span>
                     </div>
                     <div class="user-actions">
-                        ${btns}
-                        <button class="edit-btn btn-auto btn-small" onclick="prepararEdicao(${index})">✏️ Editar</button>
+                        ${zapLimpo ? `<button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${zapLimpo}')">💬</button>
+                        <button class="vip-btn btn-auto" onclick="enviarDadosZap('${u.user}','${u.pass}','${u.date}','${zapLimpo}','${u.val}')">📨</button>` : ''}
+                        <button class="edit-btn btn-auto" onclick="prepararEdicao(${index})">✏️ Editar</button>
                     </div>
                 `;
                 list.appendChild(div);
             });
         }
 
-        function enviarDadosZap(u, p, d, z, v) {
-            let msg = `🔐 *Seu Acesso ZapFlow*\n\n👤 *Usuário:* ${u}\n🔑 *Senha:* ${p}\n📅 *Validade:* ${d}`;
-            if(v) msg += `\n💰 *Valor Mensal:* R$ ${v}`;
-            msg += `\n\nAcesse: https://seu-site-aqui.com`;
-            
-            window.open(`https://wa.me/55${z}?text=${encodeURIComponent(msg)}`, '_blank');
+        function enviarDadosZap(u,p,d,z,v) {
+            let msg = `🔐 *Seu Acesso*\n👤 Usuário: ${u}\n🔑 Senha: ${p}\n📅 Validade: ${d}`;
+            if(v) msg += `\n💰 Valor: R$ ${v}`;
+            window.open(`https://wa.me/55${z}?text=${encodeURIComponent(msg)}`);
         }
 
-        // --- EDIÇÃO (COM VALOR) ---
-        function prepararEdicao(index) {
-            const u = adminCache[index];
+        function prepararEdicao(idx) {
+            const u = adminCache[idx];
             document.getElementById('edit-name').value = u.user;
             document.getElementById('edit-pass').value = u.pass;
             document.getElementById('edit-wa').value = u.zap || '';
-            document.getElementById('edit-val').value = u.val || ''; // PREENCHE VALOR
-            
-            const dataObj = parseDataBR(u.date);
-            if(!isNaN(dataObj.getTime())) {
-                document.getElementById('edit-date').value = formatDateParaInput(dataObj);
-            }
-
-            document.getElementById('manual-copy-box').style.display = 'none';
+            document.getElementById('edit-val').value = u.val || '';
+            const d = parseDataBR(u.date);
+            if(!isNaN(d.getTime())) document.getElementById('edit-date').value = d.toISOString().split('T')[0];
+            document.getElementById('manual-copy-box').style.display='none';
             fecharModal('modal-admin');
             document.getElementById('modal-edit-user').classList.add('show');
         }
 
-        function somarDiasEdicao(dias) {
-            const input = document.getElementById('edit-date');
-            if(!input.value) input.value = formatDateParaInput(new Date());
-            const atual = new Date(input.value);
-            atual.setDate(atual.getDate() + dias);
-            input.value = formatDateParaInput(atual);
+        function somarDiasEdicao(n) {
+            const i = document.getElementById('edit-date');
+            const d = new Date(i.value || new Date());
+            d.setDate(d.getDate()+n);
+            i.value = d.toISOString().split('T')[0];
         }
 
         function copiarLinhaPlanilha() {
-            const n = document.getElementById('edit-name').value;
-            const p = document.getElementById('edit-pass').value;
-            const w = document.getElementById('edit-wa').value;
-            const v = document.getElementById('edit-val').value;
-            const dInput = document.getElementById('edit-date').value; 
-            
-            if(!dInput) return alert("Selecione uma data!");
-
-            const partes = dInput.split('-');
-            const dataBR = `${partes[2]}/${partes[1]}/${partes[0]}`;
-            
-            // GERA LINHA COM 5 COLUNAS
-            const csvLine = `${n},${p},${dataBR},${w},${v}`;
-            
+            const n=document.getElementById('edit-name').value, p=document.getElementById('edit-pass').value, w=document.getElementById('edit-wa').value, v=document.getElementById('edit-val').value, dI=document.getElementById('edit-date').value;
+            if(!dI) return alert("Data!");
+            const pt=dI.split('-');
+            const csv = `${n},${p},${pt[2]}/${pt[1]}/${pt[0]},${w},${v}`;
             const box = document.getElementById('manual-copy-box');
-            box.innerText = csvLine;
-            box.style.display = 'block';
-
-            navigator.clipboard.writeText(csvLine).then(() => {
-                alert("COPIADO! Cole na planilha.");
-                window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank');
-            }).catch(err => {
-                alert("Copie o texto da caixa azul e cole na planilha.");
+            box.innerText = csv; box.style.display = 'block';
+            navigator.clipboard.writeText(csv).then(() => {
+                alert("Copiado! Cole na planilha.");
+                window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0');
             });
-        }
-
-        // --- RENOVAÇÃO / PAGAMENTO ---
-        function abrirModalRenovar() {
-            document.getElementById('modal-renovar').classList.add('show');
-        }
-
-        function copiarPix() {
-            const chave = "144.352.427-10";
-            navigator.clipboard.writeText(chave);
-            alert("Chave Pix Copiada!");
-        }
-
-        function enviarComprovante() {
-            const msg = `Ola Gabriel! Segue meu comprovante de pagamento do ZapFlow para o usuario: *${currentUser}*`;
-            window.open(`https://wa.me/5521970458286?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
         // --- LINKS PADRÃO ---
         function addLinks() {
-            const txt = document.getElementById('links-input');
-            const lines = txt.value.split('\n');
-            lines.forEach(l => { if(l.trim()) db[currentUser].links.push(l.trim()); });
-            txt.value = ''; salvarLocal(); renderizar();
+            const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim()) db[currentUser].links.push(l.trim());});
+            t.value=''; salvarLocal(); renderizar();
         }
-        function lerArquivo(input) {
-            const file = input.files[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const lines = e.target.result.split('\n');
-                lines.forEach(l => { if(l.trim()) db[currentUser].links.push(l.trim()); });
-                salvarLocal(); renderizar();
-            };
-            reader.readAsText(file); input.value = '';
+        function lerArquivo(i) {
+            const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUser].links.push(l.trim())});salvarLocal();renderizar();};
+            r.readAsText(i.files[0]); i.value='';
         }
         function baixarSalvos() {
-            const blob = new Blob([db[currentUser].salvos.join('\n')], {type: "text/plain"});
-            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `salvos.txt`; a.click();
+            const b=new Blob([db[currentUser].salvos.join('\n')],{type:"text/plain"});
+            const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="salvos.txt"; a.click();
         }
-        function limparSalvos() { if(confirm("Apagar?")) { db[currentUser].salvos = []; salvarLocal(); renderizar(); } }
-        function logout() { location.reload(); }
-        function fecharModal(id) { document.getElementById(id).classList.remove('show'); }
+        function limparSalvos(){ if(confirm("Limpar?")){db[currentUser].salvos=[]; salvarLocal(); renderizar();}}
+        function copiarPix(){ navigator.clipboard.writeText("144.352.427-10"); alert("Copiado!");}
+        function enviarComprovante(){ window.open(`https://wa.me/5521970458286?text=Pagamento comprovante user: ${currentUser}`);}
+        function logout(){ location.reload();}
+        function fecharModal(id){ document.getElementById(id).classList.remove('show');}
+        function abrirModalRenovar(){ document.getElementById('modal-renovar').classList.add('show');}
 
         function renderizar() {
-            const pend = document.getElementById('lista-pendentes');
-            const salv = document.getElementById('lista-salvos');
-            pend.innerHTML = ''; salv.innerHTML = '';
-            document.getElementById('count-pend').innerText = db[currentUser].links.length;
-            document.getElementById('count-saved').innerText = db[currentUser].salvos.length;
-
-            db[currentUser].links.forEach((l, i) => {
-                let url = l.includes('http') ? l : `https://wa.me/55${l.replace(/\D/g,'')}`;
-                pend.innerHTML += `<div class="card">
-                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70%;">${l}</span>
-                    <button onclick="window.open('${url}','_blank'); db['${currentUser}'].salvos.push('${l}');
+            const p=document.getElementById('lista-pendentes'), s=document.getElementById('lista-salvos');
+            p.innerHTML=''; s.innerHTML='';
+            document.getElementById('count-pend').innerText=db[currentUser].links.length;
+            document.getElementById('count-saved').innerText=db[currentUser].salvos.length;
+            db[currentUser].links.forEach((l,i)=>{
+                let url=l.includes('http')?l:`https://wa.me/55${l.replace(/\D/g,'')}`;
+                p.innerHTML+=`<div class="card"><span>${l}</span><button onclick="window.open('${url}');db['${currentUser}'].salvos.push('${l}');db['${currentUser}'].links.splice(${i},1);salvarLocal();renderizar();" class="btn-auto">Abrir ↗</button></div>`;
+            });
+            db[currentUser].salvos.forEach((l,i)=>{
+                s.innerHTML+=`<div class="card" style="border-left:4px solid var(--primary)"><span>${l}</span><button onclick="db['${currentUser}'].salvos.splice(${i},1);salvarLocal();renderizar();" class="danger btn-auto">X</button></div>`;
+            });
+        }
+    </script>
+</body>
+</html>
