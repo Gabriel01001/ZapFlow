@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZapFlow | Gestão V23</title>
+    <title>ZapFlow | Gestão V25</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><path d=%22M55 20 L35 50 L50 50 L45 80 L65 50 L50 50 L55 20 Z%22 fill=%22white%22/></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* ESTILOS V23 */
+        /* ESTILOS V25 */
         :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; }
         * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -33,16 +33,14 @@
         .card { background: #fff; border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; }
         .alert { background: #fff7ed; color: #9a3412; padding: 15px; border-radius: var(--radius); border: 1px solid #fdba74; margin-bottom: 20px; display: none; }
         
-        /* Modal */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:1000; }
         .modal-overlay.show { display:flex; }
         .modal-content { background:white; padding:30px; border-radius:20px; width:95%; max-width:500px; max-height:90vh; overflow-y:auto; position:relative; }
         .close-modal { position:absolute; top:20px; right:20px; cursor:pointer; font-size:24px; color:#999; }
 
-        /* Admin Rows */
         .user-row { border: 1px solid #eee; padding: 10px; margin-bottom: 8px; border-radius: 8px; background: #f9fafb; }
         .user-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .user-actions { display: flex; gap: 5px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 8px; }
+        .user-actions { display: flex; gap: 5px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 8px; flex-wrap: wrap; }
 
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -133,7 +131,7 @@
         <div class="modal-content">
             <span class="close-modal" onclick="fecharModal('modal-edit-user')">&times;</span>
             <h3>✏️ Editar Usuário</h3>
-            <p style="color:#666; font-size:12px;">1. Gere a linha abaixo.<br>2. Cole na sua Planilha Google.</p>
+            <p style="color:#666; font-size:12px;">Para salvar: O botão abaixo copiará os dados. Cole-os na sua planilha.</p>
             
             <label>Usuário</label><input type="text" id="edit-name">
             <label>Senha</label><input type="text" id="edit-pass">
@@ -148,35 +146,35 @@
                 </div>
             </div>
 
-            <button onclick="copiarLinhaPlanilha()" class="admin-btn">📋 Gerar Linha e Copiar</button>
+            <button onclick="copiarLinhaPlanilha()" class="admin-btn">💾 Salvar Edição (Gerar Linha)</button>
             <div id="manual-copy-box" class="copy-box"></div>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO DA NOVA PLANILHA ---
-        // Link de Exportação CSV direto da sua nova planilha
+        // CONFIGURAÇÃO
         const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/export?format=csv';
-        const DB_KEY = 'zapflow_v23';
-        
+        const DB_KEY = 'zapflow_v25';
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         let currentUser = null;
         let adminCache = [];
 
         function salvarLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
-        // --- TRATAMENTO DE DATA ---
+        // --- TRATAMENTO DATA ---
         function parseDataBR(dataStr) {
             if (!dataStr) return new Date();
-            let clean = dataStr.replace(/['"]/g, '').trim();
-            if (clean.includes('-')) {
-                const parts = clean.split('-');
-                if(parts[0].length === 4) return new Date(clean + 'T00:00:00');
-            }
+            let clean = dataStr.replace(/['"]+/g, '').trim();
             if (clean.includes('/')) {
                 const parts = clean.split('/');
-                if(parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
+                if (parts.length === 3) {
+                    const dia = parseInt(parts[0], 10);
+                    const mes = parseInt(parts[1], 10) - 1;
+                    const ano = parseInt(parts[2], 10);
+                    return new Date(ano, mes, dia);
+                }
             }
+            if (clean.includes('-')) return new Date(clean + 'T00:00:00');
             return new Date(clean);
         }
 
@@ -198,7 +196,7 @@
             btn.style.display = 'none'; loader.style.display = 'block'; msg.innerText = "";
 
             fetch(PLANILHA_URL).then(r => {
-                if(!r.ok) throw new Error("Erro na planilha (Verifique se está compartilhada).");
+                if(!r.ok) throw new Error("Planilha não acessível. Verifique o compartilhamento.");
                 return r.text();
             }).then(d => {
                 const linhas = d.split('\n');
@@ -227,8 +225,7 @@
                     btn.style.display = 'block'; loader.style.display = 'none';
                 }
             }).catch(err => {
-                console.error(err);
-                msg.innerText = "Erro: Planilha não acessível. Verifique o compartilhamento.";
+                msg.innerText = "Erro: " + err.message;
                 btn.style.display = 'block'; loader.style.display = 'none';
             });
         }
@@ -238,14 +235,14 @@
             const validade = parseDataBR(dados.validade);
             
             if (isNaN(validade.getTime())) {
-                document.getElementById('msg-login').innerText = "Erro: Formato de data inválido na planilha.";
+                document.getElementById('msg-login').innerText = "Erro: Data inválida ("+dados.validade+"). Use dia/mês/ano.";
                 document.querySelector('#login-screen button').style.display = 'block';
                 document.getElementById('loading').style.display = 'none';
                 return;
             }
 
             if (dados.user !== 'admin' && hoje > validade) {
-                document.getElementById('msg-login').innerText = "Acesso vencido! Renove seu plano.";
+                document.getElementById('msg-login').innerText = "Acesso vencido! Renove.";
                 document.querySelector('#login-screen button').style.display = 'block';
                 document.getElementById('loading').style.display = 'none';
                 return;
@@ -284,7 +281,7 @@
             renderizar();
         }
 
-        // --- PAINEL ADMIN ---
+        // --- PAINEL ADMIN (FUNCIONALIDADES REATIVADAS) ---
         function abrirAdminPanel() {
             document.getElementById('modal-admin').classList.add('show');
             const list = document.getElementById('admin-users-list');
@@ -299,12 +296,16 @@
                 const sttText = diff > 0 ? `${diff} dias` : 'Vencido';
                 
                 let btns = '';
-                if(u.zap) {
-                    const linkChat = `https://wa.me/55${u.zap}`;
-                    const msg = `🔐 *Seu Acesso*\nLogin: ${u.user}\nSenha: ${u.pass}\nValidade: ${u.date}`;
-                    const linkSend = `https://wa.me/55${u.zap}?text=${encodeURIComponent(msg)}`;
-                    btns = `<button class="secondary btn-auto btn-small" onclick="window.open('${linkChat}', '_blank')">💬</button>
-                            <button class="vip-btn btn-auto btn-small" onclick="window.open('${linkSend}', '_blank')">📨</button>`;
+                const zapLimpo = u.zap.replace(/\D/g, '');
+                
+                if(zapLimpo.length >= 10) {
+                    // Botões de WhatsApp REATIVADOS E CORRIGIDOS
+                    btns = `
+                        <button class="secondary btn-auto btn-small" onclick="window.open('https://wa.me/55${zapLimpo}', '_blank')">💬 Chat</button>
+                        <button class="vip-btn btn-auto btn-small" onclick="enviarDadosZap('${u.user}', '${u.pass}', '${u.date}', '${zapLimpo}')">📨 Enviar Dados</button>
+                    `;
+                } else {
+                    btns = `<span style="font-size:11px; color:#999; margin-right:5px;">Sem Zap</span>`;
                 }
 
                 const div = document.createElement('div');
@@ -323,6 +324,12 @@
             });
         }
 
+        function enviarDadosZap(u, p, d, z) {
+            const msg = `🔐 *Seu Acesso ZapFlow*\n\n👤 *Usuário:* ${u}\n🔑 *Senha:* ${p}\n📅 *Validade:* ${d}\n\nAcesse agora!`;
+            window.open(`https://wa.me/55${z}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        // --- EDIÇÃO ---
         function prepararEdicao(index) {
             const u = adminCache[index];
             document.getElementById('edit-name').value = u.user;
@@ -341,9 +348,7 @@
 
         function somarDiasEdicao(dias) {
             const input = document.getElementById('edit-date');
-            if(!input.value) {
-                input.value = formatDateParaInput(new Date());
-            }
+            if(!input.value) input.value = formatDateParaInput(new Date());
             const atual = new Date(input.value);
             atual.setDate(atual.getDate() + dias);
             input.value = formatDateParaInput(atual);
@@ -366,10 +371,10 @@
             box.style.display = 'block';
 
             navigator.clipboard.writeText(csvLine).then(() => {
-                alert("DADOS COPIADOS!\n\n1. A planilha vai abrir.\n2. Cole (Ctrl+V) os novos dados na linha do usuário.");
-                window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit', '_blank');
+                alert("DADOS COPIADOS!\n\n1. A planilha abrirá.\n2. Cole (Ctrl+V) na linha do usuário para salvar.");
+                window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank');
             }).catch(err => {
-                alert("Copie o texto azul abaixo manualmente.");
+                alert("Copie o texto da caixa azul e cole na planilha.");
             });
         }
 
@@ -381,7 +386,7 @@
             alert("Cupom copiado!");
         }
 
-        // --- LINKS PADRÃO ---
+        // --- LINKS ---
         function addLinks() {
             const txt = document.getElementById('links-input');
             const lines = txt.value.split('\n');
@@ -431,4 +436,3 @@
     </script>
 </body>
 </html>
-
