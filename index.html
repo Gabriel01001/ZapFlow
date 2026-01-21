@@ -367,7 +367,7 @@
 
             navigator.clipboard.writeText(csvLine).then(() => {
                 alert("DADOS COPIADOS!\n\n1. A planilha vai abrir.\n2. Cole (Ctrl+V) os novos dados na linha do usuário.");
-                window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank');
+                window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit', '_blank');
             }).catch(err => {
                 alert("Copie o texto azul abaixo manualmente.");
             });
@@ -431,3 +431,4 @@
     </script>
 </body>
 </html>
+
