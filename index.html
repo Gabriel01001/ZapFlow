@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZapFlow | Gestão V29</title>
+    <title>ZapFlow | Gestão V30</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><path d=%22M55 20 L35 50 L50 50 L45 80 L65 50 L50 50 L55 20 Z%22 fill=%22white%22/></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* ESTILOS V29 */
+        /* ESTILOS V30 */
         :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; }
         * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -43,7 +43,6 @@
         .user-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 5px; }
         .user-actions { display: flex; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 8px; flex-wrap: wrap; gap: 5px; }
 
-        /* NOVO ESTILO DE PAGAMENTO */
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 20px; background: #ecfdf5; position: relative; overflow: hidden; }
         .pay-card::before { content: "PIX"; position: absolute; top: -10px; right: -10px; background: #10b981; color: white; padding: 20px 10px 5px 20px; font-weight: bold; border-radius: 0 0 0 30px; font-size: 12px; }
         .pay-key { font-family: monospace; font-size: 18px; background: white; padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; color: #333; word-break: break-all; }
@@ -122,7 +121,7 @@
             <button onclick="window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank')" class="sheet-btn">📂 Abrir Minha Planilha</button>
 
             <h4>Usuários (Lidos da Planilha)</h4>
-            <div id="admin-users-list" style="max-height: 300px; overflow-y: auto;">Carregando...</div>
+            <div id="admin-users-list" style="max-height: 400px; overflow-y: auto;">Carregando...</div>
         </div>
     </div>
 
@@ -130,11 +129,21 @@
         <div class="modal-content">
             <span class="close-modal" onclick="fecharModal('modal-edit-user')">&times;</span>
             <h3>✏️ Editar Usuário</h3>
-            <p style="color:#666; font-size:12px;">Todos os dados (incluindo Zap) serão gerados para você colar na planilha.</p>
+            <p style="color:#666; font-size:12px;">Todos os dados serão gerados para você colar na planilha.</p>
             
             <label>Usuário</label><input type="text" id="edit-name">
             <label>Senha</label><input type="text" id="edit-pass">
-            <label>WhatsApp</label><input type="text" id="edit-wa" placeholder="Ex: 21999998888">
+            
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label>WhatsApp</label>
+                    <input type="text" id="edit-wa" placeholder="Ex: 2199...">
+                </div>
+                <div style="flex: 1;">
+                    <label>Valor (R$)</label>
+                    <input type="text" id="edit-val" placeholder="Ex: 30.00">
+                </div>
+            </div>
 
             <div style="background: #f0fdf4; padding:10px; border-radius:8px; border:1px solid #10b981; margin: 15px 0;">
                 <label style="margin:0; color:#064e3b;">Validade</label>
@@ -181,7 +190,7 @@
     <script>
         // CONFIGURAÇÃO
         const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/export?format=csv';
-        const DB_KEY = 'zapflow_v29';
+        const DB_KEY = 'zapflow_v30';
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         let currentUser = null;
         let adminCache = [];
@@ -239,9 +248,11 @@
                         const pu = cols[0].replace(/['"]+/g, '').trim();
                         const pp = cols[1].replace(/['"]+/g, '').trim();
                         const pd = cols[2].replace(/['"]+/g, '').trim();
-                        const pwa = (cols[3] || '').replace(/['"]+/g, '').trim();
+                        // COLUNA 4: WHATSAPP | COLUNA 5: VALOR
+                        const pwa = cols[3] ? cols[3].replace(/['"]+/g, '').trim() : '';
+                        const pval = cols[4] ? cols[4].replace(/['"]+/g, '').trim() : '';
 
-                        if(pu) adminCache.push({user: pu, pass: pp, date: pd, zap: pwa});
+                        if(pu) adminCache.push({user: pu, pass: pp, date: pd, zap: pwa, val: pval});
                         if (pu === u && pp === p) achou = { user: pu, validade: pd };
                     }
                 }
@@ -326,9 +337,10 @@
                 let btns = '';
                 
                 if(zapLimpo.length >= 8) {
+                    // BOTÕES COM VALOR
                     btns = `
                         <button class="chat-btn btn-auto btn-small" onclick="window.open('https://wa.me/55${zapLimpo}', '_blank')">💬 Chat</button>
-                        <button class="vip-btn btn-auto btn-small" onclick="enviarDadosZap('${u.user}', '${u.pass}', '${u.date}', '${zapLimpo}')">📨 Dados</button>
+                        <button class="vip-btn btn-auto btn-small" onclick="enviarDadosZap('${u.user}', '${u.pass}', '${u.date}', '${zapLimpo}', '${u.val}')">📨 Dados</button>
                     `;
                 } else {
                     btns = `<button class="secondary btn-auto btn-small" onclick="prepararEdicao(${index})">➕ Add Zap</button>`;
@@ -350,17 +362,21 @@
             });
         }
 
-        function enviarDadosZap(u, p, d, z) {
-            const msg = `🔐 *Seu Acesso ZapFlow*\n\n👤 *Usuário:* ${u}\n🔑 *Senha:* ${p}\n📅 *Validade:* ${d}`;
+        function enviarDadosZap(u, p, d, z, v) {
+            let msg = `🔐 *Seu Acesso ZapFlow*\n\n👤 *Usuário:* ${u}\n🔑 *Senha:* ${p}\n📅 *Validade:* ${d}`;
+            if(v) msg += `\n💰 *Valor:* R$ ${v}`;
+            msg += `\n\nAcesse: https://seu-site-aqui.com`;
+            
             window.open(`https://wa.me/55${z}?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
-        // --- EDIÇÃO E CÓPIA ---
+        // --- EDIÇÃO (AGORA COM VALOR) ---
         function prepararEdicao(index) {
             const u = adminCache[index];
             document.getElementById('edit-name').value = u.user;
             document.getElementById('edit-pass').value = u.pass;
             document.getElementById('edit-wa').value = u.zap || '';
+            document.getElementById('edit-val').value = u.val || '';
             
             const dataObj = parseDataBR(u.date);
             if(!isNaN(dataObj.getTime())) {
@@ -384,6 +400,7 @@
             const n = document.getElementById('edit-name').value;
             const p = document.getElementById('edit-pass').value;
             const w = document.getElementById('edit-wa').value;
+            const v = document.getElementById('edit-val').value;
             const dInput = document.getElementById('edit-date').value; 
             
             if(!dInput) return alert("Selecione uma data!");
@@ -391,17 +408,18 @@
             const partes = dInput.split('-');
             const dataBR = `${partes[2]}/${partes[1]}/${partes[0]}`;
             
-            const csvLine = `${n},${p},${dataBR},${w}`;
+            // GERA LINHA COM 5 COLUNAS: USER,PASS,DATA,ZAP,VALOR
+            const csvLine = `${n},${p},${dataBR},${w},${v}`;
             
             const box = document.getElementById('manual-copy-box');
             box.innerText = csvLine;
             box.style.display = 'block';
 
             navigator.clipboard.writeText(csvLine).then(() => {
-                alert("COPIADO! Cole na planilha.");
+                alert("COPIADO! Cole na planilha (Agora com 5 colunas: Zap e Valor).");
                 window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank');
             }).catch(err => {
-                alert("Copie o texto da caixa azul.");
+                alert("Copie o texto da caixa azul e cole na planilha.");
             });
         }
 
