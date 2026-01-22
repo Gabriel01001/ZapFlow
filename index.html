@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZapFlow | Gestão V34</title>
+    <title>ZapFlow | Gestão V35</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><path d=%22M55 20 L35 50 L50 50 L45 80 L65 50 L50 50 L55 20 Z%22 fill=%22white%22/></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* ESTILOS V34 */
+        /* ESTILOS V35 */
         :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; }
         * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -33,7 +33,6 @@
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
         .card { background: #fff; border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; }
         
-        /* REGRA PARA ENCURTAR LINKS */
         .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; color: var(--text); }
 
         .alert { background: #fff7ed; color: #9a3412; padding: 15px; border-radius: var(--radius); border: 1px solid #fdba74; margin-bottom: 20px; display: none; }
@@ -172,7 +171,7 @@
     <script>
         // CONFIGURAÇÃO
         const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/export?format=csv';
-        const DB_KEY = 'zapflow_v34';
+        const DB_KEY = 'zapflow_v35';
         const SESSION_KEY = 'zapflow_session';
         
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
@@ -193,6 +192,7 @@
             return new Date(clean);
         }
 
+        // --- INICIALIZAÇÃO ---
         window.onload = function() {
             const sessao = localStorage.getItem(SESSION_KEY);
             if (sessao) {
@@ -206,13 +206,15 @@
         };
 
         async function conectarBanco(silencioso = false) {
-            const btn = document.querySelector('#login-screen button');
-            const loader = document.getElementById('loading');
-            const msg = document.getElementById('msg-login');
             const uInput = document.getElementById('user').value.trim().toLowerCase();
             const pInput = document.getElementById('pass').value.trim();
             if(!uInput || !pInput) return;
-            if(!silencioso) { btn.style.display = 'none'; loader.style.display = 'block'; msg.innerText = "Conectando..."; }
+
+            if(!silencioso) { 
+                document.querySelector('#login-screen button').style.display = 'none'; 
+                document.getElementById('loading').style.display = 'block'; 
+            }
+
             try {
                 const response = await fetch(PLANILHA_URL + '&cache=' + new Date().getTime());
                 const csvData = await response.text();
@@ -230,18 +232,25 @@
                         if (pu.toLowerCase() === uInput && pp === pInput) achou = { user: pu, validade: pd };
                     }
                 }
+
                 if (achou) {
                     const sessao = btoa(JSON.stringify({u: uInput, p: pInput}));
                     localStorage.setItem(SESSION_KEY, sessao);
                     validarAcesso(achou);
                 } else {
                     localStorage.removeItem(SESSION_KEY);
-                    msg.innerText = "Dados incorretos.";
-                    btn.style.display = 'block'; loader.style.display = 'none';
+                    if(!silencioso) {
+                        document.getElementById('msg-login').innerText = "Dados incorretos.";
+                        document.querySelector('#login-screen button').style.display = 'block'; 
+                        document.getElementById('loading').style.display = 'none';
+                    }
                 }
             } catch (err) {
-                msg.innerText = "Erro de conexão.";
-                btn.style.display = 'block'; loader.style.display = 'none';
+                if(!silencioso) {
+                    document.getElementById('msg-login').innerText = "Erro de conexão.";
+                    document.querySelector('#login-screen button').style.display = 'block'; 
+                    document.getElementById('loading').style.display = 'none';
+                }
             }
         }
 
@@ -256,7 +265,12 @@
                 return;
             }
             currentUser = dados.user;
-            if (!db[currentUser]) db[currentUser] = { links: [], salvos: [] };
+            
+            // CORREÇÃO: VERIFICA SE O USUÁRIO JÁ EXISTE PARA NÃO APAGAR OS LINKS
+            if (!db[currentUser]) {
+                db[currentUser] = { links: [], salvos: [] };
+            }
+            
             salvarLocal(); entrarNoApp(dados.user, validade);
         }
 
@@ -363,6 +377,7 @@
         function renderizar() {
             const p=document.getElementById('lista-pendentes'), s=document.getElementById('lista-salvos');
             p.innerHTML=''; s.innerHTML='';
+            if(!db[currentUser]) db[currentUser] = { links: [], salvos: [] };
             document.getElementById('count-pend').innerText=db[currentUser].links.length;
             document.getElementById('count-saved').innerText=db[currentUser].salvos.length;
             db[currentUser].links.forEach((l,i)=>{
