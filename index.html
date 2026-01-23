@@ -16,8 +16,10 @@
         button { width: 100%; padding: 12px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         button:hover { filter: brightness(0.9); transform: translateY(-2px); }
         button.secondary { background: #e5e7eb; color: #333; }
+        button.danger { background: var(--danger); }
         button.admin-btn { background: var(--text); color: var(--card); }
         button.chat-btn { background: #25d366; color: white; }
+        button.edit-btn { background: var(--blue); }
         .btn-auto { width: auto !important; padding: 6px 12px; font-size: 12px; margin: 2px; }
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
         .card { background: var(--card); border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; }
@@ -28,8 +30,9 @@
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 20px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
         .pay-key { font-family: monospace; font-size: 16px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
         .user-row { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: rgba(0,0,0,0.02); }
-        .creator-badge { font-size: 10px; font-weight: bold; background: #f3f4f6; color: #4b5563; padding: 3px 8px; border-radius: 5px; display: inline-block; margin-top: 4px; border: 1px solid #ddd; }
+        .creator-badge { font-size: 9px; font-weight: bold; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
         .theme-toggle { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; border-radius: 50%; padding: 0; background: var(--card); color: var(--text); border: 1px solid #ddd; }
+        .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; }
     </style>
 </head>
 <body>
@@ -55,15 +58,32 @@
                     <button onclick="logout()" class="danger btn-auto">Sair</button>
                 </div>
             </div>
-            <div id="vencimento-alert" class="card" style="background: #fff7ed; border: 1px solid #fdba74; display: none; margin-bottom: 20px;">
-                <span style="color:#333;">⚠️ Expira em <span id="dias-restantes-alerta">0</span> dias.</span>
-                <button onclick="abrirModalRenovar()" class="btn-auto" style="background:#f59e0b">Renovar</button>
+            <div id="vencimento-alert" class="card" style="background: #fff7ed; border: 1px solid #fdba74; display: none; margin-bottom: 20px; padding: 15px;">
+                <div style="display:flex; align-items:center; gap:10px; justify-content: space-between; width: 100%;">
+                    <span style="color:#333; font-size: 13px;">⚠️ Expira em <span id="dias-restantes-alerta" style="font-weight: bold;">0</span> dias.</span>
+                    <button onclick="abrirModalRenovar()" class="vip-btn btn-auto">Renovar Agora</button>
+                </div>
             </div>
-            <div style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: var(--radius); margin-bottom: 20px;">
+            <div style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: var(--radius); margin-bottom: 20px; border: 1px solid #e5e7eb;">
+                <h4 style="margin: 0 0 10px 0;">📥 Adicionar Links</h4>
                 <textarea id="links-input" rows="1" placeholder="Cole links ou números..."></textarea>
-                <button onclick="addLinks()">Carregar Links</button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="addLinks()">Carregar</button>
+                    <button onclick="document.getElementById('file').click()" class="secondary">📂 Arquivo</button>
+                    <input type="file" id="file" accept=".txt" hidden onchange="lerArquivo(this)">
+                </div>
+                <div id="save-prompt" class="save-prompt">
+                    <div style="overflow: hidden; flex: 1;">
+                        <span style="font-size: 12px; font-weight: bold;">Salvar anterior?</span>
+                        <div id="last-link-opened" style="font-size: 10px; opacity: 0.7; overflow: hidden; text-overflow: ellipsis;"></div>
+                    </div>
+                    <div style="display: flex; gap: 4px;">
+                        <button onclick="confirmarSalvamento(true)" class="edit-btn btn-auto">Sim</button>
+                        <button onclick="confirmarSalvamento(false)" class="secondary btn-auto">Não</button>
+                    </div>
+                </div>
             </div>
-            <h4>Pendentes (<span id="count-pend">0</span>)</h4>
+            <h4 style="color: var(--primary);">Pendentes (<span id="count-pend">0</span>)</h4>
             <div id="lista-pendentes"></div>
         </div>
     </div>
@@ -71,21 +91,21 @@
     <div id="modal-admin" class="modal-overlay">
         <div class="modal-content">
             <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:24px;" onclick="fecharModal('modal-admin')">&times;</span>
-            <h2>⚙️ Gestão Master</h2>
-            <input type="text" id="search-user" placeholder="🔍 Pesquisar usuário..." onkeyup="filtrarUsuarios()">
-            <div id="admin-users-list" style="max-height: 400px; overflow-y: auto; margin-top:10px;"></div>
+            <h2 style="color: var(--dark); margin:0 0 15px 0;">⚙️ Painel Master</h2>
+            <input type="text" id="search-user" placeholder="🔍 Pesquisar por nome ou criador..." onkeyup="filtrarUsuarios()">
+            <div id="admin-users-list" style="max-height: 450px; overflow-y: auto; margin-top:10px;"></div>
         </div>
     </div>
 
     <div id="modal-renovar" class="modal-overlay">
         <div class="modal-content" style="max-width: 400px;">
             <span style="position:absolute; top:15px; right:15px; cursor:pointer;" onclick="fecharModal('modal-renovar')">&times;</span>
-            <h3 style="text-align: center;">💎 Renovar Acesso</h3>
+            <h3 style="text-align: center; color: var(--primary);">💎 Renovar Acesso</h3>
             <div class="pay-card">
                 <div style="font-size: 11px; font-weight: bold;">CHAVE PIX PARA PAGAMENTO</div>
                 <div class="pay-key" id="pix-display">...</div>
             </div>
-            <button onclick="copiarPixReal()" class="chat-btn" id="btn-copy">📋 Copiar Chave PIX</button>
+            <button id="btn-copy-pix" onclick="copiarPixReal()" class="chat-btn" style="border-radius: 50px; width:100%">📋 Copiar Chave PIX</button>
         </div>
     </div>
 
@@ -94,7 +114,7 @@
         const DB_KEY = 'zapflow_v36';
         const SESSION_KEY = 'zapflow_session_v36';
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        let currentUserData = null, adminCache = [];
+        let currentUserData = null, lastOpenedLink = "", adminCache = [];
 
         window.onload = () => {
             if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
@@ -123,7 +143,15 @@
                 for (let i = 1; i < linhas.length; i++) {
                     const c = linhas[i].split(',');
                     if(c.length >= 7){
-                        const uO = { user: c[0].replace(/['"]+/g,'').trim(), pass: c[1].replace(/['"]+/g,'').trim(), date: c[2].replace(/['"]+/g,'').trim(), wa: c[3].replace(/['"]+/g,'').trim(), val: c[4].replace(/['"]+/g,'').trim(), pix: c[5].replace(/['"]+/g,'').trim(), criador: c[6].replace(/['"]+/g,'').trim() };
+                        const uO = { 
+                            user: c[0].replace(/['"]+/g,'').trim(), 
+                            pass: c[1].replace(/['"]+/g,'').trim(), 
+                            date: c[2].replace(/['"]+/g,'').trim(), 
+                            wa: c[3].replace(/['"]+/g,'').trim(), 
+                            val: c[4].replace(/['"]+/g,'').trim(), 
+                            pix: c[5].replace(/['"]+/g,'').trim(), // Coluna F
+                            criador: c[6].replace(/['"]+/g,'').trim() // Coluna G
+                        };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) currentUserData = uO;
                     }
@@ -133,7 +161,19 @@
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('app-screen').classList.remove('hidden');
                     document.getElementById('ola-user').innerText = "Olá, " + currentUserData.user;
-                    if(currentUserData.user.toLowerCase() === 'admin' || currentUserData.pix.toLowerCase() === 'master') document.getElementById('btn-open-admin').classList.remove('hidden');
+                    
+                    const dPartes = currentUserData.date.split('/');
+                    const dV = dPartes.length === 3 ? new Date(dPartes[2], dPartes[1]-1, dPartes[0]) : new Date();
+                    const hoje = new Date(); hoje.setHours(0,0,0,0);
+                    const diff = Math.ceil((dV - hoje) / 86400000);
+                    document.getElementById('status-acesso').innerText = "Vence em: " + currentUserData.date;
+                    
+                    if(diff <= 5 && currentUserData.user.toLowerCase() !== 'admin') {
+                        document.getElementById('vencimento-alert').style.display = 'block';
+                        document.getElementById('dias-restantes-alerta').innerText = diff;
+                    }
+                    if(currentUserData.user.toLowerCase() === 'admin' || currentUserData.pix.toLowerCase() === 'master') 
+                        document.getElementById('btn-open-admin').classList.remove('hidden');
                     renderizar();
                 }
             } catch(e) { console.error(e); }
@@ -141,10 +181,8 @@
 
         function filtrarUsuarios() {
             const termo = document.getElementById('search-user').value.toLowerCase();
-            const rows = document.querySelectorAll('.user-row');
-            rows.forEach(row => {
-                const texto = row.innerText.toLowerCase();
-                row.style.display = texto.includes(termo) ? 'block' : 'none';
+            document.querySelectorAll('.user-row').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(termo) ? 'block' : 'none';
             });
         }
 
@@ -153,35 +191,78 @@
             const lista = document.getElementById('admin-users-list');
             lista.innerHTML = '';
             const hoje = new Date(); hoje.setHours(0,0,0,0);
-            adminCache.forEach(u => {
-                if(u.user.toLowerCase() === 'admin') return;
-                const dPartes = u.date.split('-');
-                const dV = dPartes.length === 3 ? new Date(dPartes[0], dPartes[1]-1, dPartes[2]) : new Date();
+            adminCache.forEach((u, idx) => {
+                if(u.user.toLowerCase() === 'admin' || u.user === currentUserData.user) return;
+                const dP = u.date.split('/');
+                const dV = dP.length === 3 ? new Date(dP[2], dP[1]-1, dP[0]) : new Date();
                 const diff = Math.ceil((dV - hoje) / 86400000);
                 const cor = diff <= 5 ? "#ef4444" : "#3b82f6";
                 const div = document.createElement('div');
                 div.className = 'user-row';
-                div.innerHTML = `<div style="display:flex; justify-content:space-between;"><div><strong>${u.user}</strong><br><span class="creator-badge">Criador: ${u.criador}</span></div><div style="text-align:right; color:${cor}; font-weight:bold;">${diff < 0 ? 'Expirado' : diff + ' dias'}</div></div><button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')" style="margin-top:5px;">WhatsApp</button>`;
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between;">
+                        <div>
+                            <strong>${u.user}</strong><br>
+                            <span class="creator-badge">Criador: ${u.criador}</span><br>
+                            <small style="color:#10b981">📱 ${u.wa}</small> | <small style="color:#166534">💰 ${u.val}</small>
+                        </div>
+                        <div style="text-align:right; color:${cor}; font-weight:bold; font-size:12px;">
+                            ${diff < 0 ? 'Expirado' : diff === 0 ? 'Hoje' : diff + ' dias'}
+                        </div>
+                    </div>
+                    <div style="margin-top:10px; display:flex; gap:5px;">
+                        <button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button>
+                        <button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Dados</button>
+                    </div>`;
                 lista.appendChild(div);
             });
         }
 
         function abrirModalRenovar() { document.getElementById('pix-display').innerText = currentUserData.pix; document.getElementById('modal-renovar').classList.add('show'); }
-        function copiarPixReal() { 
-            const t = document.getElementById('pix-display').innerText;
-            const el = document.createElement('textarea'); el.value = t; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
-            document.getElementById('btn-copy').innerText = "✅ Copiado!";
-            setTimeout(() => document.getElementById('btn-copy').innerText = "📋 Copiar Chave PIX", 2000);
+        
+        function copiarPixReal() {
+            const texto = document.getElementById('pix-display').innerText;
+            const tempInput = document.createElement("input"); tempInput.value = texto; document.body.appendChild(tempInput);
+            tempInput.select(); tempInput.setSelectionRange(0, 99999); document.execCommand("copy"); document.body.removeChild(tempInput);
+            alert("Chave PIX Copiada!");
         }
+
+        function tratarAberturaLink(idx, link) {
+            lastOpenedLink = link;
+            window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`);
+            db[currentUserData.user].links.splice(idx, 1);
+            document.getElementById('last-link-opened').innerText = link;
+            document.getElementById('save-prompt').style.display = 'flex';
+            renderizar();
+        }
+
+        function confirmarSalvamento(sim) {
+            if(sim && lastOpenedLink) { 
+                if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos = [];
+                db[currentUserData.user].salvos.push(lastOpenedLink); 
+            }
+            document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar();
+        }
+
         function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
         function logout(){ localStorage.removeItem(SESSION_KEY); location.reload(); }
-        function addLinks(){ const t=document.getElementById('links-input'); if(!db[currentUserData.user]) db[currentUserData.user]={links:[]}; t.value.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); t.value=''; renderizar(); }
+        function addLinks(){ const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); t.value=''; renderizar(); }
+        function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())});renderizar();}; r.readAsText(i.files[0]); i.value=''; }
+        
         function renderizar(){
             const p = document.getElementById('lista-pendentes'); p.innerHTML = '';
             const u = currentUserData.user; if(!db[u]) db[u] = {links:[]};
             document.getElementById('count-pend').innerText = db[u].links.length;
-            db[u].links.forEach((l,i) => { p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button class="btn-auto" onclick="window.open('${l.includes('http')?l:'https://wa.me/55'+l.replace(/\D/g,'')}')">Abrir</button></div>`; });
+            db[u].links.forEach((l,i) => {
+                p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button class="btn-auto" onclick="tratarAberturaLink(${i},'${l}')">Abrir ↗</button></div>`;
+            });
             localStorage.setItem(DB_KEY, JSON.stringify(db));
+        }
+
+        function enviarDadosWhatsApp(idx) {
+            const u = adminCache[idx];
+            const msg = `🔐 *Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u.user}\n🔑 *Senha:* ${u.pass}\n📅 *Vencimento:* ${u.date}`;
+            window.open(`https://wa.me/55${u.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
         }
     </script>
 </body>
