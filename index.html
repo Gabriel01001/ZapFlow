@@ -39,7 +39,7 @@
 </head>
 <body>
 
-    <button class="theme-toggle" onclick="toggleTheme()">🌗</button>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
     <div class="container">
         <div id="login-screen" style="text-align: center; max-width: 400px; margin: 40px auto;">
@@ -178,8 +178,8 @@
                             date: c[2].replace(/['"]+/g,'').trim(), // Coluna C
                             wa: c[3].replace(/['"]+/g,'').trim(),   // Coluna D
                             val: c[4].replace(/['"]+/g,'').trim(),  // Coluna E
-                            pix: c[6].replace(/['"]+/g,'').trim() // Coluna G (Pix)
                             criador: c[5].replace(/['"]+/g,'').trim(),  // Coluna G (CRIADOR)
+                            pix: c[6].replace(/['"]+/g,'').trim() // Coluna G (Pix)
                         };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) currentUserData = uO;
@@ -260,5 +260,3 @@
     </script>
 </body>
 </html>
-
-
