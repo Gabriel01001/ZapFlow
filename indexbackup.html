@@ -32,14 +32,17 @@
         .user-row { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: rgba(0,0,0,0.02); }
         .creator-badge { font-size: 9px; font-weight: bold; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
         .pix-badge { font-size: 9px; font-weight: bold; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
-        .theme-toggle { position: absolute; top: 15px; right: 15px; width: 35px; height: 35px; border-radius: 50%; padding: 0; background: var(--card); color: var(--text); border: 1px solid #ddd; z-index: 10; }
+        
+        /* BOTÃO DE TEMA REPOSICIONADO PARA NÃO ATRAPALHAR NO MOBILE */
+        .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; padding: 0; background: var(--primary); color: white; border: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 20px; }
+        
         .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; }
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; margin-bottom: 20px; font-size: 12px; }
     </style>
 </head>
 <body>
 
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Mudar Tema">🌙</button>
 
     <div class="container">
         <div id="login-screen" style="text-align: center; max-width: 400px; margin: 40px auto;">
@@ -150,7 +153,9 @@
 
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
-            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.querySelector('.theme-toggle').innerText = isDark ? '☀️' : '🌙';
         }
 
         function formatarData(d) {
@@ -171,15 +176,14 @@
                 for (let i = 1; i < linhas.length; i++) {
                     const c = linhas[i].split(',');
                     if(c.length >= 7){
-                        // OPÇÃO DAS COLUNAS DA PLANILHA (SEPARADAS PARA FACILITAR)
                         const uO = { 
                             user: c[0].replace(/['"]+/g,'').trim(), // Coluna A
                             pass: c[1].replace(/['"]+/g,'').trim(), // Coluna B
                             date: c[2].replace(/['"]+/g,'').trim(), // Coluna C
                             wa: c[3].replace(/['"]+/g,'').trim(),   // Coluna D
                             val: c[4].replace(/['"]+/g,'').trim(),  // Coluna E
-                            criador: c[6].replace(/['"]+/g,'').trim(),  // Coluna G (CRIADOR)
-                            pix: c[7].replace(/['"]+/g,'').trim() // Coluna G (Pix)
+                            pix: c[5].replace(/['"]+/g,'').trim(),  // Coluna F (CPF/PIX)
+                            criador: c[6].replace(/['"]+/g,'').trim() // Coluna G (CRIADOR)
                         };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) currentUserData = uO;
@@ -260,4 +264,3 @@
     </script>
 </body>
 </html>
-
