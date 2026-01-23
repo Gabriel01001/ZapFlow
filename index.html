@@ -124,7 +124,7 @@
             <h3 style="text-align: center; color: var(--primary);">💎 Renovar Acesso</h3>
             <div class="pay-card">
                 <div style="font-size: 12px; font-weight: bold; color: var(--dark); margin-bottom: 5px;">CHAVE PIX PARA PAGAMENTO</div>
-                <div class="pay-key" id="pix-display">Aguardando chave...</div>
+                <div class="pay-key" id="pix-display">...</div>
                 <div style="font-size: 13px; line-height: 1.5;">
                     ✅ <strong>Efetue a transferência</strong><br>
                     🏛️ <strong>Utilize a chave acima</strong>
@@ -136,6 +136,7 @@
     </div>
 
     <div id="modal-admin" class="modal-overlay"><div class="modal-content"><span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span><h2 style="color: var(--dark); margin:0 0 15px 0;">⚙️ Painel Master</h2><button onclick="window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank')" class="admin-btn btn-auto" style="background: #107c10; width: 100%; margin-bottom: 15px;">📂 Abrir Planilha Google</button><div id="admin-users-list" style="margin-top: 15px;"></div></div></div>
+    
     <div id="modal-edit-user" class="modal-overlay"><div class="modal-content"><span class="close-modal" onclick="fecharModal('modal-edit-user')">&times;</span><h3>✏️ Editar Usuário</h3><label>Usuário</label><input type="text" id="edit-name"><label>Senha</label><input type="text" id="edit-pass"><div style="display: flex; gap: 10px;"><div style="flex:1;"><label>WhatsApp</label><input type="text" id="edit-wa"></div><div style="flex:1;"><label>Valor R$</label><input type="text" id="edit-val"></div></div><label>Validade</label><input type="date" id="edit-date"><button onclick="copiarLinhaPlanilha()" class="admin-btn">💾 Gerar Linha Planilha</button><div id="manual-copy-box" style="background: #e0e7ff; color: #3730a3; padding: 10px; border-radius: 8px; font-family: monospace; word-break: break-all; margin-top: 15px; font-size: 11px; border: 1px dashed #6366f1; display: none;"></div></div></div>
 
     <script>
@@ -183,7 +184,7 @@
 
                 for (let i = 1; i < linhas.length; i++) {
                     const c = linhas[i].split(',');
-                    if(c.length >= 7){ // Mínimo de 7 colunas (A até G)
+                    if(c.length >= 7){
                         const uO = { 
                             user: (c[0]||"").replace(/['"]+/g, '').trim(), 
                             pass: (c[1]||"").replace(/['"]+/g, '').trim(), 
@@ -191,7 +192,7 @@
                             wa: (c[3]||"").replace(/['"]+/g, '').trim(),
                             val: (c[4]||"").replace(/['"]+/g, '').trim(),
                             type: (c[5]||"user").replace(/['"]+/g, '').trim().toLowerCase(),
-                            pix: (c[6]||"N/A").replace(/['"]+/g, '').trim() // COLUNA G
+                            pix: (c[6]||"").replace(/['"]+/g, '').trim() // COLUNA G É O PIX
                         };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) achou = uO;
@@ -226,14 +227,15 @@
         }
 
         function abrirModalRenovar() { 
-            // INJETA A CHAVE PIX DA COLUNA G NO MODAL
-            document.getElementById('pix-display').innerText = currentUserData.pix;
+            // AQUI É ONDE INJETAMOS A CHAVE PIX DA COLUNA G NO POP-UP
+            document.getElementById('pix-display').innerText = currentUserData.pix || "Chave não cadastrada";
             document.getElementById('modal-renovar').classList.add('show'); 
         }
 
         function copiarPix() { 
             const pix = document.getElementById('pix-display').innerText;
-            navigator.clipboard.writeText(pix).then(() => alert("Copiado: " + pix));
+            if(pix === "Chave não cadastrada") return alert("Erro: Chave não encontrada.");
+            navigator.clipboard.writeText(pix).then(() => alert("Chave PIX Copiada!")); 
         }
 
         function abrirAdminPanel() {
@@ -249,7 +251,7 @@
                 let textoDias = diff < 0 ? "Expirado" : diff === 0 ? "Vence hoje" : `Faltam ${diff} dias`;
                 const div = document.createElement('div');
                 div.className = 'user-row';
-                div.innerHTML = `<div class="user-head"><div class="user-info-text"><strong>${u.user}</strong><span class="creator-badge">PIX: ${u.pix}</span><small style="color:#10b981">📱 ${u.wa}</small><small style="color:#166534">💰 R$ ${u.val}</small></div><div style="text-align: right;"><span style="font-size:12px; font-weight:bold; color:${cor};">${textoDias}</span></div></div><div class="user-actions"><button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button><button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Dados</button><button class="edit-btn btn-auto" onclick="prepararEdicao(${idx})">✏️ Editar</button></div>`;
+                div.innerHTML = `<div class="user-head"><div class="user-info-text"><strong>${u.user}</strong><span class="creator-badge">PIX: ${u.pix}</span><small style="color:#10b981">📱 ${u.wa}</small></div><div style="text-align: right;"><span style="font-size:12px; font-weight:bold; color:${cor};">${textoDias}</span></div></div><div class="user-actions"><button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button><button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Dados</button><button class="edit-btn btn-auto" onclick="prepararEdicao(${idx})">✏️ Editar</button></div>`;
                 lista.appendChild(div);
             });
         }
