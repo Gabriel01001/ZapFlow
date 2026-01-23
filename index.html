@@ -32,10 +32,7 @@
         .user-row { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: rgba(0,0,0,0.02); }
         .creator-badge { font-size: 9px; font-weight: bold; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
         .pix-badge { font-size: 9px; font-weight: bold; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
-        
-        /* BOTÃO DE TEMA REPOSICIONADO PARA NÃO ATRAPALHAR NO MOBILE */
         .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; padding: 0; background: var(--primary); color: white; border: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 20px; }
-        
         .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; }
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; margin-bottom: 20px; font-size: 12px; }
     </style>
@@ -51,7 +48,7 @@
             <input type="text" id="user" placeholder="Usuário">
             <input type="password" id="pass" placeholder="Senha">
             <button onclick="conectarBanco()">Acessar Sistema</button>
-            <p id="msg-login" style="color: red; font-size: 14px; margin-top: 10px;"></p>
+            <p id="msg-login" style="color: red; font-size: 14px; margin-top: 10px; font-weight: 600;"></p>
             <button onclick="window.open('https://wa.me/5521970458286')" class="secondary btn-auto" style="margin-top:20px;">💬 Suporte Técnico</button>
         </div>
 
@@ -141,7 +138,10 @@
         let pgPend = 0, pgSalv = 0; const ITENS_PAG = 5;
 
         window.onload = () => {
-            if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            if(localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.querySelector('.theme-toggle').innerText = '☀️';
+            }
             const session = localStorage.getItem(SESSION_KEY);
             if(session) {
                 const s = JSON.parse(session);
@@ -168,36 +168,48 @@
         async function conectarBanco() {
             const uI = document.getElementById('user').value.trim().toLowerCase();
             const pI = document.getElementById('pass').value.trim();
+            const msg = document.getElementById('msg-login');
             try {
                 const res = await fetch(PLANILHA_URL + '&cache=' + Date.now());
                 const csv = await res.text();
                 const linhas = csv.split(/\r?\n/);
                 adminCache = [];
+                let localAchou = null;
                 for (let i = 1; i < linhas.length; i++) {
                     const c = linhas[i].split(',');
                     if(c.length >= 7){
                         const uO = { 
-                            user: c[0].replace(/['"]+/g,'').trim(), // Coluna A
-                            pass: c[1].replace(/['"]+/g,'').trim(), // Coluna B
-                            date: c[2].replace(/['"]+/g,'').trim(), // Coluna C
-                            wa: c[3].replace(/['"]+/g,'').trim(),   // Coluna D
-                            val: c[4].replace(/['"]+/g,'').trim(),  // Coluna E
-                            pix: c[5].replace(/['"]+/g,'').trim(),  // Coluna F (CPF/PIX)
-                            criador: c[6].replace(/['"]+/g,'').trim() // Coluna G (CRIADOR)
+                            user: c[0].replace(/['"]+/g,'').trim(),
+                            pass: c[1].replace(/['"]+/g,'').trim(),
+                            date: c[2].replace(/['"]+/g,'').trim(),
+                            wa: c[3].replace(/['"]+/g,'').trim(),
+                            val: c[4].replace(/['"]+/g,'').trim(),
+                            pix: c[5].replace(/['"]+/g,'').trim(),
+                            criador: c[6].replace(/['"]+/g,'').trim()
                         };
                         adminCache.push(uO);
-                        if(uO.user.toLowerCase() === uI && uO.pass === pI) currentUserData = uO;
+                        if(uO.user.toLowerCase() === uI && uO.pass === pI) localAchou = uO;
                     }
                 }
-                if(currentUserData){
+                
+                if(localAchou){
+                    const dV = formatarData(localAchou.date); dV.setHours(0,0,0,0);
+                    const hoje = new Date(); hoje.setHours(0,0,0,0);
+                    const diff = Math.ceil((dV - hoje) / 86400000);
+
+                    // TRAVA DE SEGURANÇA: BLOQUEIO DE EXPIRADOS
+                    if(diff < 0 && localAchou.user.toLowerCase() !== 'admin') {
+                        msg.innerText = "Seu acesso expirou. Entre em contato com o suporte.";
+                        localStorage.removeItem(SESSION_KEY);
+                        return;
+                    }
+
+                    currentUserData = localAchou;
                     localStorage.setItem(SESSION_KEY, JSON.stringify({user: uI, pass: pI}));
                     if(!db[currentUserData.user]) db[currentUserData.user] = {links:[], salvos:[]};
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('app-screen').classList.remove('hidden');
                     document.getElementById('ola-user').innerText = "Olá, " + currentUserData.user;
-                    const dV = formatarData(currentUserData.date); dV.setHours(0,0,0,0);
-                    const hoje = new Date(); hoje.setHours(0,0,0,0);
-                    const diff = Math.ceil((dV - hoje) / 86400000);
                     document.getElementById('status-acesso').innerText = "Vence: " + currentUserData.date;
                     if(diff <= 5 && currentUserData.user.toLowerCase() !== 'admin') {
                         document.getElementById('vencimento-alert').style.display = 'block';
@@ -205,8 +217,8 @@
                     }
                     if(currentUserData.user.toLowerCase() === 'admin' || currentUserData.pix.toLowerCase() === 'master') document.getElementById('btn-open-admin').classList.remove('hidden');
                     renderizar();
-                }
-            } catch(e) { console.error(e); }
+                } else { msg.innerText = "Dados incorretos."; localStorage.removeItem(SESSION_KEY); }
+            } catch(e) { msg.innerText = "Erro ao conectar."; }
         }
 
         function renderizar() {
@@ -231,26 +243,13 @@
                 const dV = formatarData(u.date); dV.setHours(0,0,0,0);
                 const diff = Math.ceil((dV - hoje) / 86400000), cor = diff <= 5 ? "#ef4444" : "#3b82f6";
                 const div = document.createElement('div'); div.className = 'user-row';
-                div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items: flex-start;">
-                        <div style="max-width: 65%;">
-                            <strong style="font-size:14px;">${u.user}</strong><br>
-                            <span class="creator-badge">Criador: ${u.criador}</span><br>
-                            <span class="pix-badge">PIX: ${u.pix}</span><br>
-                            <small style="color:#10b981">📱 ${u.wa}</small> | <small style="color:#166534">💰 ${u.val}</small>
-                        </div>
-                        <div style="text-align:right; color:${cor}; font-weight:bold; font-size:11px;">${diff < 0 ? 'Expirado' : diff + ' dias'}</div>
-                    </div>
-                    <div style="margin-top:10px; display:flex; gap:3px; flex-wrap:wrap;">
-                        <button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button>
-                        <button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Dados</button>
-                    </div>`;
+                div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items: flex-start;"><div style="max-width: 65%;"><strong style="font-size:14px;">${u.user}</strong><br><span class="creator-badge">Criador: ${u.criador}</span><br><span class="pix-badge">PIX: ${u.pix}</span><br><small style="color:#10b981">📱 ${u.wa}</small> | <small style="color:#166534">💰 ${u.val}</small></div><div style="text-align:right; color:${cor}; font-weight:bold; font-size:11px;">${diff < 0 ? 'Expirado' : diff + ' dias'}</div></div><div style="margin-top:10px; display:flex; gap:3px; flex-wrap:wrap;"><button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button><button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Dados</button></div>`;
                 lista.appendChild(div);
             });
         }
         function filtrarUsuarios() { const termo = document.getElementById('search-user').value.toLowerCase(); document.querySelectorAll('.user-row').forEach(row => row.style.display = row.innerText.toLowerCase().includes(termo) ? 'block' : 'none'); }
         function abrirModalRenovar() { document.getElementById('pix-display').innerText = currentUserData.pix; document.getElementById('modal-renovar').classList.add('show'); }
-        function copiarPixReal() { const t = document.getElementById('pix-display').innerText; const el = document.createElement("input"); el.value = t; document.body.appendChild(el); el.select(); el.setSelectionRange(0, 99999); document.execCommand("copy"); document.body.removeChild(el); alert("Copiado!"); }
+        function copiarPixReal() { const t = document.getElementById('pix-display').innerText; const el = document.createElement("input"); el.value = t; document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el); alert("Copiado!"); }
         function baixarSalvos() { const u = currentUserData.user; if(!db[u].salvos.length) return alert("Nada para extrair."); const blob = new Blob([db[u].salvos.join('\n')], {type: 'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `extraidos.txt`; a.click(); }
         function limparPendentes() { if(confirm("Apagar pendentes?")) { db[currentUserData.user].links = []; pgPend = 0; renderizar(); } }
         function limparSalvos() { if(confirm("Limpar salvos?")) { db[currentUserData.user].salvos = []; pgSalv = 0; renderizar(); } }
