@@ -11,10 +11,8 @@
         * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; transition: 0.3s; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
-        
         input, textarea, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; color: #333; }
         body.dark-mode input { background: #374151; color: white; border-color: #4b5563; }
-        
         button { width: 100%; padding: 12px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         button:hover { filter: brightness(0.9); transform: translateY(-2px); }
         button.secondary { background: #e5e7eb; color: #333; }
@@ -22,20 +20,15 @@
         button.admin-btn { background: var(--text); color: var(--card); }
         button.chat-btn { background: #25d366; color: white; }
         button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
-        
         .btn-auto { width: auto !important; padding: 6px 12px; font-size: 12px; margin: 2px; flex-shrink: 0; }
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        
-        /* AJUSTE PARA LINKS MOBILE NÃO PASSAREM DA BORDA */
         .card { background: var(--card); border: 1px solid #e5e7eb; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; overflow: hidden; }
         .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; min-width: 0; word-break: break-all; }
-
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:1000; }
         .modal-overlay.show { display:flex; }
         .modal-content { background:var(--card); padding:20px; border-radius:20px; width:95%; max-width:550px; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; }
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
-        .pay-key { font-family: monospace; font-size: 14px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 10px 0; word-break: break-all; }
-        
+        .pay-key { font-family: monospace; font-size: 14px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
         .user-row { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: rgba(0,0,0,0.02); }
         .creator-badge { font-size: 9px; font-weight: bold; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
         .pix-badge { font-size: 9px; font-weight: bold; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
@@ -86,7 +79,6 @@
                     <button onclick="document.getElementById('file').click()" class="secondary btn-auto">📂 Arquivo</button>
                     <input type="file" id="file" accept=".txt" hidden onchange="lerArquivo(this)">
                 </div>
-
                 <div id="save-prompt" class="save-prompt">
                     <div style="overflow: hidden; flex: 1;">
                         <span style="font-size: 11px; font-weight: bold;">Salvar anterior?</span>
@@ -179,7 +171,16 @@
                 for (let i = 1; i < linhas.length; i++) {
                     const c = linhas[i].split(',');
                     if(c.length >= 7){
-                        const uO = { user: c[0].replace(/['"]+/g,'').trim(), pass: c[1].replace(/['"]+/g,'').trim(), date: c[2].replace(/['"]+/g,'').trim(), wa: c[3].replace(/['"]+/g,'').trim(), val: c[4].replace(/['"]+/g,'').trim(), pix: c[5].replace(/['"]+/g,'').trim(), criador: c[6].replace(/['"]+/g,'').trim() };
+                        // OPÇÃO DAS COLUNAS DA PLANILHA (SEPARADAS PARA FACILITAR)
+                        const uO = { 
+                            user: c[0].replace(/['"]+/g,'').trim(), // Coluna A
+                            pass: c[1].replace(/['"]+/g,'').trim(), // Coluna B
+                            date: c[2].replace(/['"]+/g,'').trim(), // Coluna C
+                            wa: c[3].replace(/['"]+/g,'').trim(),   // Coluna D
+                            val: c[4].replace(/['"]+/g,'').trim(),  // Coluna E
+                            criador: c[6].replace(/['"]+/g,'').trim(),  // Coluna G (CRIADOR)
+                            pix: c[7].replace(/['"]+/g,'').trim() // Coluna G (Pix)
+                        };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) currentUserData = uO;
                     }
@@ -217,7 +218,6 @@
         }
 
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
-        
         function abrirAdminPanel() {
             document.getElementById('modal-admin').classList.add('show');
             const lista = document.getElementById('admin-users-list'); lista.innerHTML = '';
@@ -244,14 +244,9 @@
                 lista.appendChild(div);
             });
         }
-
-        function filtrarUsuarios() {
-            const termo = document.getElementById('search-user').value.toLowerCase();
-            document.querySelectorAll('.user-row').forEach(row => row.style.display = row.innerText.toLowerCase().includes(termo) ? 'block' : 'none');
-        }
-
+        function filtrarUsuarios() { const termo = document.getElementById('search-user').value.toLowerCase(); document.querySelectorAll('.user-row').forEach(row => row.style.display = row.innerText.toLowerCase().includes(termo) ? 'block' : 'none'); }
         function abrirModalRenovar() { document.getElementById('pix-display').innerText = currentUserData.pix; document.getElementById('modal-renovar').classList.add('show'); }
-        function copiarPixReal() { const t = document.getElementById('pix-display').innerText; const el = document.createElement("input"); el.value = t; document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el); alert("Copiado!"); }
+        function copiarPixReal() { const t = document.getElementById('pix-display').innerText; const el = document.createElement("input"); el.value = t; document.body.appendChild(el); el.select(); el.setSelectionRange(0, 99999); document.execCommand("copy"); document.body.removeChild(el); alert("Copiado!"); }
         function baixarSalvos() { const u = currentUserData.user; if(!db[u].salvos.length) return alert("Nada para extrair."); const blob = new Blob([db[u].salvos.join('\n')], {type: 'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `extraidos.txt`; a.click(); }
         function limparPendentes() { if(confirm("Apagar pendentes?")) { db[currentUserData.user].links = []; pgPend = 0; renderizar(); } }
         function limparSalvos() { if(confirm("Limpar salvos?")) { db[currentUserData.user].salvos = []; pgSalv = 0; renderizar(); } }
