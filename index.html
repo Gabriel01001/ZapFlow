@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador |WA|</title>
+    <title>ZapFlow | Gestão V36</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><path d=%22M55 20 L35 50 L50 50 L45 80 L65 50 L50 50 L55 20 Z%22 fill=%22white%22/></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -14,27 +14,39 @@
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
         
-        /* Ajuste na altura do campo de texto */
         input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; resize: none; }
-        
         button { width: 100%; padding: 12px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         button:hover { filter: brightness(0.9); transform: translateY(-2px); }
         button.secondary { background: #e5e7eb; color: var(--text); }
         button.danger { background: var(--danger); }
+        button.admin-btn { background: var(--text); color: white; }
         button.edit-btn { background: var(--blue); }
-        .btn-auto { width: auto !important; padding: 6px 12px; font-size: 12px; margin: 2px; flex-shrink: 0; }
+        button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
+        button.chat-btn { background: #25d366; color: white; }
+        button.sheet-btn { background: #107c10; color: white; margin-bottom: 10px; }
         
+        .btn-auto { width: auto !important; padding: 6px 12px; font-size: 12px; margin: 2px; flex-shrink: 0; }
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
         .card { background: #fff; border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; }
         .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; color: var(--text); }
 
-        /* Novo estilo para o prompt de salvamento abaixo dos botões */
-        .save-prompt { background: #eff6ff; color: #1e40af; padding: 12px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 15px; display: none; align-items: center; justify-content: space-between; gap: 10px; animation: fadeIn 0.3s ease; }
+        /* Ajuste do Save Prompt */
+        .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; font-size: 13px; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Estilos do Modal */
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:1000; }
+        .modal-overlay.show { display:flex; }
+        .modal-content { background:white; padding:30px; border-radius:20px; width:95%; max-width:500px; max-height:90vh; overflow-y:auto; position:relative; }
+        .close-modal { position:absolute; top:20px; right:20px; cursor:pointer; font-size:24px; color:#999; }
+        .user-row { border: 1px solid #eee; padding: 10px; margin-bottom: 8px; border-radius: 8px; background: #f9fafb; }
+        .user-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 5px; }
+        .user-actions { display: flex; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 8px; flex-wrap: wrap; gap: 5px; }
+        .value-badge { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #86efac; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -56,7 +68,10 @@
                     <h3 id="ola-user" style="margin:0">...</h3>
                     <small id="status-acesso" style="color: #666;">...</small>
                 </div>
-                <button onclick="logout()" class="danger btn-auto">Sair</button>
+                <div style="text-align: right;">
+                    <button id="btn-open-admin" class="admin-btn btn-auto hidden" onclick="abrirAdminPanel()">⚙️ Admin</button>
+                    <button onclick="logout()" class="danger btn-auto">Sair</button>
+                </div>
             </div>
 
             <div style="background: #f9fafb; padding: 15px; border-radius: var(--radius); margin-bottom: 20px; border: 1px solid #e5e7eb;">
@@ -69,13 +84,13 @@
                 </div>
 
                 <div id="save-prompt" class="save-prompt">
-                    <div style="font-size: 13px;">
-                        <strong>Salvar último link?</strong>
-                        <div id="last-link-opened" style="opacity: 0.7; font-size: 11px; max-width: 150px; overflow: hidden; text-overflow: ellipsis;"></div>
+                    <div style="display: flex; flex-direction: column; overflow: hidden; flex: 1;">
+                        <span style="font-size: 12px; font-weight: bold;">Salvar anterior?</span>
+                        <span id="last-link-opened" style="font-size: 10px; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></span>
                     </div>
-                    <div style="display: flex; gap: 5px;">
-                        <button onclick="confirmarSalvamento(true)" class="edit-btn btn-auto" style="padding: 4px 10px;">Sim</button>
-                        <button onclick="confirmarSalvamento(false)" class="secondary btn-auto" style="padding: 4px 10px;">Não</button>
+                    <div style="display: flex; gap: 4px;">
+                        <button onclick="confirmarSalvamento(true)" class="edit-btn btn-auto" style="padding: 4px 12px;">Sim</button>
+                        <button onclick="confirmarSalvamento(false)" class="secondary btn-auto" style="padding: 4px 12px;">Não</button>
                     </div>
                 </div>
             </div>
@@ -94,6 +109,16 @@
         </div>
     </div>
 
+    <div id="modal-admin" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span>
+            <h2 style="color: var(--dark); margin-top:0;">⚙️ Admin Master</h2>
+            <button onclick="window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank')" class="sheet-btn">📂 Abrir Planilha</button>
+            <h4>Usuários</h4>
+            <div id="admin-users-list" style="max-height: 400px; overflow-y: auto;">Carregando...</div>
+        </div>
+    </div>
+
     <script>
         const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/export?format=csv';
         const DB_KEY = 'zapflow_v36';
@@ -102,21 +127,63 @@
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         let currentUser = null;
         let lastOpenedLink = "";
+        let adminCache = [];
         let paginaAtualPend = 0;
         let paginaAtualSalv = 0;
         const ITENS_POR_PAGINA = 5;
 
         function salvarLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
-        // Lógica de abrir e pedir salvamento
+        function parseDataBR(dataStr) {
+            if (!dataStr) return new Date();
+            let clean = dataStr.toString().replace(/['"]+/g, '').trim();
+            if (clean.includes('/')) {
+                const parts = clean.split('/');
+                if (parts.length === 3) return new Date(parts[2], parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+            }
+            return new Date(clean);
+        }
+
+        async function conectarBanco(silencioso = false) {
+            const uInput = document.getElementById('user').value.trim().toLowerCase();
+            const pInput = document.getElementById('pass').value.trim();
+            if(!uInput || !pInput) return;
+            if(!silencioso) { document.getElementById('loading').style.display = 'block'; }
+            try {
+                const response = await fetch(PLANILHA_URL + '&cache=' + new Date().getTime());
+                const csvData = await response.text();
+                const linhas = csvData.split(/\r?\n/);
+                let achou = null; adminCache = [];
+                for (let i = 1; i < linhas.length; i++) {
+                    const cols = linhas[i].split(',');
+                    if (cols.length >= 3) {
+                        const pu = (cols[0] || '').replace(/['"]+/g, '').trim();
+                        const pp = (cols[1] || '').replace(/['"]+/g, '').trim();
+                        const pd = (cols[2] || '').replace(/['"]+/g, '').trim();
+                        adminCache.push({user: pu, pass: pp, date: pd, zap: cols[3], val: cols[4]});
+                        if (pu.toLowerCase() === uInput && pp === pInput) achou = { user: pu, validade: pd };
+                    }
+                }
+                if (achou) {
+                    currentUser = achou.user;
+                    if (!db[currentUser]) db[currentUser] = { links: [], salvos: [] };
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('app-screen').classList.remove('hidden');
+                    document.getElementById('ola-user').innerText = "Olá, " + currentUser;
+                    document.getElementById('status-acesso').innerText = "Vencimento: " + achou.validade;
+                    if(currentUser === 'admin') document.getElementById('btn-open-admin').classList.remove('hidden');
+                    renderizar();
+                } else { alert("Incorreto"); }
+            } catch (err) { alert("Erro conexão"); }
+            document.getElementById('loading').style.display = 'none';
+        }
+
         function tratarAberturaLink(indexReal, link) {
             lastOpenedLink = link;
             let url = link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`;
             window.open(url);
-            
             db[currentUser].links.splice(indexReal, 1);
             salvarLocal();
-            
             document.getElementById('last-link-opened').innerText = link;
             document.getElementById('save-prompt').style.display = 'flex';
             renderizar();
@@ -132,76 +199,52 @@
             renderizar();
         }
 
-        // --- Funções Base (Adicionar, Login, Render) ---
-        async function conectarBanco(silencioso = false) {
-            const uInput = document.getElementById('user').value.trim().toLowerCase();
-            const pInput = document.getElementById('pass').value.trim();
-            if(!uInput || !pInput) return;
-            try {
-                const response = await fetch(PLANILHA_URL + '&cache=' + new Date().getTime());
-                const csvData = await response.text();
-                const linhas = csvData.split(/\r?\n/);
-                let achou = null;
-                for (let i = 1; i < linhas.length; i++) {
-                    const cols = linhas[i].split(',');
-                    if (cols.length >= 3) {
-                        const pu = (cols[0] || '').replace(/['"]+/g, '').trim();
-                        const pp = (cols[1] || '').replace(/['"]+/g, '').trim();
-                        if (pu.toLowerCase() === uInput && pp === pInput) achou = { user: pu, validade: cols[2] };
-                    }
-                }
-                if (achou) {
-                    currentUser = achou.user;
-                    if (!db[currentUser]) db[currentUser] = { links: [], salvos: [] };
-                    document.getElementById('login-screen').classList.add('hidden');
-                    document.getElementById('app-screen').classList.remove('hidden');
-                    document.getElementById('ola-user').innerText = "Olá, " + currentUser;
-                    document.getElementById('status-acesso').innerText = "Acesso Ativo";
-                    renderizar();
-                } else { alert("Usuário/Senha incorretos"); }
-            } catch (err) { alert("Erro de conexão"); }
+        function abrirAdminPanel() {
+            document.getElementById('modal-admin').classList.add('show');
+            const list = document.getElementById('admin-users-list');
+            list.innerHTML = '';
+            adminCache.forEach(u => {
+                if(u.user === 'admin') return;
+                const div = document.createElement('div');
+                div.className = 'user-row';
+                div.innerHTML = `<div class="user-head"><strong>${u.user}</strong> <span>${u.date}</span></div>`;
+                list.appendChild(div);
+            });
         }
 
+        function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
         function logout() { location.reload(); }
-
         function addLinks() {
             const t=document.getElementById('links-input'); 
             t.value.split('\n').forEach(l=>{if(l.trim()) db[currentUser].links.push(l.trim());});
             t.value=''; salvarLocal(); renderizar();
         }
-
         function lerArquivo(i) {
             const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUser].links.push(l.trim())});salvarLocal();renderizar();};
             r.readAsText(i.files[0]); i.value='';
         }
-
         function baixarSalvos() {
             const b=new Blob([db[currentUser].salvos.join('\n')],{type:"text/plain"});
             const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="salvos.txt"; a.click();
         }
-
         function limparSalvos(){ if(confirm("Limpar?")){db[currentUser].salvos=[]; salvarLocal(); renderizar();}}
 
         function renderizar() {
             const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos');
             const pgP = document.getElementById('paginacao-pend'), pgS = document.getElementById('paginacao-salv');
             p.innerHTML = ''; s.innerHTML = '';
-            
             const totalPend = db[currentUser]?.links.length || 0;
             const totalSalv = db[currentUser]?.salvos.length || 0;
             document.getElementById('count-pend').innerText = totalPend;
             document.getElementById('count-saved').innerText = totalSalv;
-
             const inicioP = paginaAtualPend * ITENS_POR_PAGINA;
             db[currentUser]?.links.slice(inicioP, inicioP + ITENS_POR_PAGINA).forEach((l, i) => {
                 p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button onclick="tratarAberturaLink(${inicioP + i}, '${l}')" class="btn-auto">Abrir ↗</button></div>`;
             });
-
             const inicioS = paginaAtualSalv * ITENS_POR_PAGINA;
             db[currentUser]?.salvos.slice(inicioS, inicioS + ITENS_POR_PAGINA).forEach((l, i) => {
                 s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button onclick="db['${currentUser}'].salvos.splice(${inicioS + i},1);salvarLocal();renderizar();" class="danger btn-auto">X</button></div>`;
             });
-
             renderControles(pgP, totalPend, paginaAtualPend, (n) => { paginaAtualPend = n; renderizar(); });
             renderControles(pgS, totalSalv, paginaAtualSalv, (n) => { paginaAtualSalv = n; renderizar(); });
         }
