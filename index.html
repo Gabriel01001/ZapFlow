@@ -40,7 +40,6 @@
         .user-row { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: #f9fafb; }
         .user-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
         .user-info-text { display: flex; flex-direction: column; gap: 2px; }
-        .user-actions { display: flex; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 8px; gap: 5px; flex-wrap: wrap; }
         .copy-box { background: #e0e7ff; color: #3730a3; padding: 10px; border-radius: 8px; font-family: monospace; word-break: break-all; margin: 10px 0; font-size: 11px; border: 1px dashed #6366f1; display: none; }
         
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; font-size: 13px; }
@@ -68,16 +67,6 @@
         </div>
 
         <div id="app-screen" class="hidden">
-            <div id="vencimento-alert" class="card" style="background: #fff7ed; border: 1px solid #fdba74; display: none; margin-bottom: 20px; padding: 15px;">
-                <div style="display:flex; align-items:center; gap:10px; justify-content: space-between; width: 100%;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size:20px;">⚠️</span>
-                        <div style="font-size: 13px;">Seu acesso expira em <span id="dias-restantes-alerta" style="font-weight: bold;">0</span> dias.</div>
-                    </div>
-                    <button onclick="abrirModalRenovar()" class="vip-btn btn-auto">Renovar Agora</button>
-                </div>
-            </div>
-
             <div class="header">
                 <div>
                     <h3 id="ola-user" style="margin:0">...</h3>
@@ -127,23 +116,6 @@
         </div>
     </div>
 
-    <div id="modal-renovar" class="modal-overlay">
-        <div class="modal-content" style="max-width: 400px;">
-            <span class="close-modal" onclick="fecharModal('modal-renovar')">&times;</span>
-            <h3 style="text-align: center; color: var(--primary);">💎 Renovar Acesso</h3>
-            <div class="pay-card">
-                <div style="font-size: 12px; font-weight: bold; color: var(--dark); margin-bottom: 5px;">CHAVE PIX (CPF)</div>
-                <div class="pay-key">144.352.427-10</div>
-                <div style="font-size: 13px; line-height: 1.5;">
-                    ✅ <strong>Gabriel Martins Barbosa</strong><br>
-                    🏛️ <strong>Nu Bank</strong>
-                </div>
-            </div>
-            <button onclick="copiarPix()" class="chat-btn" style="border-radius: 50px; margin-bottom: 10px; width:100%">📋 Copiar Chave PIX</button>
-            <button onclick="window.open('https://wa.me/5521970458286?text=Enviei o comprovante de renovação')" class="secondary" style="width:100%">📤 Enviar Comprovante</button>
-        </div>
-    </div>
-
     <div id="modal-admin" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span>
@@ -156,11 +128,12 @@
     <div id="modal-edit-user" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="fecharModal('modal-edit-user')">&times;</span>
-            <h3 id="edit-modal-title">✏️ Criar/Editar Usuário</h3>
+            <h3 id="edit-modal-title">✏️ Gestão de Usuário</h3>
             <label>Tipo de Conta</label>
             <select id="edit-type">
                 <option value="user">Usuário Comum</option>
                 <option value="revenda">Revendedor</option>
+                <option value="master">Master</option>
             </select>
             <label>Usuário</label><input type="text" id="edit-name">
             <label>Senha</label><input type="text" id="edit-pass">
@@ -169,11 +142,7 @@
                 <div style="flex:1;"><label>Valor R$</label><input type="text" id="edit-val"></div>
             </div>
             <label>Validade</label><input type="date" id="edit-date">
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <button onclick="somarDiasEdicao(30)" class="secondary btn-auto">+30 Dias</button>
-                <button onclick="somarDiasEdicao(15)" class="secondary btn-auto">+15 Dias</button>
-            </div>
-            <button onclick="copiarLinhaPlanilha()" class="admin-btn">💾 Gerar Linha para Planilha</button>
+            <button onclick="copiarLinhaPlanilha()" class="admin-btn">💾 Gerar Linha Planilha</button>
             <div id="manual-copy-box" class="copy-box"></div>
         </div>
     </div>
@@ -182,7 +151,7 @@
         const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/export?format=csv';
         const DB_KEY = 'zapflow_v36';
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        let currentUser = null, currentUserData = null, lastOpenedLink = "", adminCache = [];
+        let currentUser = null, currentUserData = null, adminCache = [];
         let pgPend = 0, pgSalv = 0; const ITENS = 5;
 
         function salvarLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
@@ -192,7 +161,7 @@
             const uInput = document.getElementById('user').value.trim().toLowerCase();
             const pInput = document.getElementById('pass').value.trim();
             const msg = document.getElementById('msg-login'), btn = document.getElementById('btn-login'), loader = document.getElementById('loading-login');
-            if(!uInput || !pInput) { msg.innerText = "Preencha tudo."; return; }
+            
             msg.innerText = ""; btn.style.display = "none"; loader.style.display = "block";
 
             try {
@@ -200,6 +169,7 @@
                 const csv = await res.text();
                 const linhas = csv.split(/\r?\n/);
                 let achou = null; adminCache = [];
+
                 for (let i = 1; i < linhas.length; i++) {
                     const c = linhas[i].split(',');
                     if(c.length >= 3){
@@ -216,32 +186,25 @@
                         if(uO.user.toLowerCase() === uInput && uO.pass === pInput) achou = uO;
                     }
                 }
+
                 if(achou){
                     currentUser = achou.user;
                     currentUserData = achou;
                     if(!db[currentUser]) db[currentUser] = {links:[], salvos:[]};
+                    
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('app-screen').classList.remove('hidden');
                     document.getElementById('ola-user').innerText = "Olá, " + currentUser;
                     document.getElementById('status-acesso').innerText = "Vence: " + achou.date;
                     
-                    const hoje = new Date(); hoje.setHours(0,0,0,0);
-                    const vDate = parseDataBR(achou.date);
-                    const diff = Math.ceil((vDate - hoje) / (1000 * 60 * 60 * 24));
-                    if(diff <= 5 && achou.type === 'user') {
-                        document.getElementById('vencimento-alert').style.display = 'block';
-                        document.getElementById('dias-restantes-alerta').innerText = diff;
-                    }
-
+                    // REQUISITO: O painel só aparece se o tipo for 'master' ou 'revenda'
                     if(achou.type === 'master' || achou.type === 'revenda') {
                         document.getElementById('btn-open-admin').classList.remove('hidden');
-                        document.getElementById('admin-title').innerText = achou.type === 'master' ? "⚙️ Painel Master" : "⚙️ Painel Revendedor";
                         if(achou.type === 'master') document.getElementById('btn-sheet').classList.remove('hidden');
                     }
                     renderizar();
-                } else { msg.innerText = "Incorreto."; }
-            } catch(e) { msg.innerText = "Erro conectar."; }
-            btn.style.display = "block"; loader.style.display = "none";
+                } else { msg.innerText = "Incorreto."; btn.style.display = "block"; loader.style.display = "none"; }
+            } catch(e) { msg.innerText = "Erro conectar."; btn.style.display = "block"; loader.style.display = "none"; }
         }
 
         function abrirAdminPanel() {
@@ -251,6 +214,7 @@
             const hoje = new Date(); hoje.setHours(0,0,0,0);
             
             adminCache.forEach((u, idx) => {
+                // Filtro Hierárquico
                 if(currentUserData.type === 'revenda' && u.criador !== currentUser) return;
                 if(u.user.toLowerCase() === 'admin' || u.user === currentUser) return;
 
@@ -265,25 +229,17 @@
                         <div class="user-info-text">
                             <strong>${u.user}</strong>
                             ${u.type === 'revenda' ? '<span class="revenda-badge">REVENDEDOR</span>' : ''}
-                            ${currentUserData.type === 'master' ? `<small style="color:#6b7280">Criado por: <b>${u.criador}</b></small>` : ''}
-                            <small style="color:#10b981">📱 ${u.wa}</small>
+                            ${currentUserData.type === 'master' ? `<small>Por: ${u.criador}</small>` : ''}
                         </div>
-                        <div style="text-align: right;">
-                            <span style="font-size:11px; font-weight:bold; color:${corVenc};">${u.date}</span><br>
-                            <small style="font-size:9px; font-weight:bold; color:${corVenc};">${diffDays<0?'Expirado':diffDays+' dias'}</small>
-                        </div>
+                        <div style="text-align: right;"><span style="color:${corVenc}; font-weight:bold;">${u.date}</span></div>
                     </div>
-                    <div class="user-actions">
-                        <button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button>
-                        <button class="edit-btn btn-auto" onclick="prepararEdicao(${idx})">✏️ Editar</button>
-                    </div>`;
+                    <div class="user-actions"><button class="edit-btn btn-auto" onclick="prepararEdicao(${idx})">✏️ Editar</button></div>`;
                 lista.appendChild(div);
             });
         }
 
         function prepararEdicao(idx) {
             const u = adminCache[idx];
-            document.getElementById('edit-modal-title').innerText = "✏️ Editar Usuário";
             document.getElementById('edit-name').value = u.user;
             document.getElementById('edit-pass').value = u.pass;
             document.getElementById('edit-wa').value = u.wa;
@@ -296,39 +252,18 @@
         }
 
         function copiarLinhaPlanilha() {
-            const n = document.getElementById('edit-name').value;
-            const p = document.getElementById('edit-pass').value;
-            const d = document.getElementById('edit-date').value.split('-').reverse().join('/');
-            const w = document.getElementById('edit-wa').value;
-            const v = document.getElementById('edit-val').value;
-            const t = document.getElementById('edit-type').value;
-            const criador = currentUser; 
-
-            const csv = `${n},${p},${d},${w},${v},${t},${criador}`;
+            const csv = `${document.getElementById('edit-name').value},${document.getElementById('edit-pass').value},${document.getElementById('edit-date').value.split('-').reverse().join('/')},${document.getElementById('edit-wa').value},${document.getElementById('edit-val').value},${document.getElementById('edit-type').value},${currentUser}`;
             const box = document.getElementById('manual-copy-box');
             box.innerText = csv; box.style.display = 'block';
-            navigator.clipboard.writeText(csv).then(() => alert("Copiado! Cole na planilha."));
+            navigator.clipboard.writeText(csv).then(() => alert("Copiado!"));
         }
 
-        function tratarAberturaLink(idx, link) {
-            lastOpenedLink = link;
-            window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`);
-            db[currentUser].links.splice(idx, 1); salvarLocal();
-            document.getElementById('last-link-opened').innerText = link;
-            document.getElementById('save-prompt').style.display = 'flex';
-            renderizar();
-        }
-        function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { db[currentUser].salvos.push(lastOpenedLink); salvarLocal(); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
-        function limparPendentes() { if(confirm("Limpar pendentes?")){ db[currentUser].links = []; salvarLocal(); renderizar(); } }
-        function limparSalvos(){ if(confirm("Limpar salvos?")){db[currentUser].salvos=[]; salvarLocal(); renderizar();}}
-        function somarDiasEdicao(n) { const i = document.getElementById('edit-date'); let d = new Date(i.value || new Date()); d.setDate(d.getDate() + n); i.value = d.toISOString().split('T')[0]; }
         function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
         function logout() { location.reload(); }
         function addLinks() { const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUser].links.push(l.trim())}); t.value=''; salvarLocal(); renderizar(); }
-        function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUser].links.push(l.trim())});salvarLocal();renderizar();}; r.readAsText(i.files[0]); i.value=''; }
+        function limparPendentes() { db[currentUser].links = []; salvarLocal(); renderizar(); }
+        function limparSalvos(){ db[currentUser].salvos=[]; salvarLocal(); renderizar(); }
         function baixarSalvos() { const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([db[currentUser].salvos.join('\n')],{type:"text/plain"})); a.download="salvos.txt"; a.click(); }
-        function copiarPix() { navigator.clipboard.writeText("144.352.427-10"); alert("Copiado!"); }
-        function abrirModalRenovar() { document.getElementById('modal-renovar').classList.add('show'); }
 
         function renderizar() {
             const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos');
@@ -349,6 +284,8 @@
             const max = Math.ceil(total/ITENS);
             div.innerHTML = max <= 1 ? '' : `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`;
         }
+        
+        function tratarAberturaLink(idx, link) { window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`); db[currentUser].links.splice(idx, 1); salvarLocal(); renderizar(); }
     </script>
 </body>
 </html>
