@@ -139,7 +139,7 @@
             <span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span>
             <h2 style="color: var(--dark); margin:0 0 15px 0;">⚙️ Painel Master</h2>
             <button onclick="window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank')" class="admin-btn btn-auto" style="background: #107c10; width: 100%; margin-bottom: 15px;">📂 Abrir Planilha Google</button>
-            <div id="admin-users-list" style="margin-top: 15px;"></div>
+            <div id="admin-users-list"></div>
         </div>
     </div>
 
@@ -210,8 +210,8 @@
                             date: (c[2]||"").replace(/['"]+/g, '').trim(), 
                             wa: (c[3]||"").replace(/['"]+/g, '').trim(),
                             val: (c[4]||"").replace(/['"]+/g, '').trim(),
-                            type: (c[5]||"user").replace(/['"]+/g, '').trim().toLowerCase(),
-                            criador: (c[6]||"").replace(/['"]+/g, '').trim() // AGORA TRATADO COMO CRIADOR
+                            criador: (c[8]||"").replace(/['"]+/g, '').trim(), // Coluna F (índice 5)
+                            pix: (c[7]||"").replace(/['"]+/g, '').trim() // Coluna G (índice 7)
                         };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) achou = uO;
@@ -236,7 +236,8 @@
                         document.getElementById('dias-restantes-alerta').innerText = diff;
                     }
 
-                    if(achou.type === 'master' || achou.type === 'revenda' || currentUser.toLowerCase() === 'admin') {
+                    // A lógica do botão admin agora usa o login do admin ou a permissão "master" em pix (Coluna F)
+                    if(currentUser.toLowerCase() === 'admin' || achou.pix.toLowerCase() === 'master') {
                         document.getElementById('btn-open-admin').classList.remove('hidden');
                     }
                     renderizar();
@@ -246,8 +247,8 @@
         }
 
         function abrirModalRenovar() { 
-            // NO POP-UP DE RENOVAÇÃO A CHAVE PIX É O CONTEÚDO DA COLUNA G
-            document.getElementById('pix-display').innerText = currentUserData.criador || "Chave não cadastrada";
+            // Injeta o CPF da Coluna F no pop-up
+            document.getElementById('pix-display').innerText = currentUserData.pix || "Chave não cadastrada";
             document.getElementById('modal-renovar').classList.add('show'); 
         }
 
@@ -277,7 +278,7 @@
                 let textoDias = diff < 0 ? "Expirado" : diff === 0 ? "Vence hoje" : `Faltam ${diff} dias`;
                 const div = document.createElement('div');
                 div.className = 'user-row';
-                // AQUI FOI AJUSTADO PARA MOSTRAR "CRIADOR: [NOME DA COLUNA G]"
+                // Mostra "Criador: [Conteúdo da Coluna G]" conforme solicitado
                 div.innerHTML = `<div class="user-head"><div class="user-info-text"><strong>${u.user}</strong><span class="creator-badge">Criador: ${u.criador}</span><small style="color:#10b981">📱 ${u.wa}</small></div><div style="text-align: right;"><span style="font-size:12px; font-weight:bold; color:${cor};">${textoDias}</span></div></div><div class="user-actions"><button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button><button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Dados</button><button class="edit-btn btn-auto" onclick="prepararEdicao(${idx})">✏️ Editar</button></div>`;
                 lista.appendChild(div);
             });
@@ -289,6 +290,7 @@
         function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUser].links.push(l.trim())});salvarLocal();renderizar();}; r.readAsText(i.files[0]); i.value=''; }
         function prepararEdicao(idx) { const u = adminCache[idx]; document.getElementById('edit-name').value = u.user; document.getElementById('edit-pass').value = u.pass; document.getElementById('edit-wa').value = u.wa; document.getElementById('edit-val').value = u.val; const d = formatarData(u.date); document.getElementById('edit-date').value = d.toISOString().split('T')[0]; fecharModal('modal-admin'); document.getElementById('modal-edit-user').classList.add('show'); }
         function copiarLinhaPlanilha() { const csv = `${document.getElementById('edit-name').value},${document.getElementById('edit-pass').value},${document.getElementById('edit-date').value.split('-').reverse().join('/')},${document.getElementById('edit-wa').value},${document.getElementById('edit-val').value},user,${currentUserData.criador}`; const box = document.getElementById('manual-copy-box'); box.innerText = csv; box.style.display = 'block'; navigator.clipboard.writeText(csv).then(() => alert("Copiado!")); }
+        
         function renderizar() {
             const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos');
             p.innerHTML = ''; s.innerHTML = '';
@@ -300,9 +302,11 @@
         }
         function renderControles(div, total, atual, cb) { const max = Math.ceil(total/ITENS); div.innerHTML = max <= 1 ? '' : `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
         function tratarAberturaLink(idx, link) { lastOpenedLink = link; window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`); db[currentUser].links.splice(idx, 1); salvarLocal(); document.getElementById('last-link-opened').innerText = link; document.getElementById('save-prompt').style.display = 'flex'; renderizar(); }
-        function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { db[currentUser].salvos.push(lastOpenedLink); salvarLocal(); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
+        function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { if(!db[currentUser].salvos) db[currentUser].salvos=[]; db[currentUser].salvos.push(lastOpenedLink); salvarLocal(); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
         function enviarDadosWhatsApp(idx) { const u = adminCache[idx]; const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u.user}\n🔑 *Senha:* ${u.pass}\n📅 *Vencimento:* ${u.date}\n💰 *Valor:* R$ ${u.val}`; window.open(`https://wa.me/55${u.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
     </script>
 </body>
 </html>
+
+
 
