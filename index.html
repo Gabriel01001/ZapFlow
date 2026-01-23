@@ -178,8 +178,8 @@
                             date: c[2].replace(/['"]+/g,'').trim(), // Coluna C
                             wa: c[3].replace(/['"]+/g,'').trim(),   // Coluna D
                             val: c[4].replace(/['"]+/g,'').trim(),  // Coluna E
-                            pix: c[5].replace(/['"]+/g,'').trim(),  // Coluna F (CPF/PIX)
-                            criador: c[6].replace(/['"]+/g,'').trim() // Coluna G (CRIADOR)
+                            criador: c[5].replace(/['"]+/g,'').trim(),  // Coluna G (CRIADOR)
+                            pix: c[6].replace(/['"]+/g,'').trim() // Coluna G (Pix)
                         };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) currentUserData = uO;
@@ -260,3 +260,4 @@
     </script>
 </body>
 </html>
+
