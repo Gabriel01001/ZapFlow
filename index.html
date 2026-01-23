@@ -136,7 +136,6 @@
     </div>
 
     <div id="modal-admin" class="modal-overlay"><div class="modal-content"><span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span><h2 style="color: var(--dark); margin:0 0 15px 0;">⚙️ Painel Master</h2><button onclick="window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank')" class="admin-btn btn-auto" style="background: #107c10; width: 100%; margin-bottom: 15px;">📂 Abrir Planilha Google</button><div id="admin-users-list"></div></div></div>
-    
     <div id="modal-edit-user" class="modal-overlay"><div class="modal-content"><span class="close-modal" onclick="fecharModal('modal-edit-user')">&times;</span><h3>✏️ Editar Usuário</h3><label>Usuário</label><input type="text" id="edit-name"><label>Senha</label><input type="text" id="edit-pass"><div style="display: flex; gap: 10px;"><div style="flex:1;"><label>WhatsApp</label><input type="text" id="edit-wa"></div><div style="flex:1;"><label>Valor R$</label><input type="text" id="edit-val"></div></div><label>Validade</label><input type="date" id="edit-date"><button onclick="copiarLinhaPlanilha()" class="admin-btn">💾 Gerar Linha Planilha</button><div id="manual-copy-box" style="background: #e0e7ff; color: #3730a3; padding: 10px; border-radius: 8px; font-family: monospace; word-break: break-all; margin-top: 15px; font-size: 11px; border: 1px dashed #6366f1; display: none;"></div></div></div>
 
     <script>
@@ -209,9 +208,10 @@
                     const dV = formatarData(achou.date);
                     const hoje = new Date(); hoje.setHours(0,0,0,0);
                     const diff = Math.ceil((dV - hoje) / (1000 * 60 * 60 * 24));
-                    document.getElementById('status-acesso').innerText = "Vencimento: " + achou.date;
+                    document.getElementById('status-acesso').innerText = "Vence: " + achou.date;
                     
-                    if(diff <= 5 && achou.type === 'user') {
+                    // LÓGICA DE RENOVAÇÃO CORRIGIDA: MOSTRA PARA TODOS EXCETO ADMIN MASTER
+                    if(diff <= 5 && currentUser.toLowerCase() !== 'admin') {
                         document.getElementById('vencimento-alert').style.display = 'block';
                         document.getElementById('dias-restantes-alerta').innerText = diff;
                     }
