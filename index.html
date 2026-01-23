@@ -21,7 +21,6 @@
         button.danger { background: var(--danger); }
         button.admin-btn { background: var(--text); color: white; }
         button.edit-btn { background: var(--blue); }
-        button.chat-btn { background: #25d366; color: white; }
         
         .btn-auto { width: auto !important; padding: 6px 12px; font-size: 12px; margin: 2px; flex-shrink: 0; }
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
@@ -38,13 +37,8 @@
         
         .user-row { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: #f9fafb; }
         .user-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-        .user-actions { display: flex; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 8px; gap: 5px; flex-wrap: wrap; }
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; font-size: 13px; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; display: none; margin: 10px auto; }
-        
-        .login-title { font-weight: 700; color: var(--dark); letter-spacing: -1px; margin-bottom: 30px; }
-        .login-title span { color: var(--primary); }
-        .revenda-badge { background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 6px; font-size: 9px; font-weight: bold; border: 1px solid #fde68a; margin-top: 4px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -54,13 +48,12 @@
             <div style="background: var(--primary); width: 80px; height: 80px; border-radius: 20px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
                 <span style="font-size: 40px; color: white;">⚡</span>
             </div>
-            <h2 class="login-title">Gerenciador <span>|WA|</span></h2>
+            <h2 style="font-weight: 700; color: var(--dark);">Gerenciador <span>|WA|</span></h2>
             <input type="text" id="user" placeholder="Usuário">
             <input type="password" id="pass" placeholder="Senha">
             <button id="btn-login" onclick="conectarBanco()">Entrar</button>
             <div id="loading-login" class="loader"></div>
             <p id="msg-login" style="color: red; font-size: 14px; margin-top: 10px;"></p>
-            <button onclick="window.open('https://wa.me/5521970458286?text=Olá, preciso de ajuda com o Gerenciador WA')" class="secondary btn-auto" style="margin-top: 20px; width: auto;">💬 Suporte Técnico</button>
         </div>
 
         <div id="app-screen" class="hidden">
@@ -79,15 +72,13 @@
                 <h4 style="margin: 0 0 10px 0;">📥 Adicionar Links</h4>
                 <textarea id="links-input" rows="1" placeholder="Cole links ou números..."></textarea>
                 <div style="display: flex; gap: 10px;">
-                    <button onclick="document.getElementById('file').click()" class="secondary">📂 Arquivo</button>
-                    <input type="file" id="file" accept=".txt" hidden onchange="lerArquivo(this)">
                     <button onclick="addLinks()">Carregar</button>
                 </div>
 
                 <div id="save-prompt" class="save-prompt">
                     <div style="overflow: hidden; flex: 1;">
                         <span style="font-size: 12px; font-weight: bold;">Salvar anterior?</span>
-                        <div id="last-link-opened" style="font-size: 10px; opacity: 0.7; overflow: hidden; text-overflow: ellipsis;"></div>
+                        <div id="last-link-opened" style="font-size: 10px; opacity: 0.7;"></div>
                     </div>
                     <div style="display: flex; gap: 4px;">
                         <button onclick="confirmarSalvamento(true)" class="edit-btn btn-auto">Sim</button>
@@ -96,14 +87,11 @@
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h4 style="color: var(--primary); margin:0;">Pendentes (<span id="count-pend">0</span>)</h4>
-                <button onclick="limparPendentes()" class="danger btn-auto" style="padding: 4px 8px; font-size: 10px;">🗑️ Limpar Tudo</button>
-            </div>
+            <h4 style="color: var(--primary);">Pendentes (<span id="count-pend">0</span>)</h4>
             <div id="lista-pendentes"></div>
             <div id="paginacao-pend" class="pagination-ctrl"></div>
             
-            <h4 style="color: var(--blue); margin-top: 20px;">Salvos (<span id="count-saved">0</span>)</h4>
+            <h4 style="color: var(--blue);">Salvos (<span id="count-saved">0</span>)</h4>
             <div id="lista-salvos"></div>
             <div id="paginacao-salv" class="pagination-ctrl"></div>
         </div>
@@ -112,13 +100,17 @@
     <div id="modal-admin" class="modal-overlay">
         <div class="modal-content">
             <span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span>
-            <h2 id="admin-title" style="color: var(--dark); margin:0 0 15px 0;">⚙️ Gestão</h2>
+            <h2 style="color: var(--dark); margin:0 0 15px 0;">⚙️ Gestão de Usuários</h2>
             <div id="admin-users-list"></div>
         </div>
     </div>
 
     <script>
+        // CONFIGURAÇÕES MESTRAS
         const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/export?format=csv';
+        const MODO_ADMIN_FORCADO = true; // SE ESTIVER TRUE, MOSTRA O PAINEL PARA O USUÁRIO DEFINIDO ABAIXO
+        const USUARIO_MASTER_FIXO = "admin"; // SEU USUÁRIO
+        
         const DB_KEY = 'zapflow_v36';
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         let currentUser = null, currentUserData = null, lastOpenedLink = "", adminCache = [];
@@ -126,16 +118,6 @@
 
         function salvarLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
         
-        function formatarData(dataStr) {
-            if(!dataStr) return new Date();
-            let limpa = dataStr.replace(/['"]+/g, '').trim();
-            if (limpa.includes('/')) {
-                const p = limpa.split('/');
-                return new Date(p[2], p[1] - 1, p[0]);
-            }
-            return new Date(limpa);
-        }
-
         async function conectarBanco() {
             const uI = document.getElementById('user').value.trim().toLowerCase();
             const pI = document.getElementById('pass').value.trim();
@@ -150,14 +132,12 @@
 
                 for (let i = 1; i < linhas.length; i++) {
                     const c = linhas[i].split(',');
-                    if(c.length >= 6){
+                    if(c.length >= 3){
                         const uO = { 
                             user: (c[0]||"").replace(/['"]+/g, '').trim(), 
                             pass: (c[1]||"").replace(/['"]+/g, '').trim(), 
                             date: (c[2]||"").replace(/['"]+/g, '').trim(), 
-                            wa: (c[3]||"").replace(/['"]+/g, '').trim(), 
-                            type: (c[5]||"user").replace(/['"]+/g, '').trim().toLowerCase(),
-                            criador: (c[6]||"admin").replace(/['"]+/g, '').trim().toLowerCase()
+                            type: (c[5]||"user").replace(/['"]+/g, '').trim().toLowerCase()
                         };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) achou = uO;
@@ -170,14 +150,15 @@
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('app-screen').classList.remove('hidden');
                     document.getElementById('ola-user').innerText = "Olá, " + currentUser;
-                    document.getElementById('status-acesso').innerText = "Vence: " + formatarData(achou.date).toLocaleDateString('pt-BR');
+                    document.getElementById('status-acesso').innerText = "Vencimento: " + achou.date;
                     
-                    if(achou.type === 'master' || achou.type === 'revenda') {
+                    // LÓGICA DE EXIBIÇÃO DO BOTÃO (PLANILHA OU CHAVE MESTRA)
+                    if(achou.type === 'master' || achou.type === 'revenda' || (MODO_ADMIN_FORCADO && currentUser.toLowerCase() === USUARIO_MASTER_FIXO)) {
                         document.getElementById('btn-open-admin').classList.remove('hidden');
                     }
                     renderizar();
-                } else { msg.innerText = "Dados incorretos."; }
-            } catch(e) { msg.innerText = "Erro conectar."; }
+                } else { msg.innerText = "Usuário ou senha incorretos."; }
+            } catch(e) { msg.innerText = "Erro ao carregar dados."; }
             btn.style.display = "block"; loader.style.display = "none";
         }
 
@@ -200,12 +181,11 @@
             document.getElementById('modal-admin').classList.add('show');
             const lista = document.getElementById('admin-users-list');
             lista.innerHTML = '';
-            adminCache.forEach((u, idx) => {
-                if(currentUserData.type === 'revenda' && u.criador !== currentUser.toLowerCase()) return;
-                if(u.user.toLowerCase() === 'admin' || u.user.toLowerCase() === currentUser.toLowerCase()) return;
+            adminCache.forEach(u => {
+                if(u.user.toLowerCase() === currentUser.toLowerCase()) return;
                 const div = document.createElement('div');
                 div.className = 'user-row';
-                div.innerHTML = `<div class="user-head"><strong>${u.user}</strong><span>${u.date}</span></div>`;
+                div.innerHTML = `<div class="user-head"><strong>${u.user}</strong><span>${u.date}</span></div><small>Tipo: ${u.type}</small>`;
                 lista.appendChild(div);
             });
         }
@@ -213,7 +193,6 @@
         function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
         function logout() { location.reload(); }
         function addLinks() { const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUser].links.push(l.trim())}); t.value=''; salvarLocal(); renderizar(); }
-        function limparPendentes() { db[currentUser].links = []; salvarLocal(); renderizar(); }
         function renderizar() {
             const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos');
             p.innerHTML = ''; s.innerHTML = '';
@@ -222,7 +201,7 @@
             db[currentUser]?.links.slice(pgPend*ITENS, pgPend*ITENS+ITENS).forEach((l,i) => {
                 p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button onclick="tratarAberturaLink(${pgPend*ITENS+i},'${l}')" class="btn-auto">Abrir ↗</button></div>`;
             });
-            db[currentUser]?.salvos.slice(pgSalv*ITENS, pgSalv*ITENS+ITENS).forEach((l,i) => {
+            db[currentUser]?.salvos.slice(pgSalv*ITENS, pgSalv*ITENS+ITENS).forEach(l => {
                 s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span></div>`;
             });
             renderControles(document.getElementById('paginacao-pend'), tP, pgPend, (n)=> {pgPend=n; renderizar();});
