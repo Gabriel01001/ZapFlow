@@ -14,7 +14,7 @@
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
         
-        input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; resize: none; }
+        input, textarea, select { width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; resize: none; }
         button { width: 100%; padding: 12px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         button:hover { filter: brightness(0.9); transform: translateY(-2px); }
         button.secondary { background: #e5e7eb; color: var(--text); }
@@ -34,7 +34,7 @@
 
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:1000; }
         .modal-overlay.show { display:flex; }
-        .modal-content { background:white; padding:25px; border-radius:20px; width:95%; max-width:500px; max-height:90vh; overflow-y:auto; position:relative; }
+        .modal-content { background:white; padding:25px; border-radius:20px; width:95%; max-width:550px; max-height:90vh; overflow-y:auto; position:relative; }
         .close-modal { position:absolute; top:15px; right:15px; cursor:pointer; font-size:24px; color:#999; }
         
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 20px; background: #ecfdf5; margin-bottom: 15px; }
@@ -44,30 +44,25 @@
         .user-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
         .user-info-text { display: flex; flex-direction: column; gap: 2px; }
         .user-actions { display: flex; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 8px; gap: 5px; flex-wrap: wrap; }
-        .copy-box { background: #e0e7ff; color: #3730a3; padding: 10px; border-radius: 8px; font-family: monospace; word-break: break-all; margin: 10px 0; font-size: 11px; border: 1px dashed #6366f1; display: none; }
-        
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; font-size: 13px; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; display: none; margin: 10px auto; }
-        
-        .login-title { font-weight: 700; color: var(--dark); letter-spacing: -1px; margin-bottom: 30px; }
-        .login-title span { color: var(--primary); }
-        .support-btn { background: transparent; color: #666; font-size: 13px; margin-top: 20px; border: 1px solid #ddd; width: auto; padding: 8px 20px; }
+        .creator-badge { font-size: 9px; font-weight: bold; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <div id="login-screen" style="text-align: center; max-width: 400px; margin: 40px auto;">
-            <div style="background: var(--primary); width: 80px; height: 80px; border-radius: 20px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px rgba(16, 185, 129, 0.2);">
+            <div style="background: var(--primary); width: 80px; height: 80px; border-radius: 20px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
                 <span style="font-size: 40px; color: white;">⚡</span>
             </div>
-            <h2 class="login-title">Gerenciador <span>|WA|</span></h2>
+            <h2 style="font-weight: 700; color: var(--dark);">Gerenciador <span>|WA|</span></h2>
             <input type="text" id="user" placeholder="Usuário">
             <input type="password" id="pass" placeholder="Senha">
-            <button id="btn-login" onclick="conectarBanco()">Acessar Painel</button>
+            <button id="btn-login" onclick="conectarBanco()">Entrar</button>
             <div id="loading-login" class="loader"></div>
             <p id="msg-login" style="color: red; font-size: 14px; margin-top: 10px;"></p>
-            <button onclick="window.open('https://wa.me/5521970458286?text=Olá, preciso de ajuda com o Gerenciador WA')" class="support-btn">💬 Suporte Técnico</button>
+            <button onclick="window.open('https://wa.me/5521970458286?text=Olá, preciso de ajuda com o Gerenciador WA')" class="admin-btn" style="margin-top: 20px; background: transparent; color: #666; border: 1px solid #ddd;">💬 Suporte Técnico</button>
         </div>
 
         <div id="app-screen" class="hidden">
@@ -84,21 +79,21 @@
             <div class="header">
                 <div>
                     <h3 id="ola-user" style="margin:0">...</h3>
-                    <small id="status-acesso" style="color: #666;">...</small>
+                    <small id="status-acesso" style="color: #666;"></small>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
-                    <button id="btn-open-admin" class="admin-btn btn-auto hidden" onclick="abrirAdminPanel()">⚙️ Admin</button>
+                    <button id="btn-open-admin" class="admin-btn btn-auto hidden" onclick="abrirAdminPanel()">⚙️ Painel Master</button>
                     <button onclick="logout()" class="danger btn-auto">Sair</button>
                 </div>
             </div>
 
             <div style="background: #f9fafb; padding: 15px; border-radius: var(--radius); margin-bottom: 20px; border: 1px solid #e5e7eb;">
-                <h4 style="margin: 0 0 10px 0;">📥 Adicionar</h4>
+                <h4 style="margin: 0 0 10px 0;">📥 Adicionar Links</h4>
                 <textarea id="links-input" rows="1" placeholder="Cole links ou números..."></textarea>
                 <div style="display: flex; gap: 10px;">
+                    <button onclick="addLinks()">Carregar</button>
                     <button onclick="document.getElementById('file').click()" class="secondary">📂 Arquivo</button>
                     <input type="file" id="file" accept=".txt" hidden onchange="lerArquivo(this)">
-                    <button onclick="addLinks()">Carregar</button>
                 </div>
 
                 <div id="save-prompt" class="save-prompt">
@@ -113,18 +108,11 @@
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h4 style="color: var(--primary); margin:0;">Pendentes (<span id="count-pend">0</span>)</h4>
-                <button onclick="limparPendentes()" class="danger btn-auto" style="padding: 4px 8px; font-size: 10px;">🗑️ Limpar Tudo</button>
-            </div>
+            <h4 style="color: var(--primary);">Pendentes (<span id="count-pend">0</span>)</h4>
             <div id="lista-pendentes"></div>
             <div id="paginacao-pend" class="pagination-ctrl"></div>
             
-            <h4 style="color: var(--blue); margin-top: 20px;">Salvos (<span id="count-saved">0</span>)</h4>
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <button onclick="baixarSalvos()" class="secondary btn-auto">📥 Baixar</button>
-                <button onclick="limparSalvos()" class="danger btn-auto">🗑️ Limpar</button>
-            </div>
+            <h4 style="color: var(--blue);">Salvos (<span id="count-saved">0</span>)</h4>
             <div id="lista-salvos"></div>
             <div id="paginacao-salv" class="pagination-ctrl"></div>
         </div>
@@ -136,36 +124,54 @@
             <h3 style="text-align: center; color: var(--primary);">💎 Renovar Acesso</h3>
             <div class="pay-card">
                 <div style="font-size: 12px; font-weight: bold; color: var(--dark); margin-bottom: 5px;">CHAVE PIX (CPF)</div>
-                <div class="pay-key" id="pix-key">144.352.427-10</div>
+                <div class="pay-key">144.352.427-10</div>
                 <div style="font-size: 13px; line-height: 1.5;">
                     ✅ <strong>Gabriel Martins Barbosa</strong><br>
                     🏛️ <strong>Nu Bank</strong>
                 </div>
             </div>
-            <button onclick="copiarPix()" class="chat-btn" style="border-radius: 50px; margin-bottom: 10px;">📋 Copiar Chave PIX</button>
-            <button onclick="window.open('https://wa.me/5521970458286?text=Enviei o comprovante de renovação')" class="secondary">📤 Enviar Comprovante</button>
+            <button onclick="copiarPix()" class="chat-btn" style="border-radius: 50px; margin-bottom: 10px; width:100%">📋 Copiar Chave PIX</button>
+            <button onclick="window.open('https://wa.me/5521970458286?text=Enviei o comprovante de renovação')" class="secondary" style="width:100%">📤 Enviar Comprovante</button>
         </div>
     </div>
 
-    <div id="modal-admin" class="modal-overlay"><div class="modal-content"><span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span><h2 style="color: var(--dark); margin:0 0 15px 0;">⚙️ Painel Master</h2><button onclick="window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank')" class="sheet-btn" style="background: #107c10; color: white; width: 100%;">📂 Abrir Planilha Google</button><div id="admin-users-list" style="margin-top: 15px;"></div></div></div>
-    
-    <div id="modal-edit-user" class="modal-overlay"><div class="modal-content"><span class="close-modal" onclick="fecharModal('modal-edit-user')">&times;</span><h3>✏️ Editar Usuário</h3><label>Usuário</label><input type="text" id="edit-name"><label>Senha</label><input type="text" id="edit-pass"><div style="display: flex; gap: 10px;"><div style="flex:1;"><label>WhatsApp</label><input type="text" id="edit-wa"></div><div style="flex:1;"><label>Valor R$</label><input type="text" id="edit-val"></div></div><label>Validade</label><input type="date" id="edit-date"><div style="display:flex; gap:10px; margin-bottom:15px;"><button onclick="somarDiasEdicao(30)" class="secondary btn-auto">+30 Dias</button><button onclick="somarDiasEdicao(15)" class="secondary btn-auto">+15 Dias</button></div><button onclick="copiarLinhaPlanilha()" class="admin-btn">💾 Gerar Linha Planilha</button><div id="manual-copy-box" class="copy-box"></div></div></div>
+    <div id="modal-admin" class="modal-overlay"><div class="modal-content"><span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span><h2 style="color: var(--dark); margin:0 0 15px 0;">⚙️ Painel Master</h2><button onclick="window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank')" class="admin-btn btn-auto" style="background: #107c10; width: 100%; margin-bottom: 15px;">📂 Abrir Planilha Google</button><div id="admin-users-list"></div></div></div>
+    <div id="modal-edit-user" class="modal-overlay"><div class="modal-content"><span class="close-modal" onclick="fecharModal('modal-edit-user')">&times;</span><h3>✏️ Editar Usuário</h3><label>Usuário</label><input type="text" id="edit-name"><label>Senha</label><input type="text" id="edit-pass"><div style="display: flex; gap: 10px;"><div style="flex:1;"><label>WhatsApp</label><input type="text" id="edit-wa"></div><div style="flex:1;"><label>Valor R$</label><input type="text" id="edit-val"></div></div><label>Validade</label><input type="date" id="edit-date"><button onclick="copiarLinhaPlanilha()" class="admin-btn">💾 Gerar Linha Planilha</button><div id="manual-copy-box" style="background: #e0e7ff; color: #3730a3; padding: 10px; border-radius: 8px; font-family: monospace; word-break: break-all; margin-top: 15px; font-size: 11px; border: 1px dashed #6366f1; display: none;"></div></div></div>
 
     <script>
         const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/export?format=csv';
         const DB_KEY = 'zapflow_v36';
+        const SESSION_KEY = 'zapflow_session_v36';
+        
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        let currentUser = null, lastOpenedLink = "", adminCache = [];
+        let currentUser = null, currentUserData = null, lastOpenedLink = "", adminCache = [];
         let pgPend = 0, pgSalv = 0; const ITENS = 5;
 
+        window.onload = () => {
+            const savedSession = localStorage.getItem(SESSION_KEY);
+            if(savedSession) {
+                const sessionData = JSON.parse(savedSession);
+                document.getElementById('user').value = sessionData.user;
+                document.getElementById('pass').value = sessionData.pass;
+                conectarBanco();
+            }
+        };
+
         function salvarLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
-        function parseDataBR(dataStr) { const partes = dataStr.split('/'); return partes.length === 3 ? new Date(partes[2], partes[1] - 1, partes[0]) : new Date(dataStr); }
+        function formatarData(dataStr) {
+            if(!dataStr) return new Date();
+            let limpa = dataStr.replace(/['"]+/g, '').trim();
+            if (limpa.includes('/')) {
+                const p = limpa.split('/');
+                return new Date(p[2], p[1] - 1, p[0]);
+            }
+            return new Date(limpa);
+        }
 
         async function conectarBanco() {
-            const uInput = document.getElementById('user').value.trim().toLowerCase();
-            const pInput = document.getElementById('pass').value.trim();
+            const uI = document.getElementById('user').value.trim().toLowerCase();
+            const pI = document.getElementById('pass').value.trim();
             const msg = document.getElementById('msg-login'), btn = document.getElementById('btn-login'), loader = document.getElementById('loading-login');
-            if(!uInput || !pInput) { msg.innerText = "Preencha tudo."; return; }
             msg.innerText = ""; btn.style.display = "none"; loader.style.display = "block";
 
             try {
@@ -173,43 +179,50 @@
                 const csv = await res.text();
                 const linhas = csv.split(/\r?\n/);
                 let achou = null; adminCache = [];
+
                 for (let i = 1; i < linhas.length; i++) {
                     const c = linhas[i].split(',');
-                    if(c.length >= 3){
-                        const uO = { user: (c[0]||"").replace(/"/g,'').trim(), pass: (c[1]||"").replace(/"/g,'').trim(), date: (c[2]||"").replace(/"/g,'').trim(), wa: (c[3]||"").replace(/"/g,'').trim(), val: (c[4]||"").replace(/"/g,'').trim() };
-                        if(uO.user) adminCache.push(uO);
-                        if(uO.user.toLowerCase() === uInput && uO.pass === pInput) achou = uO;
+                    if(c.length >= 6){
+                        const uO = { 
+                            user: (c[0]||"").replace(/['"]+/g, '').trim(), 
+                            pass: (c[1]||"").replace(/['"]+/g, '').trim(), 
+                            date: (c[2]||"").replace(/['"]+/g, '').trim(), 
+                            wa: (c[3]||"").replace(/['"]+/g, '').trim(),
+                            val: (c[4]||"").replace(/['"]+/g, '').trim(),
+                            type: (c[5]||"user").replace(/['"]+/g, '').trim().toLowerCase(),
+                            criador: (c[6]||"admin").replace(/['"]+/g, '').trim()
+                        };
+                        adminCache.push(uO);
+                        if(uO.user.toLowerCase() === uI && uO.pass === pI) achou = uO;
                     }
                 }
+
                 if(achou){
-                    currentUser = achou.user;
+                    currentUser = achou.user; currentUserData = achou;
                     if(!db[currentUser]) db[currentUser] = {links:[], salvos:[]};
+                    localStorage.setItem(SESSION_KEY, JSON.stringify({user: uI, pass: pI}));
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('app-screen').classList.remove('hidden');
                     document.getElementById('ola-user').innerText = "Olá, " + currentUser;
+                    
+                    const dV = formatarData(achou.date);
+                    const hoje = new Date(); hoje.setHours(0,0,0,0);
+                    const diff = Math.ceil((dV - hoje) / (1000 * 60 * 60 * 24));
                     document.getElementById('status-acesso').innerText = "Vence: " + achou.date;
                     
-                    const hoje = new Date(); hoje.setHours(0,0,0,0);
-                    const vDate = parseDataBR(achou.date);
-                    const diff = Math.ceil((vDate - hoje) / (1000 * 60 * 60 * 24));
-                    if(diff <= 5 && currentUser !== 'admin') {
+                    // LÓGICA DE RENOVAÇÃO CORRIGIDA: MOSTRA PARA TODOS EXCETO ADMIN MASTER
+                    if(diff <= 5 && currentUser.toLowerCase() !== 'admin') {
                         document.getElementById('vencimento-alert').style.display = 'block';
                         document.getElementById('dias-restantes-alerta').innerText = diff;
                     }
 
-                    if(currentUser.toLowerCase()==='admin') document.getElementById('btn-open-admin').classList.remove('hidden');
+                    if(achou.type === 'master' || achou.type === 'revenda' || currentUser.toLowerCase() === 'admin') {
+                        document.getElementById('btn-open-admin').classList.remove('hidden');
+                    }
                     renderizar();
-                } else { msg.innerText = "Incorreto."; }
-            } catch(e) { msg.innerText = "Erro conectar."; }
+                } else { msg.innerText = "Dados incorretos."; localStorage.removeItem(SESSION_KEY); }
+            } catch(e) { msg.innerText = "Erro ao conectar."; }
             btn.style.display = "block"; loader.style.display = "none";
-        }
-
-        function enviarDadosWhatsApp(idx) {
-            const u = adminCache[idx];
-            const zap = u.wa.replace(/\D/g,'');
-            if(!zap) { alert("WhatsApp não cadastrado!"); return; }
-            const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u.user}\n🔑 *Senha:* ${u.pass}\n📅 *Vencimento:* ${u.date}\n💰 *Valor:* R$ ${u.val}\n\n*Suporte:* wa.me/5521970458286`;
-            window.open(`https://wa.me/55${zap}?text=${encodeURIComponent(msg)}`);
         }
 
         function abrirAdminPanel() {
@@ -218,49 +231,40 @@
             lista.innerHTML = '';
             const hoje = new Date(); hoje.setHours(0,0,0,0);
             adminCache.forEach((u, idx) => {
-                if(u.user.toLowerCase() === 'admin') return;
-                const dataVenc = parseDataBR(u.date); dataVenc.setHours(0,0,0,0);
-                const diffDays = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
-                const corVenc = diffDays <= 5 ? "#ef4444" : "#3b82f6";
+                if(u.user.toLowerCase() === 'admin' || u.user === currentUser) return;
+                const dV = formatarData(u.date); dV.setHours(0,0,0,0);
+                const diff = Math.ceil((dV - hoje) / (1000 * 60 * 60 * 24));
+                const cor = diff <= 5 ? "#ef4444" : "#3b82f6";
+                let textoDias = diff < 0 ? "Expirado" : diff === 0 ? "Vence hoje" : `Faltam ${diff} dias`;
                 const div = document.createElement('div');
                 div.className = 'user-row';
-                div.innerHTML = `
-                    <div class="user-head">
-                        <div class="user-info-text">
-                            <strong>${u.user}</strong>
-                            <small style="color:#10b981">📱 ${u.wa}</small>
-                            ${u.val ? `<small style="color:#166534">💰 R$ ${u.val}</small>` : ''}
-                        </div>
-                        <div style="text-align: right;">
-                            <span style="font-size:12px; font-weight:bold; color:${corVenc};">Vence: ${u.date}</span><br>
-                            <small style="font-size:10px; font-weight:bold; color:${corVenc};">${diffDays<0?'Expirado':'Faltam '+diffDays+' dias'}</small>
-                        </div>
-                    </div>
-                    <div class="user-actions">
-                        <button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button>
-                        <button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Enviar Dados</button>
-                        <button class="edit-btn btn-auto" onclick="prepararEdicao(${idx})">✏️ Editar</button>
-                    </div>`;
+                div.innerHTML = `<div class="user-head"><div class="user-info-text"><strong>${u.user}</strong><span class="creator-badge">Por: ${u.criador}</span><small style="color:#10b981">📱 ${u.wa}</small><small style="color:#166534">💰 R$ ${u.val}</small></div><div style="text-align: right;"><span style="font-size:12px; font-weight:bold; color:${cor};">${textoDias}</span></div></div><div class="user-actions"><button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button><button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Dados</button><button class="edit-btn btn-auto" onclick="prepararEdicao(${idx})">✏️ Editar</button></div>`;
                 lista.appendChild(div);
             });
         }
 
-        function copiarPix() { navigator.clipboard.writeText("144.352.427-10"); alert("Chave PIX Copiada!"); }
+        function enviarDadosWhatsApp(idx) { const u = adminCache[idx]; const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u.user}\n🔑 *Senha:* ${u.pass}\n📅 *Vencimento:* ${u.date}\n💰 *Valor:* R$ ${u.val}`; window.open(`https://wa.me/55${u.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
+        function copiarPix() { navigator.clipboard.writeText("144.352.427-10"); alert("Copiado!"); }
         function abrirModalRenovar() { document.getElementById('modal-renovar').classList.add('show'); }
         function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
-        function logout() { location.reload(); }
-        function tratarAberturaLink(idx, link) { lastOpenedLink = link; window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`); db[currentUser].links.splice(idx, 1); salvarLocal(); document.getElementById('last-link-opened').innerText = link; document.getElementById('save-prompt').style.display = 'flex'; renderizar(); }
-        function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { db[currentUser].salvos.push(lastOpenedLink); salvarLocal(); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
-        function limparPendentes() { if(confirm("Apagar todos os links pendentes?")){ db[currentUser].links = []; salvarLocal(); renderizar(); } }
-        function limparSalvos(){ if(confirm("Limpar salvos?")){db[currentUser].salvos=[]; salvarLocal(); renderizar();}}
-        function prepararEdicao(idx) { const u = adminCache[idx]; document.getElementById('edit-name').value = u.user; document.getElementById('edit-pass').value = u.pass; document.getElementById('edit-wa').value = u.wa; document.getElementById('edit-val').value = u.val; const p = u.date.split('/'); if(p.length === 3) document.getElementById('edit-date').value = `${p[2]}-${p[1]}-${p[0]}`; fecharModal('modal-admin'); document.getElementById('modal-edit-user').classList.add('show'); }
-        function somarDiasEdicao(n) { const i = document.getElementById('edit-date'); let d = new Date(i.value || new Date()); d.setDate(d.getDate() + n); i.value = d.toISOString().split('T')[0]; }
-        function copiarLinhaPlanilha() { const n=document.getElementById('edit-name').value, p=document.getElementById('edit-pass').value, w=document.getElementById('edit-wa').value, v=document.getElementById('edit-val').value, d=document.getElementById('edit-date').value.split('-').reverse().join('/'); const csv=`${n},${p},${d},${w},${v}`; const box=document.getElementById('manual-copy-box'); box.innerText=csv; box.style.display='block'; navigator.clipboard.writeText(csv).then(()=>alert("Copiado!")); }
+        function logout() { localStorage.removeItem(SESSION_KEY); location.reload(); }
         function addLinks() { const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUser].links.push(l.trim())}); t.value=''; salvarLocal(); renderizar(); }
         function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUser].links.push(l.trim())});salvarLocal();renderizar();}; r.readAsText(i.files[0]); i.value=''; }
-        function baixarSalvos() { const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([db[currentUser].salvos.join('\n')],{type:"text/plain"})); a.download="salvos.txt"; a.click(); }
-        function renderizar() { const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos'); p.innerHTML = ''; s.innerHTML = ''; const tP = db[currentUser]?.links.length || 0, tS = db[currentUser]?.salvos.length || 0; document.getElementById('count-pend').innerText = tP; document.getElementById('count-saved').innerText = tS; db[currentUser]?.links.slice(pgPend*ITENS, pgPend*ITENS+ITENS).forEach((l,i) => { p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button onclick="tratarAberturaLink(${pgPend*ITENS+i},'${l}')" class="btn-auto">Abrir ↗</button></div>`; }); db[currentUser]?.salvos.slice(pgSalv*ITENS, pgSalv*ITENS+ITENS).forEach((l,i) => { s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button onclick="db['${currentUser}'].salvos.splice(${pgSalv*ITENS+i},1);salvarLocal();renderizar();" class="danger btn-auto">X</button></div>`; }); renderControles(document.getElementById('paginacao-pend'), tP, pgPend, (n)=> {pgPend=n; renderizar();}); renderControles(document.getElementById('paginacao-salv'), tS, pgSalv, (n)=> {pgSalv=n; renderizar();}); }
+        function prepararEdicao(idx) { const u = adminCache[idx]; document.getElementById('edit-name').value = u.user; document.getElementById('edit-pass').value = u.pass; document.getElementById('edit-wa').value = u.wa; document.getElementById('edit-val').value = u.val; const d = formatarData(u.date); document.getElementById('edit-date').value = d.toISOString().split('T')[0]; fecharModal('modal-admin'); document.getElementById('modal-edit-user').classList.add('show'); }
+        function copiarLinhaPlanilha() { const csv = `${document.getElementById('edit-name').value},${document.getElementById('edit-pass').value},${document.getElementById('edit-date').value.split('-').reverse().join('/')},${document.getElementById('edit-wa').value},${document.getElementById('edit-val').value},user,${currentUser}`; const box = document.getElementById('manual-copy-box'); box.innerText = csv; box.style.display = 'block'; navigator.clipboard.writeText(csv).then(() => alert("Copiado!")); }
+        function renderizar() {
+            const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos');
+            p.innerHTML = ''; s.innerHTML = '';
+            const tP = db[currentUser]?.links.length || 0;
+            document.getElementById('count-pend').innerText = tP;
+            db[currentUser]?.links.slice(pgPend*ITENS, pgPend*ITENS+ITENS).forEach((l,i) => { p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button onclick="tratarAberturaLink(${pgPend*ITENS+i},'${l}')" class="btn-auto">Abrir ↗</button></div>`; });
+            db[currentUser]?.salvos.slice(pgSalv*ITENS, pgSalv*ITENS+ITENS).forEach(l => { s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span></div>`; });
+            renderControles(document.getElementById('paginacao-pend'), tP, pgPend, (n)=> {pgPend=n; renderizar();});
+        }
         function renderControles(div, total, atual, cb) { const max = Math.ceil(total/ITENS); div.innerHTML = max <= 1 ? '' : `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
+        function tratarAberturaLink(idx, link) { lastOpenedLink = link; window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`); db[currentUser].links.splice(idx, 1); salvarLocal(); document.getElementById('last-link-opened').innerText = link; document.getElementById('save-prompt').style.display = 'flex'; renderizar(); }
+        function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { db[currentUser].salvos.push(lastOpenedLink); salvarLocal(); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
     </script>
 </body>
 </html>
+
