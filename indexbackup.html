@@ -4,158 +4,136 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciador |WA|</title>
-    
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><path d=%22M55 20 L35 50 L50 50 L45 80 L65 50 L50 50 L55 20 Z%22 fill=%22white%22/></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
     <style>
         :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; }
-        * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        body.dark-mode { --bg: #111827; --text: #f9fafb; --card: #1f2937; }
+        * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; transition: 0.3s; }
+        .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
         
-        input, textarea, select { width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; resize: none; }
+        input, textarea, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; color: #333; }
+        body.dark-mode input { background: #374151; color: white; border-color: #4b5563; }
+        
         button { width: 100%; padding: 12px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         button:hover { filter: brightness(0.9); transform: translateY(-2px); }
-        button.secondary { background: #e5e7eb; color: var(--text); }
+        button.secondary { background: #e5e7eb; color: #333; }
         button.danger { background: var(--danger); }
-        button.admin-btn { background: var(--text); color: white; }
-        button.edit-btn { background: var(--blue); }
-        button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
+        button.admin-btn { background: var(--text); color: var(--card); }
         button.chat-btn { background: #25d366; color: white; }
+        button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
         
         .btn-auto { width: auto !important; padding: 6px 12px; font-size: 12px; margin: 2px; flex-shrink: 0; }
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        .card { background: #fff; border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; }
-        .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; color: var(--text); }
-
-        .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* AJUSTE PARA LINKS MOBILE NÃO PASSAREM DA BORDA */
+        .card { background: var(--card); border: 1px solid #e5e7eb; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; overflow: hidden; }
+        .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; min-width: 0; word-break: break-all; }
 
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:1000; }
         .modal-overlay.show { display:flex; }
-        .modal-content { background:white; padding:25px; border-radius:20px; width:95%; max-width:550px; max-height:90vh; overflow-y:auto; position:relative; }
-        .close-modal { position:absolute; top:15px; right:15px; cursor:pointer; font-size:24px; color:#999; }
+        .modal-content { background:var(--card); padding:20px; border-radius:20px; width:95%; max-width:550px; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; }
+        .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
+        .pay-key { font-family: monospace; font-size: 14px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 10px 0; word-break: break-all; }
         
-        .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 20px; background: #ecfdf5; margin-bottom: 15px; }
-        .pay-key { font-family: monospace; font-size: 16px; background: white; padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; color: #333; word-break: break-all; }
-
-        .user-row { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: #f9fafb; }
-        .user-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-        .user-info-text { display: flex; flex-direction: column; gap: 2px; }
-        .user-actions { display: flex; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 8px; gap: 5px; flex-wrap: wrap; }
-        .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; font-size: 13px; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; display: none; margin: 10px auto; }
+        .user-row { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: rgba(0,0,0,0.02); }
         .creator-badge { font-size: 9px; font-weight: bold; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+        .pix-badge { font-size: 9px; font-weight: bold; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+        .theme-toggle { position: absolute; top: 15px; right: 15px; width: 35px; height: 35px; border-radius: 50%; padding: 0; background: var(--card); color: var(--text); border: 1px solid #ddd; z-index: 10; }
+        .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; }
+        .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; margin-bottom: 20px; font-size: 12px; }
     </style>
 </head>
 <body>
 
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+
     <div class="container">
         <div id="login-screen" style="text-align: center; max-width: 400px; margin: 40px auto;">
-            <div style="background: var(--primary); width: 80px; height: 80px; border-radius: 20px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
-                <span style="font-size: 40px; color: white;">⚡</span>
-            </div>
-            <h2 style="font-weight: 700; color: var(--dark);">Gerenciador <span>|WA|</span></h2>
+            <div style="background: var(--primary); width: 60px; height: 60px; border-radius: 15px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: white;">⚡</div>
+            <h2 style="font-weight: 700;">Gerenciador <span>|WA|</span></h2>
             <input type="text" id="user" placeholder="Usuário">
             <input type="password" id="pass" placeholder="Senha">
-            <button id="btn-login" onclick="conectarBanco()">Entrar</button>
-            <div id="loading-login" class="loader"></div>
+            <button onclick="conectarBanco()">Acessar Sistema</button>
             <p id="msg-login" style="color: red; font-size: 14px; margin-top: 10px;"></p>
-            <button onclick="window.open('https://wa.me/5521970458286?text=Olá, preciso de ajuda com o Gerenciador WA')" class="admin-btn" style="margin-top: 20px; background: transparent; color: #666; border: 1px solid #ddd;">💬 Suporte Técnico</button>
+            <button onclick="window.open('https://wa.me/5521970458286')" class="secondary btn-auto" style="margin-top:20px;">💬 Suporte Técnico</button>
         </div>
 
         <div id="app-screen" class="hidden">
-            <div id="vencimento-alert" class="card" style="background: #fff7ed; border: 1px solid #fdba74; display: none; margin-bottom: 20px; padding: 15px;">
-                <div style="display:flex; align-items:center; gap:10px; justify-content: space-between; width: 100%;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size:20px;">⚠️</span>
-                        <div style="font-size: 13px;">Seu acesso expira em <span id="dias-restantes-alerta" style="font-weight: bold;">0</span> dias.</div>
-                    </div>
-                    <button onclick="abrirModalRenovar()" class="vip-btn btn-auto">Renovar Agora</button>
-                </div>
-            </div>
-
             <div class="header">
-                <div>
-                    <h3 id="ola-user" style="margin:0">...</h3>
-                    <small id="status-acesso" style="color: #666;"></small>
+                <div style="max-width: 70%;">
+                    <h3 id="ola-user" style="margin:0; font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">...</h3>
+                    <small id="status-acesso"></small>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
-                    <button id="btn-open-admin" class="admin-btn btn-auto hidden" onclick="abrirAdminPanel()">⚙️ Painel Master</button>
+                    <button id="btn-open-admin" class="admin-btn btn-auto hidden" onclick="abrirAdminPanel()">⚙️ Master</button>
                     <button onclick="logout()" class="danger btn-auto">Sair</button>
                 </div>
             </div>
 
-            <div style="background: #f9fafb; padding: 15px; border-radius: var(--radius); margin-bottom: 20px; border: 1px solid #e5e7eb;">
-                <h4 style="margin: 0 0 10px 0;">📥 Adicionar Links</h4>
+            <div id="vencimento-alert" class="card" style="background: #fff7ed; border: 1px solid #fdba74; display: none; margin-bottom: 20px; padding: 15px;">
+                <div style="display:flex; align-items:center; gap:5px; justify-content: space-between; width: 100%;">
+                    <span style="color:#333; font-size: 11px;">⚠️ Expira em <span id="dias-restantes-alerta" style="font-weight: bold;">0</span> dias.</span>
+                    <button onclick="abrirModalRenovar()" class="vip-btn btn-auto">Renovar</button>
+                </div>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: var(--radius); margin-bottom: 20px; border: 1px solid #e5e7eb;">
+                <h4 style="margin: 0 0 10px 0;">📥 Adicionar Dados</h4>
                 <textarea id="links-input" rows="1" placeholder="Cole links ou números..."></textarea>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="addLinks()">Carregar</button>
-                    <button onclick="document.getElementById('file').click()" class="secondary">📂 Arquivo</button>
+                <div style="display: flex; gap: 5px;">
+                    <button onclick="addLinks()" class="btn-auto">Carregar</button>
+                    <button onclick="document.getElementById('file').click()" class="secondary btn-auto">📂 Arquivo</button>
                     <input type="file" id="file" accept=".txt" hidden onchange="lerArquivo(this)">
                 </div>
 
                 <div id="save-prompt" class="save-prompt">
                     <div style="overflow: hidden; flex: 1;">
-                        <span style="font-size: 12px; font-weight: bold;">Salvar anterior?</span>
-                        <div id="last-link-opened" style="font-size: 10px; opacity: 0.7; overflow: hidden; text-overflow: ellipsis;"></div>
+                        <span style="font-size: 11px; font-weight: bold;">Salvar anterior?</span>
+                        <div id="last-link-opened" style="font-size: 9px; opacity: 0.7; overflow: hidden; text-overflow: ellipsis;"></div>
                     </div>
                     <div style="display: flex; gap: 4px;">
-                        <button onclick="confirmarSalvamento(true)" class="edit-btn btn-auto">Sim</button>
-                        <button onclick="confirmarSalvamento(false)" class="secondary btn-auto">Não</button>
+                        <button onclick="confirmarSalvamento(true)" class="btn-auto" style="padding: 4px 8px;">Sim</button>
+                        <button onclick="confirmarSalvamento(false)" class="secondary btn-auto" style="padding: 4px 8px;">Não</button>
                     </div>
                 </div>
             </div>
 
-            <h4 style="color: var(--primary);">Pendentes (<span id="count-pend">0</span>)</h4>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="color: var(--primary); margin:0;">Pendentes (<span id="count-pend">0</span>)</h4>
+                <button onclick="limparPendentes()" class="danger btn-auto" style="padding: 4px 8px; font-size: 9px;">🗑️ Limpar</button>
+            </div>
             <div id="lista-pendentes"></div>
             <div id="paginacao-pend" class="pagination-ctrl"></div>
             
             <h4 style="color: var(--blue);">Salvos (<span id="count-saved">0</span>)</h4>
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                <button onclick="baixarSalvos()" class="secondary btn-auto">📥 Extrair</button>
+                <button onclick="limparSalvos()" class="danger btn-auto">🗑️ Limpar</button>
+            </div>
             <div id="lista-salvos"></div>
             <div id="paginacao-salv" class="pagination-ctrl"></div>
         </div>
     </div>
 
-    <div id="modal-renovar" class="modal-overlay">
-        <div class="modal-content" style="max-width: 400px;">
-            <span class="close-modal" onclick="fecharModal('modal-renovar')">&times;</span>
-            <h3 style="text-align: center; color: var(--primary);">💎 Renovar Acesso</h3>
-            <div class="pay-card">
-                <div style="font-size: 12px; font-weight: bold; color: var(--dark); margin-bottom: 5px;">CHAVE PIX PARA PAGAMENTO</div>
-                <div class="pay-key" id="pix-display">...</div>
-                <div style="font-size: 13px; line-height: 1.5;">
-                    ✅ <strong>Efetue a transferência</strong><br>
-                    🏛️ <strong>Utilize a chave acima</strong>
-                </div>
-            </div>
-            <button id="btn-copy-pix" onclick="copiarPixReal()" class="chat-btn" style="border-radius: 50px; width:100%">📋 Copiar Chave PIX</button>
-        </div>
-    </div>
-
     <div id="modal-admin" class="modal-overlay">
         <div class="modal-content">
-            <span class="close-modal" onclick="fecharModal('modal-admin')">&times;</span>
-            <h2 style="color: var(--dark); margin:0 0 15px 0;">⚙️ Painel Master</h2>
-            <button onclick="window.open('https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/edit?gid=0#gid=0', '_blank')" class="admin-btn btn-auto" style="background: #107c10; width: 100%; margin-bottom: 15px;">📂 Abrir Planilha Google</button>
-            <div id="admin-users-list"></div>
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:24px;" onclick="fecharModal('modal-admin')">&times;</span>
+            <h2 style="color: var(--dark); font-size: 18px;">⚙️ Gestão Master</h2>
+            <input type="text" id="search-user" placeholder="🔍 Pesquisar..." onkeyup="filtrarUsuarios()">
+            <div id="admin-users-list" style="margin-top:10px;"></div>
         </div>
     </div>
 
-    <div id="modal-edit-user" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-modal" onclick="fecharModal('modal-edit-user')">&times;</span>
-            <h3>✏️ Editar Usuário</h3>
-            <label>Usuário</label><input type="text" id="edit-name">
-            <label>Senha</label><input type="text" id="edit-pass">
-            <div style="display: flex; gap: 10px;">
-                <div style="flex:1;"><label>WhatsApp</label><input type="text" id="edit-wa"></div>
-                <div style="flex:1;"><label>Valor R$</label><input type="text" id="edit-val"></div>
+    <div id="modal-renovar" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer;" onclick="fecharModal('modal-renovar')">&times;</span>
+            <h3 style="text-align: center; color: var(--primary);">💎 Renovar Acesso</h3>
+            <div class="pay-card">
+                <div style="font-size: 11px; font-weight: bold;">PIX PARA PAGAMENTO</div>
+                <div class="pay-key" id="pix-display">...</div>
             </div>
-            <label>Validade</label><input type="date" id="edit-date">
-            <button onclick="copiarLinhaPlanilha()" class="admin-btn">💾 Gerar Linha Planilha</button>
-            <div id="manual-copy-box" style="background: #e0e7ff; color: #3730a3; padding: 10px; border-radius: 8px; font-family: monospace; word-break: break-all; margin: 10px 0; font-size: 11px; border: 1px dashed #6366f1; display: none;"></div>
+            <button onclick="copiarPixReal()" class="chat-btn" style="border-radius: 50px; width:100%">📋 Copiar Chave PIX</button>
         </div>
     </div>
 
@@ -163,150 +141,128 @@
         const PLANILHA_URL = 'https://docs.google.com/spreadsheets/d/1zoUz8WEiulTm2r2VYAxbiq6yy8EROFbKrx6EPjppsyI/export?format=csv';
         const DB_KEY = 'zapflow_v36';
         const SESSION_KEY = 'zapflow_session_v36';
-        
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
-        let currentUser = null, currentUserData = null, lastOpenedLink = "", adminCache = [];
-        let pgPend = 0, pgSalv = 0; const ITENS = 5;
+        let currentUserData = null, lastOpenedLink = "", adminCache = [];
+        let pgPend = 0, pgSalv = 0; const ITENS_PAG = 5;
 
         window.onload = () => {
-            const savedSession = localStorage.getItem(SESSION_KEY);
-            if(savedSession) {
-                const s = JSON.parse(savedSession);
+            if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            const session = localStorage.getItem(SESSION_KEY);
+            if(session) {
+                const s = JSON.parse(session);
                 document.getElementById('user').value = s.user;
                 document.getElementById('pass').value = s.pass;
                 conectarBanco();
             }
         };
 
-        function salvarLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
-        function formatarData(dataStr) {
-            if(!dataStr) return new Date();
-            let limpa = dataStr.replace(/['"]+/g, '').trim();
-            if (limpa.includes('/')) {
-                const p = limpa.split('/');
-                return new Date(p[2], p[1] - 1, p[0]);
-            }
-            return new Date(limpa);
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        function formatarData(d) {
+            if(!d) return new Date();
+            let l = d.replace(/['"]+/g, '').trim();
+            if(l.includes('/')) { const p = l.split('/'); return new Date(p[2], p[1]-1, p[0]); }
+            return new Date(l);
         }
 
         async function conectarBanco() {
             const uI = document.getElementById('user').value.trim().toLowerCase();
             const pI = document.getElementById('pass').value.trim();
-            const msg = document.getElementById('msg-login'), btn = document.getElementById('btn-login'), loader = document.getElementById('loading-login');
-            msg.innerText = ""; btn.style.display = "none"; loader.style.display = "block";
-
             try {
                 const res = await fetch(PLANILHA_URL + '&cache=' + Date.now());
                 const csv = await res.text();
                 const linhas = csv.split(/\r?\n/);
-                let achou = null; adminCache = [];
-
+                adminCache = [];
                 for (let i = 1; i < linhas.length; i++) {
                     const c = linhas[i].split(',');
                     if(c.length >= 7){
-                        const uO = { 
-                            user: (c[0]||"").replace(/['"]+/g, '').trim(), 
-                            pass: (c[1]||"").replace(/['"]+/g, '').trim(), 
-                            date: (c[2]||"").replace(/['"]+/g, '').trim(), 
-                            wa: (c[3]||"").replace(/['"]+/g, '').trim(),
-                            val: (c[4]||"").replace(/['"]+/g, '').trim(),
-                            criador: (c[8]||"").replace(/['"]+/g, '').trim(), // Coluna F (índice 5)
-                            pix: (c[7]||"").replace(/['"]+/g, '').trim() // Coluna G (índice 7)
-                        };
+                        const uO = { user: c[0].replace(/['"]+/g,'').trim(), pass: c[1].replace(/['"]+/g,'').trim(), date: c[2].replace(/['"]+/g,'').trim(), wa: c[3].replace(/['"]+/g,'').trim(), val: c[4].replace(/['"]+/g,'').trim(), pix: c[5].replace(/['"]+/g,'').trim(), criador: c[6].replace(/['"]+/g,'').trim() };
                         adminCache.push(uO);
-                        if(uO.user.toLowerCase() === uI && uO.pass === pI) achou = uO;
+                        if(uO.user.toLowerCase() === uI && uO.pass === pI) currentUserData = uO;
                     }
                 }
-
-                if(achou){
-                    currentUser = achou.user; currentUserData = achou;
-                    if(!db[currentUser]) db[currentUser] = {links:[], salvos:[]};
+                if(currentUserData){
                     localStorage.setItem(SESSION_KEY, JSON.stringify({user: uI, pass: pI}));
+                    if(!db[currentUserData.user]) db[currentUserData.user] = {links:[], salvos:[]};
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('app-screen').classList.remove('hidden');
-                    document.getElementById('ola-user').innerText = "Olá, " + currentUser;
-                    document.getElementById('status-acesso').innerText = "Vence: " + achou.date;
-                    
-                    const dV = formatarData(achou.date); dV.setHours(0,0,0,0);
+                    document.getElementById('ola-user').innerText = "Olá, " + currentUserData.user;
+                    const dV = formatarData(currentUserData.date); dV.setHours(0,0,0,0);
                     const hoje = new Date(); hoje.setHours(0,0,0,0);
-                    const diff = Math.ceil((dV - hoje) / (1000 * 60 * 60 * 24));
-                    
-                    if(diff <= 5 && currentUser.toLowerCase() !== 'admin') {
+                    const diff = Math.ceil((dV - hoje) / 86400000);
+                    document.getElementById('status-acesso').innerText = "Vence: " + currentUserData.date;
+                    if(diff <= 5 && currentUserData.user.toLowerCase() !== 'admin') {
                         document.getElementById('vencimento-alert').style.display = 'block';
                         document.getElementById('dias-restantes-alerta').innerText = diff;
                     }
-
-                    // A lógica do botão admin agora usa o login do admin ou a permissão "master" em pix (Coluna F)
-                    if(currentUser.toLowerCase() === 'admin' || achou.pix.toLowerCase() === 'master') {
-                        document.getElementById('btn-open-admin').classList.remove('hidden');
-                    }
+                    if(currentUserData.user.toLowerCase() === 'admin' || currentUserData.pix.toLowerCase() === 'master') document.getElementById('btn-open-admin').classList.remove('hidden');
                     renderizar();
-                } else { msg.innerText = "Dados incorretos."; localStorage.removeItem(SESSION_KEY); }
-            } catch(e) { msg.innerText = "Erro ao conectar."; }
-            btn.style.display = "block"; loader.style.display = "none";
+                }
+            } catch(e) { console.error(e); }
         }
 
-        function abrirModalRenovar() { 
-            // Injeta o CPF da Coluna F no pop-up
-            document.getElementById('pix-display').innerText = currentUserData.pix || "Chave não cadastrada";
-            document.getElementById('modal-renovar').classList.add('show'); 
+        function renderizar() {
+            const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos'), u = currentUserData.user;
+            p.innerHTML = ''; s.innerHTML = '';
+            const tP = db[u].links.length, tS = db[u].salvos ? db[u].salvos.length : 0;
+            document.getElementById('count-pend').innerText = tP; document.getElementById('count-saved').innerText = tS;
+            db[u].links.slice(pgPend*ITENS_PAG, (pgPend+1)*ITENS_PAG).forEach((l,i) => { p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button class="btn-auto" onclick="tratarAberturaLink(${pgPend*ITENS_PAG+i},'${l}')">Abrir ↗</button></div>`; });
+            if(db[u].salvos) db[u].salvos.slice(pgSalv*ITENS_PAG, (pgSalv+1)*ITENS_PAG).forEach((l,i) => { s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button class="danger btn-auto" onclick="db['${u}'].salvos.splice(${pgSalv*ITENS_PAG+i},1);renderizar();">X</button></div>`; });
+            renderControles('paginacao-pend', tP, pgPend, (n)=> {pgPend=n; renderizar();});
+            renderControles('paginacao-salv', tS, pgSalv, (n)=> {pgSalv=n; renderizar();});
+            localStorage.setItem(DB_KEY, JSON.stringify(db));
         }
 
-        function copiarPixReal() {
-            const texto = document.getElementById('pix-display').innerText;
-            if(texto === "..." || texto === "Chave não cadastrada") return;
-            const tempInput = document.createElement("input");
-            tempInput.value = texto;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            tempInput.setSelectionRange(0, 99999);
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-            alert("Chave PIX Copiada!");
-        }
-
+        function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
+        
         function abrirAdminPanel() {
             document.getElementById('modal-admin').classList.add('show');
-            const lista = document.getElementById('admin-users-list');
-            lista.innerHTML = '';
+            const lista = document.getElementById('admin-users-list'); lista.innerHTML = '';
             const hoje = new Date(); hoje.setHours(0,0,0,0);
             adminCache.forEach((u, idx) => {
-                if(u.user.toLowerCase() === 'admin' || u.user === currentUser) return;
+                if(u.user.toLowerCase() === 'admin' || u.user === currentUserData.user) return;
                 const dV = formatarData(u.date); dV.setHours(0,0,0,0);
-                const diff = Math.ceil((dV - hoje) / (1000 * 60 * 60 * 24));
-                const cor = diff <= 5 ? "#ef4444" : "#3b82f6";
-                let textoDias = diff < 0 ? "Expirado" : diff === 0 ? "Vence hoje" : `Faltam ${diff} dias`;
-                const div = document.createElement('div');
-                div.className = 'user-row';
-                // Mostra "Criador: [Conteúdo da Coluna G]" conforme solicitado
-                div.innerHTML = `<div class="user-head"><div class="user-info-text"><strong>${u.user}</strong><span class="creator-badge">Criador: ${u.criador}</span><small style="color:#10b981">📱 ${u.wa}</small></div><div style="text-align: right;"><span style="font-size:12px; font-weight:bold; color:${cor};">${textoDias}</span></div></div><div class="user-actions"><button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button><button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Dados</button><button class="edit-btn btn-auto" onclick="prepararEdicao(${idx})">✏️ Editar</button></div>`;
+                const diff = Math.ceil((dV - hoje) / 86400000), cor = diff <= 5 ? "#ef4444" : "#3b82f6";
+                const div = document.createElement('div'); div.className = 'user-row';
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items: flex-start;">
+                        <div style="max-width: 65%;">
+                            <strong style="font-size:14px;">${u.user}</strong><br>
+                            <span class="creator-badge">Criador: ${u.criador}</span><br>
+                            <span class="pix-badge">PIX: ${u.pix}</span><br>
+                            <small style="color:#10b981">📱 ${u.wa}</small> | <small style="color:#166534">💰 ${u.val}</small>
+                        </div>
+                        <div style="text-align:right; color:${cor}; font-weight:bold; font-size:11px;">${diff < 0 ? 'Expirado' : diff + ' dias'}</div>
+                    </div>
+                    <div style="margin-top:10px; display:flex; gap:3px; flex-wrap:wrap;">
+                        <button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${u.wa.replace(/\D/g,'')}')">💬 Chat</button>
+                        <button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp(${idx})">📨 Dados</button>
+                    </div>`;
                 lista.appendChild(div);
             });
         }
 
-        function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
-        function logout() { localStorage.removeItem(SESSION_KEY); location.reload(); }
-        function addLinks() { const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUser].links.push(l.trim())}); t.value=''; salvarLocal(); renderizar(); }
-        function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUser].links.push(l.trim())});salvarLocal();renderizar();}; r.readAsText(i.files[0]); i.value=''; }
-        function prepararEdicao(idx) { const u = adminCache[idx]; document.getElementById('edit-name').value = u.user; document.getElementById('edit-pass').value = u.pass; document.getElementById('edit-wa').value = u.wa; document.getElementById('edit-val').value = u.val; const d = formatarData(u.date); document.getElementById('edit-date').value = d.toISOString().split('T')[0]; fecharModal('modal-admin'); document.getElementById('modal-edit-user').classList.add('show'); }
-        function copiarLinhaPlanilha() { const csv = `${document.getElementById('edit-name').value},${document.getElementById('edit-pass').value},${document.getElementById('edit-date').value.split('-').reverse().join('/')},${document.getElementById('edit-wa').value},${document.getElementById('edit-val').value},user,${currentUserData.criador}`; const box = document.getElementById('manual-copy-box'); box.innerText = csv; box.style.display = 'block'; navigator.clipboard.writeText(csv).then(() => alert("Copiado!")); }
-        
-        function renderizar() {
-            const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos');
-            p.innerHTML = ''; s.innerHTML = '';
-            const tP = db[currentUser]?.links.length || 0;
-            document.getElementById('count-pend').innerText = tP;
-            db[currentUser]?.links.slice(pgPend*ITENS, pgPend*ITENS+ITENS).forEach((l,i) => { p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button onclick="tratarAberturaLink(${pgPend*ITENS+i},'${l}')" class="btn-auto">Abrir ↗</button></div>`; });
-            db[currentUser]?.salvos.slice(pgSalv*ITENS, pgSalv*ITENS+ITENS).forEach(l => { s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span></div>`; });
-            renderControles(document.getElementById('paginacao-pend'), tP, pgPend, (n)=> {pgPend=n; renderizar();});
+        function filtrarUsuarios() {
+            const termo = document.getElementById('search-user').value.toLowerCase();
+            document.querySelectorAll('.user-row').forEach(row => row.style.display = row.innerText.toLowerCase().includes(termo) ? 'block' : 'none');
         }
-        function renderControles(div, total, atual, cb) { const max = Math.ceil(total/ITENS); div.innerHTML = max <= 1 ? '' : `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
-        function tratarAberturaLink(idx, link) { lastOpenedLink = link; window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`); db[currentUser].links.splice(idx, 1); salvarLocal(); document.getElementById('last-link-opened').innerText = link; document.getElementById('save-prompt').style.display = 'flex'; renderizar(); }
-        function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { if(!db[currentUser].salvos) db[currentUser].salvos=[]; db[currentUser].salvos.push(lastOpenedLink); salvarLocal(); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
+
+        function abrirModalRenovar() { document.getElementById('pix-display').innerText = currentUserData.pix; document.getElementById('modal-renovar').classList.add('show'); }
+        function copiarPixReal() { const t = document.getElementById('pix-display').innerText; const el = document.createElement("input"); el.value = t; document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el); alert("Copiado!"); }
+        function baixarSalvos() { const u = currentUserData.user; if(!db[u].salvos.length) return alert("Nada para extrair."); const blob = new Blob([db[u].salvos.join('\n')], {type: 'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `extraidos.txt`; a.click(); }
+        function limparPendentes() { if(confirm("Apagar pendentes?")) { db[currentUserData.user].links = []; pgPend = 0; renderizar(); } }
+        function limparSalvos() { if(confirm("Limpar salvos?")) { db[currentUserData.user].salvos = []; pgSalv = 0; renderizar(); } }
+        function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
+        function logout(){ localStorage.removeItem(SESSION_KEY); location.reload(); }
+        function addLinks(){ const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); t.value=''; pgPend = 0; renderizar(); }
+        function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
+        function tratarAberturaLink(idx, link) { lastOpenedLink = link; window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`); db[currentUserData.user].links.splice(idx, 1); document.getElementById('last-link-opened').innerText = link; document.getElementById('save-prompt').style.display = 'flex'; renderizar(); }
+        function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; db[currentUserData.user].salvos.push(lastOpenedLink); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
         function enviarDadosWhatsApp(idx) { const u = adminCache[idx]; const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u.user}\n🔑 *Senha:* ${u.pass}\n📅 *Vencimento:* ${u.date}\n💰 *Valor:* R$ ${u.val}`; window.open(`https://wa.me/55${u.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
     </script>
 </body>
 </html>
-
-
 
