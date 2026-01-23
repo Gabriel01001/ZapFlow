@@ -39,7 +39,7 @@
 </head>
 <body>
 
-    <button class="theme-toggle" onclick="toggleTheme()" title="Mudar Tema">🌙</button>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
     <div class="container">
         <div id="login-screen" style="text-align: center; max-width: 400px; margin: 40px auto;">
@@ -47,7 +47,7 @@
             <h2 style="font-weight: 700;">Gerenciador <span>|WA|</span></h2>
             <input type="text" id="user" placeholder="Usuário">
             <input type="password" id="pass" placeholder="Senha">
-            <button onclick="conectarBanco()">Acessar Sistema</button>
+            <button onclick="conectarBanco()">Entrar</button>
             <p id="msg-login" style="color: red; font-size: 14px; margin-top: 10px; font-weight: 600;"></p>
             <button onclick="window.open('https://wa.me/5521970458286')" class="secondary btn-auto" style="margin-top:20px;">💬 Suporte Técnico</button>
         </div>
@@ -178,14 +178,15 @@
                 for (let i = 1; i < linhas.length; i++) {
                     const c = linhas[i].split(',');
                     if(c.length >= 7){
+                        // PARTE DESMEMBRADA DA PLANILHA PARA FACILITAR EDIÇÃO
                         const uO = { 
-                            user: c[0].replace(/['"]+/g,'').trim(),
-                            pass: c[1].replace(/['"]+/g,'').trim(),
-                            date: c[2].replace(/['"]+/g,'').trim(),
-                            wa: c[3].replace(/['"]+/g,'').trim(),
-                            val: c[4].replace(/['"]+/g,'').trim(),
-                            pix: c[5].replace(/['"]+/g,'').trim(),
-                            criador: c[6].replace(/['"]+/g,'').trim()
+                            user: (c[0]||"").replace(/['"]+/g, '').trim(),    // Coluna A (Usuário)
+                            pass: (c[1]||"").replace(/['"]+/g, '').trim(),    // Coluna B (Senha)
+                            date: (c[2]||"").replace(/['"]+/g, '').trim(),    // Coluna C (Validade)
+                            wa: (c[3]||"").replace(/['"]+/g, '').trim(),      // Coluna D (WhatsApp)
+                            val: (c[4]||"").replace(/['"]+/g, '').trim(),     // Coluna E (Valor)
+                            pix: (c[7]||"").replace(/['"]+/g, '').trim(),     // Coluna F (CPF/PIX)
+                            criador: (c[6]||"").replace(/['"]+/g, '').trim()  // Coluna G (Nome do Criador)
                         };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) localAchou = uO;
@@ -197,7 +198,6 @@
                     const hoje = new Date(); hoje.setHours(0,0,0,0);
                     const diff = Math.ceil((dV - hoje) / 86400000);
 
-                    // TRAVA DE SEGURANÇA: BLOQUEIO DE EXPIRADOS
                     if(diff < 0 && localAchou.user.toLowerCase() !== 'admin') {
                         msg.innerText = "Seu acesso expirou. Entre em contato com o suporte.";
                         localStorage.removeItem(SESSION_KEY);
