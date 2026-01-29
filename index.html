@@ -163,11 +163,12 @@
                     <span style="font-size:12px; color:#666">dias de validade</span>
                 </div>
 
-                <div class="full-width">
+                <div class="full-width" id="role-container">
                     <label style="font-size:12px; font-weight:bold; color:#333;">Tipo de Acesso:</label>
                     <select id="new-role">
                         <option value="User">Usuário Comum</option>
                         <option value="Sub-Admin">Sub-Admin (Pode criar Users)</option>
+                        <option value="Admin">Admin Master</option>
                     </select>
                 </div>
 
@@ -193,7 +194,7 @@
     </div>
 
     <script>
-        // === URL NOVA ===
+        // === URL DA SUA API ===
         const API_URL = 'https://script.google.com/macros/s/AKfycbxupEUQjLkPPmSAhMjmXCO_SBcvEN2zWsS8IaHh4kdQVk009ZrwoV8rz_pZBHVsQX8iUQ/exec';
 
         const DB_KEY = 'zapflow_v36';
@@ -413,7 +414,7 @@
             }
         }
 
-        // --- FUNÇÕES DE CRIAÇÃO ---
+        // --- FUNÇÕES DE CRIAÇÃO INTELIGENTE ---
         function abrirModalCreate() {
             document.getElementById('new-user').value = '';
             document.getElementById('new-pass').value = '';
@@ -422,6 +423,21 @@
             document.getElementById('new-val').value = '';
             document.getElementById('new-pix').value = currentUserData.pix || ''; 
             document.getElementById('msg-create').innerText = '';
+            
+            // Lógica de Visibilidade do Cargo
+            const roleContainer = document.getElementById('role-container');
+            const roleSelect = document.getElementById('new-role');
+            
+            if (currentUserData.cargo === 'Sub-Admin') {
+                // Se for Sub-Admin, esconde a escolha e força "User"
+                roleContainer.style.display = 'none';
+                roleSelect.value = 'User';
+            } else {
+                // Se for Admin, mostra tudo
+                roleContainer.style.display = 'block';
+                roleSelect.value = 'User';
+            }
+
             document.getElementById('modal-create').classList.add('show');
         }
 
