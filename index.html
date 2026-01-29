@@ -532,6 +532,9 @@
                             <tbody>
                     `;
 
+                    // --- AQUI ESTÁ A LÓGICA DO SUB-ADMIN ---
+                    const isSubAdmin = currentUserData.cargo === 'Sub-Admin';
+
                     dados.forEach((row) => {
                         const dateVal = row[2]; 
                         const dV = formatarData(dateVal); dV.setHours(0,0,0,0);
@@ -546,9 +549,18 @@
                         const uWa   = row[3] || "";
                         const uVal  = row[4] || "";
                         
-                        // Status na coluna 8 (I)
                         const statusAcc = row[8] || "Ativo"; 
                         const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : '✅');
+
+                        // --- Lógica do Botão ---
+                        let statusBtn = '';
+                        if (isSubAdmin) {
+                            // Sub-Admin: Apenas vê, sem clique
+                            statusBtn = `<button class="status-btn btn-auto" style="width:25px; height:25px; padding:0; cursor: not-allowed; opacity: 0.6;" title="Status: ${statusAcc}">${statusIcon}</button>`;
+                        } else {
+                            // Admin: Pode clicar
+                            statusBtn = `<button class="status-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>`;
+                        }
 
                         html += `
                         <tr>
@@ -562,7 +574,7 @@
                         html += `
                             <td>
                                 <div style="display:flex; gap:5px;">
-                                    <button class="status-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>
+                                    ${statusBtn} 
                                     <button class="chat-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button>
                                     <button class="vip-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button>
                                     <button class="edit-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button>
@@ -820,8 +832,8 @@
         
         function lerArquivoSalvos(i) { const r=new FileReader(); r.onload=(e)=>{if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; const linhas = e.target.result.split('\n'); const novos = linhas.filter(l => l.trim() && !db[currentUserData.user].salvos.includes(l.trim())); db[currentUserData.user].salvos.push(...novos); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
 
+        // --- ALTERAÇÃO NA ABERTURA DE LINKS ---
         function tratarAberturaLink(idx, link) { 
-            // Se existia um link anterior pendente, ele foi descartado (Não Salvo)
             if (lastOpenedLink) {
                 if(!db[currentUserData.user].naoSalvos) db[currentUserData.user].naoSalvos = [];
                 db[currentUserData.user].naoSalvos.push(lastOpenedLink);
