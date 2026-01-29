@@ -6,7 +6,7 @@
     <title>Gerenciador |WA|</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; }
+        :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; --gray: #6b7280; }
         body.dark-mode { --bg: #111827; --text: #f9fafb; --card: #1f2937; }
         * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; transition: 0.3s; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -18,6 +18,7 @@
         button.secondary { background: #e5e7eb; color: #333; }
         button.danger { background: var(--danger); }
         button.edit-btn { background: #3b82f6; color: white; }
+        button.status-btn { background: var(--gold); color: white; border: 1px solid #d97706; }
         button.admin-btn { background: var(--text); color: var(--card); }
         button.chat-btn { background: #25d366; color: white; }
         button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
@@ -42,6 +43,7 @@
         .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
         .status-active { background-color: #10b981; }
         .status-expired { background-color: #ef4444; }
+        .status-pending { background-color: #f59e0b; }
         
         .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; padding: 0; background: var(--primary); color: white; border: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 20px; }
         .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; }
@@ -49,9 +51,10 @@
         .loader { border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* ESTILO DO FORMULARIO */
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .full-width { grid-column: span 2; }
+        .discarded-section { margin-top: 30px; border-top: 2px dashed #e5e7eb; padding-top: 20px; }
+        .card-discarded { border-left: 4px solid var(--gray); opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -123,12 +126,9 @@
             </div>
 
             <div style="background: #e0f2fe; padding: 10px; border-radius: var(--radius); border: 1px solid #bae6fd; margin-bottom: 10px; display: none !important; align-items: center; gap: 10px; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <span style="font-size: 12px; font-weight: bold; color: #0369a1;">⚡ Auto (seg):</span>
-                    <input type="number" id="auto-time" value="5" style="width: 50px; padding: 6px; margin: 0; text-align: center;" min="1">
-                    <span id="countdown-display" style="font-size: 12px; font-weight: bold; color: #ef4444; margin-left: 5px;"></span>
-                </div>
                 <button id="btn-auto" onclick="toggleAuto()" class="btn-auto" style="background: #0ea5e9; width: 80px !important;">Iniciar</button>
+                <input type="number" id="auto-time" value="5">
+                <span id="countdown-display"></span>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -147,6 +147,15 @@
             </div>
             <div id="lista-salvos"></div>
             <div id="paginacao-salv" class="pagination-ctrl"></div>
+
+            <div class="discarded-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h4 style="color: var(--gray); margin:0;">Não Salvos (<span id="count-discarded">0</span>)</h4>
+                    <button onclick="limparDescartados()" class="danger btn-auto" style="padding: 4px 8px; font-size: 9px;">🗑️ Limpar</button>
+                </div>
+                <div id="lista-descartados"></div>
+                <div id="paginacao-desc" class="pagination-ctrl"></div>
+            </div>
         </div>
     </div>
 
@@ -254,7 +263,7 @@
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         let currentUserData = null; 
         let lastOpenedLink = "";
-        let pgPend = 0, pgSalv = 0; const ITENS_PAG = 5;
+        let pgPend = 0, pgSalv = 0, pgDesc = 0; const ITENS_PAG = 5;
         let autoTimer = null;
         let countdownRef = null;
         let userEditing = null;
@@ -328,7 +337,7 @@
                     
                     localStorage.setItem(SESSION_KEY, JSON.stringify({user: uI, pass: pI}));
                     
-                    if(!db[uI]) db[uI] = {links:[], salvos:[]};
+                    if(!db[uI]) db[uI] = {links:[], salvos:[], naoSalvos: []};
                     
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('app-screen').classList.remove('hidden');
@@ -343,7 +352,6 @@
 
                     if(dados.isMaster) document.getElementById('btn-open-admin').classList.remove('hidden');
                     
-                    // --- VERIFICA ARQUIVO ---
                     if (dados.file && dados.file.url) {
                         document.getElementById('file-download-card').style.display = 'flex';
                         document.getElementById('file-date').innerText = dados.file.time;
@@ -365,25 +373,120 @@
             }
         }
 
+        // --- FUNÇÃO ANTI-DUPLICIDADE COM 3 VERIFICAÇÕES ---
+        function processarNovosLinks(listaBruta) {
+            const u = currentUserData.user;
+            if (!db[u]) db[u] = { links: [], salvos: [], naoSalvos: [] };
+            if (!db[u].salvos) db[u].salvos = []; 
+            if (!db[u].naoSalvos) db[u].naoSalvos = []; 
+
+            // Verifica em Pendentes + Salvos + Não Salvos
+            const jaExistem = new Set([...db[u].links, ...db[u].salvos, ...db[u].naoSalvos]);
+
+            let adicionados = 0;
+            let duplicados = 0;
+
+            listaBruta.forEach(link => {
+                const l = link.trim();
+                if (l) {
+                    if (jaExistem.has(l)) {
+                        duplicados++;
+                    } else {
+                        db[u].links.push(l);
+                        jaExistem.add(l); 
+                        adicionados++;
+                    }
+                }
+            });
+
+            if (duplicados > 0) alert(`Filtrado: ${adicionados} novos adicionados. ${duplicados} repetidos removidos.`);
+            renderizar();
+        }
+
+        function addLinks(){ 
+            const t=document.getElementById('links-input'); 
+            const linhas = t.value.split('\n');
+            processarNovosLinks(linhas);
+            t.value=''; 
+            pgPend = 0; 
+        }
+        
+        function lerArquivo(i) { 
+            const r=new FileReader(); 
+            r.onload=(e)=>{
+                const linhas = e.target.result.split('\n');
+                processarNovosLinks(linhas);
+            }; 
+            r.readAsText(i.files[0]); 
+            i.value=''; 
+        }
+
         function renderizar() {
-            const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos'), u = currentUserData.user;
-            p.innerHTML = ''; s.innerHTML = '';
-            
-            if(!db[u]) db[u] = {links:[], salvos:[]}; 
-            
-            const tP = db[u].links.length, tS = db[u].salvos ? db[u].salvos.length : 0;
-            document.getElementById('count-pend').innerText = tP; document.getElementById('count-saved').innerText = tS;
-            
-            db[u].links.slice(pgPend*ITENS_PAG, (pgPend+1)*ITENS_PAG).forEach((l,i) => { p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button class="btn-auto" onclick="tratarAberturaLink(${pgPend*ITENS_PAG+i},'${l}')">Abrir ↗</button></div>`; });
-            if(db[u].salvos) db[u].salvos.slice(pgSalv*ITENS_PAG, (pgSalv+1)*ITENS_PAG).forEach((l,i) => { s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button class="danger btn-auto" onclick="db['${u}'].salvos.splice(${pgSalv*ITENS_PAG+i},1);renderizar();">X</button></div>`; });
-            
+            const u = currentUserData.user;
+            if(!db[u]) db[u] = {links:[], salvos:[], naoSalvos:[]};
+            if(!db[u].naoSalvos) db[u].naoSalvos = [];
+
+            // Renderizar Pendentes
+            const p = document.getElementById('lista-pendentes');
+            p.innerHTML = '';
+            const tP = db[u].links.length;
+            document.getElementById('count-pend').innerText = tP;
+            db[u].links.slice(pgPend*ITENS_PAG, (pgPend+1)*ITENS_PAG).forEach((l,i) => { 
+                p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button class="btn-auto" onclick="tratarAberturaLink(${pgPend*ITENS_PAG+i},'${l}')">Abrir ↗</button></div>`; 
+            });
             renderControles('paginacao-pend', tP, pgPend, (n)=> {pgPend=n; renderizar();});
+
+            // Renderizar Salvos
+            const s = document.getElementById('lista-salvos');
+            s.innerHTML = '';
+            const tS = db[u].salvos ? db[u].salvos.length : 0;
+            document.getElementById('count-saved').innerText = tS;
+            if(db[u].salvos) db[u].salvos.slice(pgSalv*ITENS_PAG, (pgSalv+1)*ITENS_PAG).forEach((l,i) => { 
+                s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button class="danger btn-auto" onclick="db['${u}'].salvos.splice(${pgSalv*ITENS_PAG+i},1);renderizar();">X</button></div>`; 
+            });
             renderControles('paginacao-salv', tS, pgSalv, (n)=> {pgSalv=n; renderizar();});
+
+            // Renderizar Descartados
+            const d = document.getElementById('lista-descartados');
+            d.innerHTML = '';
+            const tD = db[u].naoSalvos ? db[u].naoSalvos.length : 0;
+            document.getElementById('count-discarded').innerText = tD;
+            if(db[u].naoSalvos) db[u].naoSalvos.slice(pgDesc*ITENS_PAG, (pgDesc+1)*ITENS_PAG).forEach((l,i) => { 
+                d.innerHTML += `<div class="card card-discarded"><span class="link-text">${l}</span><button class="btn-auto" onclick="resgatarDescartado(${pgDesc*ITENS_PAG+i})">♻️</button><button class="danger btn-auto" onclick="db['${u}'].naoSalvos.splice(${pgDesc*ITENS_PAG+i},1);renderizar();">X</button></div>`; 
+            });
+            renderControles('paginacao-desc', tD, pgDesc, (n)=> {pgDesc=n; renderizar();});
+
             localStorage.setItem(DB_KEY, JSON.stringify(db));
         }
 
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
         
+        // --- FUNÇÃO DE STATUS DO ADMIN ---
+        async function alterarStatus(targetUser) {
+            if(!confirm("Deseja alterar o status deste usuário (Aprovar/Bloquear)?")) return;
+            
+            try {
+                const req = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        action: 'toggle_status', 
+                        user: currentUserData.user, 
+                        pass: currentUserData.pass,
+                        targetUser: targetUser
+                    })
+                });
+                const res = await req.json();
+                if(res.success) {
+                    alert("Status alterado para: " + res.novoStatus);
+                    abrirAdminPanel(); // Recarrega a lista
+                } else {
+                    alert("Erro: " + res.msg);
+                }
+            } catch(e) {
+                alert("Erro de conexão.");
+            }
+        }
+
         async function abrirAdminPanel() {
             document.getElementById('modal-admin').classList.add('show');
             const lista = document.getElementById('admin-users-list');
@@ -429,6 +532,9 @@
                             <tbody>
                     `;
 
+                    // --- AQUI ESTÁ A LÓGICA DO SUB-ADMIN ---
+                    const isSubAdmin = currentUserData.cargo === 'Sub-Admin';
+
                     dados.forEach((row) => {
                         const dateVal = row[2]; 
                         const dV = formatarData(dateVal); dV.setHours(0,0,0,0);
@@ -442,6 +548,19 @@
                         const uDate = row[2] || "";
                         const uWa   = row[3] || "";
                         const uVal  = row[4] || "";
+                        
+                        const statusAcc = row[8] || "Ativo"; 
+                        const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : '✅');
+
+                        // --- Lógica do Botão ---
+                        let statusBtn = '';
+                        if (isSubAdmin) {
+                            // Sub-Admin: Apenas vê, sem clique
+                            statusBtn = `<button class="status-btn btn-auto" style="width:25px; height:25px; padding:0; cursor: not-allowed; opacity: 0.6;" title="Status: ${statusAcc}">${statusIcon}</button>`;
+                        } else {
+                            // Admin: Pode clicar
+                            statusBtn = `<button class="status-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>`;
+                        }
 
                         html += `
                         <tr>
@@ -455,6 +574,7 @@
                         html += `
                             <td>
                                 <div style="display:flex; gap:5px;">
+                                    ${statusBtn} 
                                     <button class="chat-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button>
                                     <button class="vip-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button>
                                     <button class="edit-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button>
@@ -523,8 +643,17 @@
             reader.readAsDataURL(file);
         }
 
+        // --- FUNÇÃO DE DOWNLOAD ---
         function baixarArquivoGeral() {
-            if(currentFileUrl) window.open(currentFileUrl, '_blank');
+            if(currentFileUrl) {
+                const link = document.createElement("a");
+                link.href = currentFileUrl;
+                link.setAttribute("download", "");
+                link.setAttribute("target", "_blank");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
         }
 
         function abrirModalCreate() {
@@ -695,27 +824,51 @@
         function baixarSalvos() { const u = currentUserData.user; if(!db[u].salvos.length) return alert("Nada para extrair."); const blob = new Blob([db[u].salvos.join('\n')], {type: 'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `extraidos.txt`; a.click(); }
         function limparPendentes() { if(confirm("Apagar pendentes?")) { db[currentUserData.user].links = []; pgPend = 0; renderizar(); } }
         function limparSalvos() { if(confirm("Limpar salvos?")) { db[currentUserData.user].salvos = []; pgSalv = 0; renderizar(); } }
+        function limparDescartados() { if(confirm("Limpar descartados?")) { db[currentUserData.user].naoSalvos = []; pgDesc = 0; renderizar(); } }
+        function resgatarDescartado(idx) { const u = currentUserData.user; const link = db[u].naoSalvos[idx]; db[u].links.push(link); db[u].naoSalvos.splice(idx, 1); renderizar(); }
+        
         function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
         function logout(){ localStorage.removeItem(SESSION_KEY); location.reload(); }
-        function addLinks(){ const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); t.value=''; pgPend = 0; renderizar(); }
         
-        function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
-        function lerArquivoSalvos(i) { const r=new FileReader(); r.onload=(e)=>{if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].salvos.push(l.trim())}); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
-        
+        function lerArquivoSalvos(i) { const r=new FileReader(); r.onload=(e)=>{if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; const linhas = e.target.result.split('\n'); const novos = linhas.filter(l => l.trim() && !db[currentUserData.user].salvos.includes(l.trim())); db[currentUserData.user].salvos.push(...novos); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
+
+        // --- ALTERAÇÃO NA ABERTURA DE LINKS ---
         function tratarAberturaLink(idx, link) { 
+            if (lastOpenedLink) {
+                if(!db[currentUserData.user].naoSalvos) db[currentUserData.user].naoSalvos = [];
+                db[currentUserData.user].naoSalvos.push(lastOpenedLink);
+            }
+
             lastOpenedLink = link; 
+
             if(link.includes('http')) {
                 window.open(link); 
             } else {
                 window.open(`whatsapp://send?phone=55${link.replace(/\D/g,'')}`);
             }
+
             db[currentUserData.user].links.splice(idx, 1); 
             document.getElementById('last-link-opened').innerText = link; 
             document.getElementById('save-prompt').style.display = 'flex'; 
             renderizar(); 
         }
 
-        function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; db[currentUserData.user].salvos.push(lastOpenedLink); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
+        function confirmarSalvamento(sim) { 
+            const u = currentUserData.user;
+            if(!db[u].salvos) db[u].salvos=[]; 
+            if(!db[u].naoSalvos) db[u].naoSalvos=[];
+
+            if(sim && lastOpenedLink) { 
+                db[u].salvos.push(lastOpenedLink); 
+            } else if (!sim && lastOpenedLink) {
+                db[u].naoSalvos.push(lastOpenedLink);
+            }
+            
+            document.getElementById('save-prompt').style.display = 'none'; 
+            lastOpenedLink = ""; 
+            renderizar(); 
+        }
+
         function enviarDadosWhatsApp(u,p,w,d,v) { const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u}\n🔑 *Senha:* ${p}\n📅 *Vencimento:* ${d}\n💰 *Valor:* R$ ${v}`; window.open(`https://wa.me/55${String(w).replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
 
         function toggleAuto() {
