@@ -164,7 +164,7 @@
             <div style="background:#f9fafb; border:1px dashed #ccc; padding:10px; border-radius:8px; margin-bottom:15px;">
                 <div style="font-size:11px; font-weight:bold; margin-bottom:5px;">Carregar Arquivo Geral (Público)</div>
                 <div style="display:flex; gap:5px;">
-                    <input type="file" id="admin-file-upload" style="margin:0; padding:5px; font-size:11px;">
+                    <input type="file" id="admin-file-upload" accept="*" style="margin:0; padding:5px; font-size:11px;">
                     <button class="btn-auto" onclick="fazerUploadArquivo()">Enviar</button>
                 </div>
                 <div id="upload-status" style="font-size:10px; color:#666; margin-top:3px;"></div>
@@ -343,7 +343,6 @@
 
                     if(dados.isMaster) document.getElementById('btn-open-admin').classList.remove('hidden');
                     
-                    // --- VERIFICA ARQUIVO ---
                     if (dados.file && dados.file.url) {
                         document.getElementById('file-download-card').style.display = 'flex';
                         document.getElementById('file-date').innerText = dados.file.time;
@@ -439,9 +438,9 @@
                         
                         const uUser = row[0] || "";
                         const uPass = row[1] || "";
+                        const uDate = row[2] || "";
                         const uWa   = row[3] || "";
                         const uVal  = row[4] || "";
-                        const uDate = row[2] || "";
 
                         html += `
                         <tr>
@@ -476,7 +475,57 @@
             }
         }
 
-        // --- FUNÇÕES DE CRIAÇÃO ---
+        // --- UPLOAD DE ARQUIVO ---
+        function fazerUploadArquivo() {
+            const input = document.getElementById('admin-file-upload');
+            const status = document.getElementById('upload-status');
+            
+            if (input.files.length === 0) {
+                return alert("Selecione um arquivo!");
+            }
+
+            const file = input.files[0];
+            const reader = new FileReader();
+            
+            status.innerText = "Lendo arquivo...";
+            
+            reader.onload = async function(e) {
+                const base64 = e.target.result.split(',')[1]; 
+                status.innerText = "Enviando para o Drive...";
+                
+                try {
+                    const req = await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'upload_file',
+                            user: currentUserData.user,
+                            pass: currentUserData.pass,
+                            fileData: base64,
+                            fileName: file.name,
+                            fileType: file.type
+                        })
+                    });
+                    const res = await req.json();
+                    
+                    if (res.success) {
+                        status.innerText = "Sucesso! Link salvo.";
+                        alert("Arquivo enviado com sucesso!");
+                        location.reload(); 
+                    } else {
+                        status.innerText = "Erro: " + res.msg;
+                    }
+                } catch(err) {
+                    status.innerText = "Erro de conexão.";
+                }
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        function baixarArquivoGeral() {
+            if(currentFileUrl) window.open(currentFileUrl, '_blank');
+        }
+
         function abrirModalCreate() {
             document.getElementById('new-user').value = '';
             document.getElementById('new-pass').value = '';
@@ -484,7 +533,6 @@
             document.getElementById('new-wa').value = '';
             document.getElementById('new-val').value = '';
             
-            // SE FOR SUB-ADMIN, O PIX VEM LIMPO E SEM OPÇÃO DE CARGO
             if (currentUserData.cargo === 'Sub-Admin') {
                 document.getElementById('new-pix').value = ''; 
                 document.getElementById('role-container').style.display = 'none'; 
@@ -563,7 +611,6 @@
             }
         }
 
-        // --- FUNÇÕES DE EDIÇÃO ---
         function abrirModalEdit(user, pass, date, wa, val) {
             userEditing = user;
             document.getElementById('edit-user-display').innerText = user;
@@ -615,57 +662,6 @@
                 btn.disabled = false;
                 btn.innerText = "💾 Atualizar Dados";
             }
-        }
-
-        // --- UPLOAD DE ARQUIVO ---
-        function fazerUploadArquivo() {
-            const input = document.getElementById('admin-file-upload');
-            const status = document.getElementById('upload-status');
-            
-            if (input.files.length === 0) {
-                return alert("Selecione um arquivo!");
-            }
-
-            const file = input.files[0];
-            const reader = new FileReader();
-            
-            status.innerText = "Lendo arquivo...";
-            
-            reader.onload = async function(e) {
-                const base64 = e.target.result.split(',')[1]; // Remove header do base64
-                status.innerText = "Enviando para o Drive...";
-                
-                try {
-                    const req = await fetch(API_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            action: 'upload_file',
-                            user: currentUserData.user,
-                            pass: currentUserData.pass,
-                            fileData: base64,
-                            fileName: file.name,
-                            fileType: file.type
-                        })
-                    });
-                    const res = await req.json();
-                    
-                    if (res.success) {
-                        status.innerText = "Sucesso! Link salvo.";
-                        alert("Arquivo enviado com sucesso!");
-                        location.reload(); // Recarrega para aparecer o card
-                    } else {
-                        status.innerText = "Erro: " + res.msg;
-                    }
-                } catch(err) {
-                    status.innerText = "Erro de conexão.";
-                }
-            };
-            
-            reader.readAsDataURL(file);
-        }
-
-        function baixarArquivoGeral() {
-            if(currentFileUrl) window.open(currentFileUrl, '_blank');
         }
 
         function filtrarUsuarios() { 
