@@ -275,10 +275,20 @@
         function tratarAberturaLink(idx, link) { 
             lastOpenedLink = link; 
             if(link.includes('http')) {
-                window.open(link); 
+                // Link normal (grupos, etc) precisa abrir em nova aba
+                window.open(link, '_blank'); 
             } else {
-                // AQUI FOI ALTERADO PARA EVITAR BLOQUEIO DE POPUP
-                window.location.href = `whatsapp://send?phone=55${link.replace(/\D/g,'')}`;
+                // TRUQUE DO IFRAME OCULTO PARA ABRIR APP SEM ABA
+                const formatted = link.replace(/\D/g,'');
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = `whatsapp://send?phone=55${formatted}`;
+                document.body.appendChild(iframe);
+                
+                // Remove o iframe depois de alguns segundos para limpar
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 5000);
             }
             db[currentUserData.user].links.splice(idx, 1); 
             document.getElementById('last-link-opened').innerText = link; 
