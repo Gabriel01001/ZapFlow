@@ -93,10 +93,8 @@
 
             <div style="background: #e0f2fe; padding: 10px; border-radius: var(--radius); border: 1px solid #bae6fd; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 5px;">
-                    <span style="font-size: 12px; font-weight: bold; color: #0369a1;">⚡ Intervalo (seg):</span>
-                    <input type="number" id="min-time" value="10" style="width: 45px; padding: 6px; margin: 0; text-align: center;" min="1" placeholder="Min">
-                    <span style="color:#0369a1;">a</span>
-                    <input type="number" id="max-time" value="15" style="width: 45px; padding: 6px; margin: 0; text-align: center;" min="1" placeholder="Max">
+                    <span style="font-size: 12px; font-weight: bold; color: #0369a1;">⚡ Auto (seg):</span>
+                    <input type="number" id="auto-time" value="5" style="width: 50px; padding: 6px; margin: 0; text-align: center;" min="1">
                     <span id="countdown-display" style="font-size: 12px; font-weight: bold; color: #ef4444; margin-left: 5px;"></span>
                 </div>
                 <button id="btn-auto" onclick="toggleAuto()" class="btn-auto" style="background: #0ea5e9; width: 80px !important;">Iniciar</button>
@@ -149,7 +147,7 @@
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         let currentUserData = null, lastOpenedLink = "", adminCache = [];
         let pgPend = 0, pgSalv = 0; const ITENS_PAG = 5;
-        let autoTimeout = null;
+        let autoTimer = null;
         let countdownRef = null; 
 
         window.onload = () => {
@@ -277,22 +275,24 @@
         function tratarAberturaLink(idx, link) { 
             lastOpenedLink = link; 
             
+            // VERIFICA SE É LINK DE GRUPO (TEM QUE ABRIR ABA)
             if(link.includes('chat.whatsapp.com')) {
-                // Grupos: Nova Aba obrigatória
                 window.open(link, '_blank'); 
-            } else {
-                // Números: Tenta forçar via protocolo
+            } 
+            // SE FOR NÚMERO OU LINK DIRETO (wa.me/api.whatsapp), EXTRAI O NÚMERO E FORÇA APP
+            else {
+                // Remove tudo que não for dígito
                 const formatted = link.replace(/\D/g,'');
-                if(formatted.length > 5) { 
-                    // CRIA UM LINK INVISIVEL E CLICA NELE (Melhor método para Chrome)
+                if(formatted.length > 5) { // Validação mínima de número
+                    // Cria elemento de link falso
                     const a = document.createElement('a');
                     a.href = `whatsapp://send?phone=55${formatted}`;
                     a.style.display = 'none';
                     document.body.appendChild(a);
-                    a.click();
-                    // Pequeno delay para remover o elemento
-                    setTimeout(() => document.body.removeChild(a), 100);
+                    a.click(); // SIMULA O CLIQUE FÍSICO
+                    document.body.removeChild(a);
                 } else {
+                    // Se sobrou algo estranho (link quebrado), tenta abrir normal
                     window.open(link, '_blank');
                 }
             }
@@ -311,10 +311,10 @@
             const display = document.getElementById('countdown-display');
             const u = currentUserData.user;
             
-            if (autoTimeout) {
-                clearTimeout(autoTimeout);
+            if (autoTimer) {
+                clearInterval(autoTimer);
                 clearInterval(countdownRef);
-                autoTimeout = null;
+                autoTimer = null;
                 countdownRef = null;
                 btn.innerText = "Iniciar";
                 btn.style.background = "#0ea5e9";
@@ -322,21 +322,20 @@
                 return;
             }
 
-            const min = parseInt(document.getElementById('min-time').value);
-            const max = parseInt(document.getElementById('max-time').value);
-            if (!min || !max || min < 1 || max < min) return alert("Tempo inválido");
+            const tempo = parseInt(document.getElementById('auto-time').value);
+            if (!tempo || tempo < 1) return alert("Tempo inválido");
             if (db[u].links.length === 0) return alert("Sem links pendentes.");
 
             btn.innerText = "Parar";
             btn.style.background = "#ef4444";
 
-            const runCountdown = (totalSeconds) => {
-                let timeLeft = totalSeconds;
-                display.innerText = `(${timeLeft}s)`;
+            const runCountdown = (t) => {
+                let count = t;
+                display.innerText = `(${count}s)`;
                 clearInterval(countdownRef);
                 countdownRef = setInterval(() => {
-                    timeLeft--;
-                    if(timeLeft > 0) display.innerText = `(${timeLeft}s)`;
+                    count--;
+                    if(count > 0) display.innerText = `(${count}s)`;
                     else display.innerText = "...";
                 }, 1000);
             };
@@ -347,17 +346,13 @@
                     alert("Finalizado!");
                     return;
                 }
-
                 const link = db[u].links[0];
                 tratarAberturaLink(0, link);
-
-                const randomTime = Math.floor(Math.random() * (max - min + 1) + min);
-                runCountdown(randomTime);
-
-                autoTimeout = setTimeout(processar, randomTime * 1000);
+                runCountdown(tempo);
             };
 
             processar();
+            autoTimer = setInterval(processar, tempo * 1000);
         }
     </script>
 </body>
