@@ -24,16 +24,23 @@
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
         .card { background: var(--card); border: 1px solid #e5e7eb; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; overflow: hidden; }
         .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; min-width: 0; word-break: break-all; }
+        
+        /* MODAL E UTILITARIOS */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:1000; }
         .modal-overlay.show { display:flex; }
-        .modal-content { background:var(--card); padding:20px; border-radius:20px; width:95%; max-width:550px; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; }
+        .modal-content { background:var(--card); padding:20px; border-radius:20px; width:95%; max-width:900px; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; }
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
         .pay-key { font-family: monospace; font-size: 14px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
         
-        /* ESTILOS ORIGINAIS DO ADMIN */
-        .user-row { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: rgba(0,0,0,0.02); }
-        .creator-badge { font-size: 9px; font-weight: bold; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
-        .pix-badge { font-size: 9px; font-weight: bold; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+        /* --- ESTILOS DA NOVA TABELA DE ADMIN --- */
+        .table-responsive { overflow-x: auto; border: 1px solid #eee; border-radius: 10px; }
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
+        .admin-table th { background: #f3f4f6; color: #374151; padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+        .admin-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        .admin-table tr:hover { background: rgba(0,0,0,0.02); }
+        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .status-active { background-color: #10b981; }
+        .status-expired { background-color: #ef4444; }
         
         .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; padding: 0; background: var(--primary); color: white; border: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 20px; }
         .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; }
@@ -130,9 +137,9 @@
     <div id="modal-admin" class="modal-overlay">
         <div class="modal-content">
             <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:24px;" onclick="fecharModal('modal-admin')">&times;</span>
-            <h2 style="color: var(--dark); font-size: 18px;">⚙️ Gestão Master</h2>
-            <input type="text" id="search-user" placeholder="🔍 Pesquisar..." onkeyup="filtrarUsuarios()">
-            <div id="admin-users-list" style="margin-top:10px;">Carregando...</div>
+            <h2 style="color: var(--dark); font-size: 18px; margin-bottom: 15px;">⚙️ Gestão Master</h2>
+            <input type="text" id="search-user" placeholder="🔍 Pesquisar usuário..." onkeyup="filtrarUsuarios()" style="margin-bottom: 15px;">
+            <div id="admin-users-list"></div>
         </div>
     </div>
 
@@ -181,7 +188,6 @@
             document.querySelector('.theme-toggle').innerText = isDark ? '☀️' : '🌙';
         }
 
-        // Função de data otimizada
         function formatarData(d) {
             if(!d) return new Date();
             let l = String(d).trim();
@@ -278,6 +284,7 @@
 
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
         
+        // --- FUNÇÃO DE ADMIN COM MODO TABELA ---
         async function abrirAdminPanel() {
             document.getElementById('modal-admin').classList.add('show');
             const lista = document.getElementById('admin-users-list');
@@ -295,7 +302,6 @@
                 const res = await req.json();
 
                 if(res.success && Array.isArray(res.list)) {
-                    lista.innerHTML = '';
                     const hoje = new Date(); hoje.setHours(0,0,0,0);
                     
                     if(res.list.length === 0) {
@@ -303,33 +309,54 @@
                         return;
                     }
 
-                    res.list.forEach((u, idx) => {
+                    // Monta a estrutura da Tabela
+                    let html = `
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Usuário</th>
+                                    <th>Senha</th>
+                                    <th>Vencimento</th>
+                                    <th>WhatsApp</th>
+                                    <th>Valor</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    res.list.forEach((u) => {
                         const dV = formatarData(u.date); dV.setHours(0,0,0,0);
                         const diff = Math.ceil((dV - hoje) / 86400000);
-                        const cor = diff <= 5 ? "#ef4444" : "#3b82f6";
-                        
-                        // RESTAURAÇÃO EXATA DO VISUAL ORIGINAL
-                        const div = document.createElement('div'); div.className = 'user-row';
-                        div.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; align-items: flex-start;">
-                            <div style="max-width: 65%;">
-                                <strong style="font-size:14px;">${u.user}</strong><br>
-                                <span class="creator-badge">Criador: ${u.criador}</span><br>
-                                <span class="pix-badge">PIX: ${u.pix}</span><br>
-                                <small style="color:#10b981">📱 ${u.wa}</small> | <small style="color:#166534">💰 ${u.val}</small>
-                            </div>
-                            <div style="text-align:right; color:${cor}; font-weight:bold; font-size:11px;">
-                                ${diff < 0 ? 'Expirado' : diff + ' dias'}
-                            </div>
-                        </div>
-                        <div style="margin-top:10px; display:flex; gap:3px; flex-wrap:wrap;">
-                            <button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${String(u.wa).replace(/\D/g,'')}')">💬 Chat</button>
-                            <button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp('${u.user}','${u.pass}','${u.wa}','${u.date}','${u.val}')">📨 Dados</button>
-                        </div>`;
-                        lista.appendChild(div);
+                        const isExpired = diff < 0;
+                        const statusClass = isExpired ? 'status-expired' : 'status-active';
+                        const statusText = isExpired ? `Expirado` : `${diff} dias`;
+
+                        html += `
+                        <tr class="user-row">
+                            <td><span class="status-dot ${statusClass}"></span><span style="font-size:11px">${statusText}</span></td>
+                            <td><strong>${u.user}</strong></td>
+                            <td style="font-family:monospace; color:var(--primary)">${u.pass}</td>
+                            <td>${u.date}</td>
+                            <td>${u.wa}</td>
+                            <td>${u.val}</td>
+                            <td>
+                                <div style="display:flex; gap:5px;">
+                                    <button class="chat-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Chat" onclick="window.open('https://wa.me/55${String(u.wa).replace(/\D/g,'')}')">💬</button>
+                                    <button class="vip-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${u.user}','${u.pass}','${u.wa}','${u.date}','${u.val}')">📨</button>
+                                </div>
+                            </td>
+                        </tr>
+                        `;
                     });
+
+                    html += `</tbody></table></div>`;
+                    lista.innerHTML = html;
+
                 } else {
-                    lista.innerHTML = '<p style="text-align:center; color:red">Erro ao carregar (API mismatch).</p>';
+                    lista.innerHTML = '<p style="text-align:center; color:red">Erro ao carregar lista.</p>';
                 }
             } catch(e) {
                 console.error(e);
@@ -337,7 +364,15 @@
             }
         }
 
-        function filtrarUsuarios() { const termo = document.getElementById('search-user').value.toLowerCase(); document.querySelectorAll('.user-row').forEach(row => row.style.display = row.innerText.toLowerCase().includes(termo) ? 'block' : 'none'); }
+        function filtrarUsuarios() { 
+            const termo = document.getElementById('search-user').value.toLowerCase(); 
+            const linhas = document.querySelectorAll('.admin-table tbody tr');
+            linhas.forEach(tr => {
+                const texto = tr.innerText.toLowerCase();
+                tr.style.display = texto.includes(termo) ? '' : 'none';
+            });
+        }
+        
         function abrirModalRenovar() { document.getElementById('pix-display').innerText = currentUserData.pix; document.getElementById('modal-renovar').classList.add('show'); }
         
         function copiarPixReal() { 
@@ -376,6 +411,7 @@
         function enviarDadosWhatsApp(u,p,w,d,v) { const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u}\n🔑 *Senha:* ${p}\n📅 *Vencimento:* ${d}\n💰 *Valor:* R$ ${v}`; window.open(`https://wa.me/55${String(w).replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
 
         function toggleAuto() {
+            // Função mantida caso precise reativar no futuro, mas o botão está oculto.
             const btn = document.getElementById('btn-auto');
             const display = document.getElementById('countdown-display');
             const u = currentUserData.user;
