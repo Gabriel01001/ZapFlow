@@ -91,6 +91,15 @@
                 </div>
             </div>
 
+            <div style="background: #e0f2fe; padding: 10px; border-radius: var(--radius); border: 1px solid #bae6fd; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-size: 12px; font-weight: bold; color: #0369a1;">⚡ Auto (seg):</span>
+                    <input type="number" id="auto-time" value="5" style="width: 50px; padding: 6px; margin: 0; text-align: center;" min="1">
+                    <span id="countdown-display" style="font-size: 12px; font-weight: bold; color: #ef4444; margin-left: 5px;"></span>
+                </div>
+                <button id="btn-auto" onclick="toggleAuto()" class="btn-auto" style="background: #0ea5e9; width: 80px !important;">Iniciar</button>
+            </div>
+
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h4 style="color: var(--primary); margin:0;">Pendentes (<span id="count-pend">0</span>)</h4>
                 <button onclick="limparPendentes()" class="danger btn-auto" style="padding: 4px 8px; font-size: 9px;">🗑️ Limpar</button>
@@ -101,6 +110,8 @@
             <h4 style="color: var(--blue);">Salvos (<span id="count-saved">0</span>)</h4>
             <div style="display: flex; gap: 5px; margin-bottom: 10px;">
                 <button onclick="baixarSalvos()" class="secondary btn-auto">📥 Extrair</button>
+                <button onclick="document.getElementById('file-saved').click()" class="secondary btn-auto">📂 Arquivo</button>
+                <input type="file" id="file-saved" accept=".txt" hidden onchange="lerArquivoSalvos(this)">
                 <button onclick="limparSalvos()" class="danger btn-auto">🗑️ Limpar</button>
             </div>
             <div id="lista-salvos"></div>
@@ -136,6 +147,8 @@
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
         let currentUserData = null, lastOpenedLink = "", adminCache = [];
         let pgPend = 0, pgSalv = 0; const ITENS_PAG = 5;
+        let autoTimer = null;
+        let countdownRef = null; // VARIAVEL PARA O CONTADOR VISUAL
 
         window.onload = () => {
             if(localStorage.getItem('theme') === 'dark') {
@@ -178,15 +191,14 @@
                 for (let i = 1; i < linhas.length; i++) {
                     const c = linhas[i].split(',');
                     if(c.length >= 7){
-                        // PARTE DESMEMBRADA DA PLANILHA PARA FACILITAR EDIÇÃO
                         const uO = { 
-                            user: (c[0]||"").replace(/['"]+/g, '').trim(),    // Coluna A (Usuário)
-                            pass: (c[1]||"").replace(/['"]+/g, '').trim(),    // Coluna B (Senha)
-                            date: (c[2]||"").replace(/['"]+/g, '').trim(),    // Coluna C (Validade)
-                            wa: (c[3]||"").replace(/['"]+/g, '').trim(),      // Coluna D (WhatsApp)
-                            val: (c[4]||"").replace(/['"]+/g, '').trim(),     // Coluna E (Valor)
-                            pix: (c[7]||"").replace(/['"]+/g, '').trim(),     // Coluna F (CPF/PIX)
-                            criador: (c[6]||"").replace(/['"]+/g, '').trim()  // Coluna G (Nome do Criador)
+                            user: (c[0]||"").replace(/['"]+/g, '').trim(),
+                            pass: (c[1]||"").replace(/['"]+/g, '').trim(),
+                            date: (c[2]||"").replace(/['"]+/g, '').trim(),
+                            wa: (c[3]||"").replace(/['"]+/g, '').trim(),
+                            val: (c[4]||"").replace(/['"]+/g, '').trim(),
+                            pix: (c[7]||"").replace(/['"]+/g, '').trim(),
+                            criador: (c[6]||"").replace(/['"]+/g, '').trim()
                         };
                         adminCache.push(uO);
                         if(uO.user.toLowerCase() === uI && uO.pass === pI) localAchou = uO;
@@ -256,10 +268,74 @@
         function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
         function logout(){ localStorage.removeItem(SESSION_KEY); location.reload(); }
         function addLinks(){ const t=document.getElementById('links-input'); t.value.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); t.value=''; pgPend = 0; renderizar(); }
+        
         function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].links.push(l.trim())}); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
-        function tratarAberturaLink(idx, link) { lastOpenedLink = link; window.open(link.includes('http') ? link : `https://wa.me/55${link.replace(/\D/g,'')}`); db[currentUserData.user].links.splice(idx, 1); document.getElementById('last-link-opened').innerText = link; document.getElementById('save-prompt').style.display = 'flex'; renderizar(); }
+        function lerArquivoSalvos(i) { const r=new FileReader(); r.onload=(e)=>{if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; e.target.result.split('\n').forEach(l=>{if(l.trim())db[currentUserData.user].salvos.push(l.trim())}); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
+        
+        function tratarAberturaLink(idx, link) { 
+            lastOpenedLink = link; 
+            if(link.includes('http')) {
+                window.open(link); 
+            } else {
+                window.open(`whatsapp://send?phone=55${link.replace(/\D/g,'')}`);
+            }
+            db[currentUserData.user].links.splice(idx, 1); 
+            document.getElementById('last-link-opened').innerText = link; 
+            document.getElementById('save-prompt').style.display = 'flex'; 
+            renderizar(); 
+        }
+
         function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; db[currentUserData.user].salvos.push(lastOpenedLink); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
         function enviarDadosWhatsApp(idx) { const u = adminCache[idx]; const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u.user}\n🔑 *Senha:* ${u.pass}\n📅 *Vencimento:* ${u.date}\n💰 *Valor:* R$ ${u.val}`; window.open(`https://wa.me/55${u.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
+
+        function toggleAuto() {
+            const btn = document.getElementById('btn-auto');
+            const display = document.getElementById('countdown-display');
+            const u = currentUserData.user;
+            
+            if (autoTimer) {
+                clearInterval(autoTimer);
+                clearInterval(countdownRef);
+                autoTimer = null;
+                countdownRef = null;
+                btn.innerText = "Iniciar";
+                btn.style.background = "#0ea5e9";
+                display.innerText = "";
+                return;
+            }
+
+            const tempo = parseInt(document.getElementById('auto-time').value);
+            if (!tempo || tempo < 1) return alert("Tempo inválido");
+            if (db[u].links.length === 0) return alert("Sem links pendentes.");
+
+            btn.innerText = "Parar";
+            btn.style.background = "#ef4444";
+
+            const runCountdown = (t) => {
+                let count = t;
+                display.innerText = `(${count}s)`;
+                clearInterval(countdownRef);
+                countdownRef = setInterval(() => {
+                    count--;
+                    if(count > 0) display.innerText = `(${count}s)`;
+                    else display.innerText = "...";
+                }, 1000);
+            };
+
+            const processar = () => {
+                if (db[u].links.length === 0) {
+                    toggleAuto();
+                    alert("Finalizado!");
+                    return;
+                }
+                const link = db[u].links[0];
+                tratarAberturaLink(0, link);
+                runCountdown(tempo);
+            };
+
+            processar();
+            autoTimer = setInterval(processar, tempo * 1000);
+        }
     </script>
 </body>
 </html>
