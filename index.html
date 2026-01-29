@@ -377,14 +377,14 @@
             }
         }
 
-        // --- FUNÇÃO ANTI-DUPLICIDADE ---
+        // --- FUNÇÃO ANTI-DUPLICIDADE COM 3 VERIFICAÇÕES ---
         function processarNovosLinks(listaBruta) {
             const u = currentUserData.user;
             if (!db[u]) db[u] = { links: [], salvos: [], naoSalvos: [] };
             if (!db[u].salvos) db[u].salvos = []; 
             if (!db[u].naoSalvos) db[u].naoSalvos = []; 
 
-            // Cria conjunto com tudo que ja existe (Pendentes + Salvos + Não Salvos)
+            // Verifica em Pendentes + Salvos + Não Salvos
             const jaExistem = new Set([...db[u].links, ...db[u].salvos, ...db[u].naoSalvos]);
 
             let adicionados = 0;
@@ -450,7 +450,7 @@
             });
             renderControles('paginacao-salv', tS, pgSalv, (n)=> {pgSalv=n; renderizar();});
 
-            // Renderizar Descartados (Não Salvos)
+            // Renderizar Descartados
             const d = document.getElementById('lista-descartados');
             d.innerHTML = '';
             const tD = db[u].naoSalvos ? db[u].naoSalvos.length : 0;
@@ -795,7 +795,7 @@
         
         function lerArquivoSalvos(i) { const r=new FileReader(); r.onload=(e)=>{if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; const linhas = e.target.result.split('\n'); const novos = linhas.filter(l => l.trim() && !db[currentUserData.user].salvos.includes(l.trim())); db[currentUserData.user].salvos.push(...novos); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
 
-        // --- ALTERAÇÃO NA ABERTURA DE LINKS ---
+        // --- ALTERAÇÃO IMPORTANTE NA ABERTURA DE LINKS ---
         function tratarAberturaLink(idx, link) { 
             // 1. Verifica se já existe um link aberto pendente (lastOpenedLink)
             // Se existir, significa que o usuário NÃO clicou em "Sim" para salvá-lo.
@@ -832,7 +832,7 @@
             if(sim && lastOpenedLink) { 
                 db[u].salvos.push(lastOpenedLink); 
             } else if (!sim && lastOpenedLink) {
-                // Se clicar em NÃO, move explicitamente para Não Salvos
+                // Se clicar em NÃO, também move explicitamente para Não Salvos
                 db[u].naoSalvos.push(lastOpenedLink);
             }
             
