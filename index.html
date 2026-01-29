@@ -278,16 +278,20 @@
             lastOpenedLink = link; 
             
             if(link.includes('chat.whatsapp.com')) {
+                // Grupos: Nova Aba obrigatória
                 window.open(link, '_blank'); 
             } else {
+                // Números: Tenta forçar via protocolo
                 const formatted = link.replace(/\D/g,'');
                 if(formatted.length > 5) { 
+                    // CRIA UM LINK INVISIVEL E CLICA NELE (Melhor método para Chrome)
                     const a = document.createElement('a');
                     a.href = `whatsapp://send?phone=55${formatted}`;
                     a.style.display = 'none';
                     document.body.appendChild(a);
                     a.click();
-                    document.body.removeChild(a);
+                    // Pequeno delay para remover o elemento
+                    setTimeout(() => document.body.removeChild(a), 100);
                 } else {
                     window.open(link, '_blank');
                 }
@@ -302,13 +306,11 @@
         function confirmarSalvamento(sim) { if(sim && lastOpenedLink) { if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; db[currentUserData.user].salvos.push(lastOpenedLink); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
         function enviarDadosWhatsApp(idx) { const u = adminCache[idx]; const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u.user}\n🔑 *Senha:* ${u.pass}\n📅 *Vencimento:* ${u.date}\n💰 *Valor:* R$ ${u.val}`; window.open(`https://wa.me/55${u.wa.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
 
-        // LOGICA DE AUTO COM TEMPO VARIAVEL (RECURSIVA)
         function toggleAuto() {
             const btn = document.getElementById('btn-auto');
             const display = document.getElementById('countdown-display');
             const u = currentUserData.user;
             
-            // SE ESTIVER RODANDO, PARA
             if (autoTimeout) {
                 clearTimeout(autoTimeout);
                 clearInterval(countdownRef);
@@ -328,7 +330,6 @@
             btn.innerText = "Parar";
             btn.style.background = "#ef4444";
 
-            // FUNCAO DE CONTAGEM REGRESSIVA VISUAL
             const runCountdown = (totalSeconds) => {
                 let timeLeft = totalSeconds;
                 display.innerText = `(${timeLeft}s)`;
@@ -340,29 +341,22 @@
                 }, 1000);
             };
 
-            // FUNCAO PRINCIPAL QUE SE CHAMA RECURSIVAMENTE
             const processar = () => {
                 if (db[u].links.length === 0) {
-                    toggleAuto(); // Para tudo
+                    toggleAuto();
                     alert("Finalizado!");
                     return;
                 }
 
-                // 1. Abre o link atual (sempre indice 0 da lista)
                 const link = db[u].links[0];
                 tratarAberturaLink(0, link);
 
-                // 2. Calcula o PRÓXIMO tempo aleatório
                 const randomTime = Math.floor(Math.random() * (max - min + 1) + min);
-                
-                // 3. Inicia contagem visual
                 runCountdown(randomTime);
 
-                // 4. Agenda a próxima execução
                 autoTimeout = setTimeout(processar, randomTime * 1000);
             };
 
-            // Inicia imediatamente o primeiro
             processar();
         }
     </script>
