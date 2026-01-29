@@ -193,7 +193,7 @@
     </div>
 
     <script>
-        // === URL DA SUA API ===
+        // === NOVA URL DA SUA API ===
         const API_URL = 'https://script.google.com/macros/s/AKfycbzPSSQYnV2Bg61wPTlbycC5Lk6GEKIk4JiEY7jufNq_4ogNX2KUGvs4DaRTiu_Z6bWmXg/exec';
 
         const DB_KEY = 'zapflow_v36';
@@ -435,8 +435,6 @@
             const w = document.getElementById('new-wa').value;
             const v = document.getElementById('new-val').value;
             const x = document.getElementById('new-pix').value;
-            
-            // PEGA O CARGO SELECIONADO (User ou Sub-Admin)
             const cargo = document.getElementById('new-role').value;
 
             if(!u || !p || !d) {
@@ -458,8 +456,7 @@
                 wa: w,
                 val: v,
                 pix: x,
-                criador: currentUserData.user,
-                cargo: cargo // ENVIA O CARGO PARA A PLANILHA (Coluna H/7)
+                cargo: cargo 
             };
 
             btn.disabled = true;
