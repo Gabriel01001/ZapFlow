@@ -29,9 +29,12 @@
         .modal-content { background:var(--card); padding:20px; border-radius:20px; width:95%; max-width:550px; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; }
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
         .pay-key { font-family: monospace; font-size: 14px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
+        
+        /* ESTILOS ORIGINAIS DO ADMIN */
         .user-row { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: rgba(0,0,0,0.02); }
         .creator-badge { font-size: 9px; font-weight: bold; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
         .pix-badge { font-size: 9px; font-weight: bold; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+        
         .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; padding: 0; background: var(--primary); color: white; border: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 20px; }
         .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; }
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; margin-bottom: 20px; font-size: 12px; }
@@ -146,7 +149,7 @@
     </div>
 
     <script>
-        // === URL DA SUA API SEGURA ===
+        // === URL DA SUA API ===
         const API_URL = 'https://script.google.com/macros/s/AKfycbzPZF_g41r5zs4rzO9qj4S8iBhwGk7pVEkhrH9pLgVSoZOd5GpWkJH8eNiQ6YodJ10dbg/exec';
 
         const DB_KEY = 'zapflow_v36';
@@ -178,9 +181,11 @@
             document.querySelector('.theme-toggle').innerText = isDark ? '☀️' : '🌙';
         }
 
+        // Função de data otimizada
         function formatarData(d) {
             if(!d) return new Date();
-            let l = String(d).replace(/['"]+/g, '').trim();
+            // Se já vier formatado do servidor (DD/MM/AAAA)
+            let l = String(d).trim();
             if(l.includes('/')) { const p = l.split('/'); return new Date(p[2], p[1]-1, p[0]); }
             return new Date(l);
         }
@@ -195,14 +200,12 @@
 
             if(!uI || !pI) return msg.innerText = "Preencha todos os campos.";
 
-            // UI Loading
             btn.disabled = true;
             txt.style.display = 'none';
             loader.style.display = 'block';
             msg.innerText = "";
 
             try {
-                // Nova chamada segura para o Backend
                 const req = await fetch(API_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'login', user: uI, pass: pI })
@@ -215,7 +218,6 @@
                     const hoje = new Date(); hoje.setHours(0,0,0,0);
                     const diff = Math.ceil((dV - hoje) / 86400000);
 
-                    // Verifica validade
                     if(diff < 0 && !dados.isMaster) {
                         msg.innerText = "Acesso expirado.";
                         localStorage.removeItem(SESSION_KEY);
@@ -224,14 +226,12 @@
                     }
 
                     currentUserData = dados;
-                    // Salva senha localmente APENAS para re-autenticação do admin (opcional)
                     currentUserData.pass = pI; 
                     
                     localStorage.setItem(SESSION_KEY, JSON.stringify({user: uI, pass: pI}));
                     
                     if(!db[uI]) db[uI] = {links:[], salvos:[]};
                     
-                    // Transição de tela
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('app-screen').classList.remove('hidden');
                     
@@ -252,7 +252,7 @@
                 }
             } catch(e) {
                 console.error(e);
-                msg.innerText = "Erro de conexão.";
+                msg.innerText = "Erro ao conectar. Verifique internet.";
             } finally {
                 btn.disabled = false;
                 txt.style.display = 'block';
@@ -264,7 +264,7 @@
             const p = document.getElementById('lista-pendentes'), s = document.getElementById('lista-salvos'), u = currentUserData.user;
             p.innerHTML = ''; s.innerHTML = '';
             
-            if(!db[u]) db[u] = {links:[], salvos:[]}; // Previne erro se user for novo
+            if(!db[u]) db[u] = {links:[], salvos:[]}; 
             
             const tP = db[u].links.length, tS = db[u].salvos ? db[u].salvos.length : 0;
             document.getElementById('count-pend').innerText = tP; document.getElementById('count-saved').innerText = tS;
@@ -279,13 +279,13 @@
 
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
         
+        // --- FUNÇÃO DE ADMIN CORRIGIDA E RESTAURADA ---
         async function abrirAdminPanel() {
             document.getElementById('modal-admin').classList.add('show');
             const lista = document.getElementById('admin-users-list');
-            lista.innerHTML = '<div class="loader" style="display:block; border-color:#ccc; border-top-color:#333"></div>';
+            lista.innerHTML = '<div class="loader" style="display:block; border-color:#ccc; border-top-color:#333; margin-top: 20px;"></div>';
 
             try {
-                // Chama Backend para pegar lista (Seguro)
                 const req = await fetch(API_URL, {
                     method: 'POST',
                     body: JSON.stringify({ 
@@ -296,24 +296,46 @@
                 });
                 const res = await req.json();
 
-                if(res.success) {
+                if(res.success && Array.isArray(res.list)) {
                     lista.innerHTML = '';
                     const hoje = new Date(); hoje.setHours(0,0,0,0);
                     
+                    if(res.list.length === 0) {
+                        lista.innerHTML = '<p style="text-align:center; color:#666;">Nenhum usuário encontrado.</p>';
+                        return;
+                    }
+
                     res.list.forEach((u, idx) => {
                         const dV = formatarData(u.date); dV.setHours(0,0,0,0);
                         const diff = Math.ceil((dV - hoje) / 86400000);
                         const cor = diff <= 5 ? "#ef4444" : "#3b82f6";
-                        const div = document.createElement('div'); div.className = 'user-row';
                         
-                        div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items: flex-start;"><div style="max-width: 65%;"><strong style="font-size:14px;">${u.user}</strong><br><span class="creator-badge">Criador: ${u.criador}</span><br><span class="pix-badge">PIX: ${u.pix}</span><br><small style="color:#10b981">📱 ${u.wa}</small> | <small style="color:#166534">💰 ${u.val}</small></div><div style="text-align:right; color:${cor}; font-weight:bold; font-size:11px;">${diff < 0 ? 'Expirado' : diff + ' dias'}</div></div><div style="margin-top:10px; display:flex; gap:3px; flex-wrap:wrap;"><button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${String(u.wa).replace(/\D/g,'')}')">💬 Chat</button><button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp('${u.user}','${u.pass}','${u.wa}','${u.date}','${u.val}')">📨 Dados</button></div>`;
+                        // RESTAURAÇÃO EXATA DO VISUAL ORIGINAL
+                        const div = document.createElement('div'); div.className = 'user-row';
+                        div.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items: flex-start;">
+                            <div style="max-width: 65%;">
+                                <strong style="font-size:14px;">${u.user}</strong><br>
+                                <span class="creator-badge">Criador: ${u.criador}</span><br>
+                                <span class="pix-badge">PIX: ${u.pix}</span><br>
+                                <small style="color:#10b981">📱 ${u.wa}</small> | <small style="color:#166534">💰 ${u.val}</small>
+                            </div>
+                            <div style="text-align:right; color:${cor}; font-weight:bold; font-size:11px;">
+                                ${diff < 0 ? 'Expirado' : diff + ' dias'}
+                            </div>
+                        </div>
+                        <div style="margin-top:10px; display:flex; gap:3px; flex-wrap:wrap;">
+                            <button class="chat-btn btn-auto" onclick="window.open('https://wa.me/55${String(u.wa).replace(/\D/g,'')}')">💬 Chat</button>
+                            <button class="vip-btn btn-auto" onclick="enviarDadosWhatsApp('${u.user}','${u.pass}','${u.wa}','${u.date}','${u.val}')">📨 Dados</button>
+                        </div>`;
                         lista.appendChild(div);
                     });
                 } else {
-                    lista.innerHTML = 'Erro ao carregar lista.';
+                    lista.innerHTML = '<p style="text-align:center; color:red">Erro ao carregar (API mismatch).</p>';
                 }
             } catch(e) {
-                lista.innerHTML = 'Erro de conexão.';
+                console.error(e);
+                lista.innerHTML = '<p style="text-align:center; color:red">Erro de conexão com o servidor.</p>';
             }
         }
 
