@@ -148,7 +148,7 @@
         let currentUserData = null, lastOpenedLink = "", adminCache = [];
         let pgPend = 0, pgSalv = 0; const ITENS_PAG = 5;
         let autoTimer = null;
-        let countdownRef = null; // VARIAVEL PARA O CONTADOR VISUAL
+        let countdownRef = null; 
 
         window.onload = () => {
             if(localStorage.getItem('theme') === 'dark') {
@@ -277,7 +277,8 @@
             if(link.includes('http')) {
                 window.open(link); 
             } else {
-                window.open(`whatsapp://send?phone=55${link.replace(/\D/g,'')}`);
+                // AQUI FOI ALTERADO PARA EVITAR BLOQUEIO DE POPUP
+                window.location.href = `whatsapp://send?phone=55${link.replace(/\D/g,'')}`;
             }
             db[currentUserData.user].links.splice(idx, 1); 
             document.getElementById('last-link-opened').innerText = link; 
