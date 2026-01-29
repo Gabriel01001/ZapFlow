@@ -164,7 +164,7 @@
             <div style="background:#f9fafb; border:1px dashed #ccc; padding:10px; border-radius:8px; margin-bottom:15px;">
                 <div style="font-size:11px; font-weight:bold; margin-bottom:5px;">Carregar Arquivo Geral (Público)</div>
                 <div style="display:flex; gap:5px;">
-                    <input type="file" id="admin-file-upload" accept="*" style="margin:0; padding:5px; font-size:11px;">
+                    <input type="file" id="admin-file-upload" style="margin:0; padding:5px; font-size:11px;">
                     <button class="btn-auto" onclick="fazerUploadArquivo()">Enviar</button>
                 </div>
                 <div id="upload-status" style="font-size:10px; color:#666; margin-top:3px;"></div>
@@ -343,6 +343,7 @@
 
                     if(dados.isMaster) document.getElementById('btn-open-admin').classList.remove('hidden');
                     
+                    // --- VERIFICA ARQUIVO ---
                     if (dados.file && dados.file.url) {
                         document.getElementById('file-download-card').style.display = 'flex';
                         document.getElementById('file-date').innerText = dados.file.time;
