@@ -156,7 +156,7 @@
     </div>
 
     <script>
-        // === URL NOVA ===
+        // === URL DA SUA API ===
         const API_URL = 'https://script.google.com/macros/s/AKfycbzPSSQYnV2Bg61wPTlbycC5Lk6GEKIk4JiEY7jufNq_4ogNX2KUGvs4DaRTiu_Z6bWmXg/exec';
 
         const DB_KEY = 'zapflow_v36';
@@ -284,7 +284,7 @@
 
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
         
-        // --- FUNÇÃO ADMIN TOTALMENTE DINÂMICA ---
+        // --- FUNÇÃO ADMIN DINÂMICA ---
         async function abrirAdminPanel() {
             document.getElementById('modal-admin').classList.add('show');
             const lista = document.getElementById('admin-users-list');
@@ -302,8 +302,8 @@
                 const res = await req.json();
 
                 if(res.success && Array.isArray(res.list)) {
-                    const headers = res.headers || []; // Cabeçalhos da planilha
-                    const dados = res.list; // Dados dos usuários
+                    const headers = res.headers || []; 
+                    const dados = res.list; 
                     const hoje = new Date(); hoje.setHours(0,0,0,0);
                     
                     if(dados.length === 0) {
@@ -311,7 +311,6 @@
                         return;
                     }
 
-                    // MONTA O CABEÇALHO DINÂMICO
                     let html = `
                     <div class="table-responsive">
                         <table class="admin-table">
@@ -320,12 +319,10 @@
                                     <th style="width: 50px;">Status</th>
                     `;
                     
-                    // Cria uma coluna <th> para cada cabeçalho da planilha
                     headers.forEach(h => {
                         html += `<th>${h}</th>`;
                     });
 
-                    // Adiciona coluna de Ações no final
                     html += `
                                     <th style="width: 80px;">Ações</th>
                                 </tr>
@@ -333,9 +330,8 @@
                             <tbody>
                     `;
 
-                    // MONTA AS LINHAS
                     dados.forEach((row) => {
-                        // Assume que a Data está na Coluna 3 (Índice 2)
+                        // Assume Data na Coluna 3 (Índice 2)
                         const dateVal = row[2]; 
                         const dV = formatarData(dateVal); dV.setHours(0,0,0,0);
                         const diff = Math.ceil((dV - hoje) / 86400000);
@@ -343,8 +339,6 @@
                         const statusClass = isExpired ? 'status-expired' : 'status-active';
                         const statusText = isExpired ? `Expirado` : `${diff}d`;
                         
-                        // Assume que User=0, Pass=1, WA=3, Val=4 para o botão de envio
-                        // Mesmo sendo dinâmico, os botões precisam saber onde estão os dados chaves
                         const uUser = row[0] || "";
                         const uPass = row[1] || "";
                         const uWa   = row[3] || "";
@@ -356,7 +350,6 @@
                             <td><span class="status-dot ${statusClass}" title="${statusText}"></span><small>${statusText}</small></td>
                         `;
                         
-                        // Loop dinâmico para criar células <td> para cada coluna da planilha
                         row.forEach(cell => {
                             html += `<td>${cell}</td>`;
                         });
@@ -393,7 +386,19 @@
             });
         }
         
-        function abrirModalRenovar() { document.getElementById('pix-display').innerText = currentUserData.pix; document.getElementById('modal-renovar').classList.add('show'); }
+        // --- CORREÇÃO DO DISPLAY DE PIX ---
+        function abrirModalRenovar() { 
+            // Pega o PIX da sessão atual do usuário
+            let chaveDaPlanilha = currentUserData.pix;
+            
+            // Verifica se está vazio ou é "undefined" e define texto padrão
+            if (!chaveDaPlanilha || chaveDaPlanilha === "undefined") {
+                chaveDaPlanilha = "Chave não cadastrada";
+            }
+
+            document.getElementById('pix-display').innerText = chaveDaPlanilha;
+            document.getElementById('modal-renovar').classList.add('show'); 
+        }
         
         function copiarPixReal() { 
             const t = document.getElementById('pix-display').innerText;
