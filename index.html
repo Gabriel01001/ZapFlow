@@ -11,9 +11,11 @@
         * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; transition: 0.3s; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
-        input, textarea, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; color: #333; }
+        input, textarea, select { width: 100%; padding: 14px; margin-bottom: 12px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; color: #333; font-size: 14px; }
         body.dark-mode input, body.dark-mode select { background: #374151; color: white; border-color: #4b5563; }
-        button { width: 100%; padding: 12px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        
+        /* BOTÕES GERAIS MAIORES */
+        button { width: 100%; padding: 14px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; }
         button:hover { filter: brightness(0.9); transform: translateY(-2px); }
         button.secondary { background: #e5e7eb; color: #333; }
         button.danger { background: var(--danger); }
@@ -22,7 +24,10 @@
         button.admin-btn { background: var(--text); color: var(--card); }
         button.chat-btn { background: #25d366; color: white; }
         button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
-        .btn-auto { width: auto !important; padding: 6px 12px; font-size: 12px; margin: 2px; flex-shrink: 0; }
+        
+        /* BOTÕES PEQUENOS (Auto) MAIORES */
+        .btn-auto { width: auto !important; padding: 8px 16px; font-size: 13px; margin: 3px; flex-shrink: 0; }
+        
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
         .card { background: var(--card); border: 1px solid #e5e7eb; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; overflow: hidden; }
         .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; min-width: 0; word-break: break-all; }
@@ -35,23 +40,23 @@
         
         /* TABELA DINAMICA */
         .table-responsive { overflow-x: auto; border: 1px solid #eee; border-radius: 10px; margin-top: 10px; }
-        .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 800px; }
-        .admin-table th { background: #f3f4f6; color: #374151; padding: 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
-        .admin-table td { padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: middle; white-space: nowrap; }
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 800px; }
+        .admin-table th { background: #f3f4f6; color: #374151; padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+        .admin-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; white-space: nowrap; }
         .admin-table tr:hover { background: rgba(0,0,0,0.02); }
         
-        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
         .status-active { background-color: #10b981; }
         .status-expired { background-color: #ef4444; }
         .status-pending { background-color: #f59e0b; }
         
-        .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; padding: 0; background: var(--primary); color: white; border: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 20px; }
+        .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; padding: 0; background: var(--primary); color: white; border: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 24px; }
         .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; }
-        .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; margin-bottom: 20px; font-size: 12px; }
-        .loader { border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; margin: 0 auto; }
+        .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 15px; margin-bottom: 20px; font-size: 13px; }
+        .loader { border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .full-width { grid-column: span 2; }
         .discarded-section { margin-top: 30px; border-top: 2px dashed #e5e7eb; padding-top: 20px; }
         .card-discarded { border-left: 4px solid var(--gray); opacity: 0.8; }
@@ -89,10 +94,10 @@
 
             <div id="file-download-card" class="card" style="background: #eff6ff; border: 1px solid #bfdbfe; display: none; color: #1f2937 !important;">
                 <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
-                    <span style="font-size: 20px;">📥</span>
+                    <span style="font-size: 24px;">📥</span>
                     <div style="overflow: hidden;">
-                        <div style="font-weight: bold; font-size: 13px; color: #1f2937;">Arquivo Geral</div>
-                        <div style="font-size: 10px; color: #4b5563; white-space: nowrap;">Atualizado: <span id="file-date"></span></div>
+                        <div style="font-weight: bold; font-size: 14px; color: #1f2937;">Arquivo Geral</div>
+                        <div style="font-size: 11px; color: #4b5563; white-space: nowrap;">Atualizado: <span id="file-date"></span></div>
                     </div>
                 </div>
                 <button onclick="baixarArquivoGeral()" class="btn-auto" style="background: #3b82f6;">Baixar</button>
@@ -100,7 +105,7 @@
 
             <div id="vencimento-alert" class="card" style="background: #fff7ed; border: 1px solid #fdba74; display: none; margin-bottom: 20px; padding: 15px;">
                 <div style="display:flex; align-items:center; gap:5px; justify-content: space-between; width: 100%;">
-                    <span style="color:#333; font-size: 11px;">⚠️ Expira em <span id="dias-restantes-alerta" style="font-weight: bold;">0</span> dias.</span>
+                    <span style="color:#333; font-size: 12px;">⚠️ Expira em <span id="dias-restantes-alerta" style="font-weight: bold;">0</span> dias.</span>
                     <button onclick="abrirModalRenovar()" class="vip-btn btn-auto">Renovar</button>
                 </div>
             </div>
@@ -108,19 +113,19 @@
             <div style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: var(--radius); margin-bottom: 20px; border: 1px solid #e5e7eb;">
                 <h4 style="margin: 0 0 10px 0;">📥 Adicionar Dados</h4>
                 <textarea id="links-input" rows="1" placeholder="Cole links ou números..."></textarea>
-                <div style="display: flex; gap: 5px;">
+                <div style="display: flex; gap: 8px;">
                     <button onclick="addLinks()" class="btn-auto">Carregar</button>
                     <button onclick="document.getElementById('file').click()" class="secondary btn-auto">📂 Arquivo</button>
                     <input type="file" id="file" accept=".txt" hidden onchange="lerArquivo(this)">
                 </div>
                 <div id="save-prompt" class="save-prompt">
                     <div style="overflow: hidden; flex: 1;">
-                        <span style="font-size: 11px; font-weight: bold;">Salvar anterior?</span>
-                        <div id="last-link-opened" style="font-size: 9px; opacity: 0.7; overflow: hidden; text-overflow: ellipsis;"></div>
+                        <span style="font-size: 12px; font-weight: bold;">Salvar anterior?</span>
+                        <div id="last-link-opened" style="font-size: 10px; opacity: 0.7; overflow: hidden; text-overflow: ellipsis;"></div>
                     </div>
-                    <div style="display: flex; gap: 4px;">
-                        <button onclick="confirmarSalvamento(true)" class="btn-auto" style="padding: 4px 8px;">Sim</button>
-                        <button onclick="confirmarSalvamento(false)" class="secondary btn-auto" style="padding: 4px 8px;">Não</button>
+                    <div style="display: flex; gap: 6px;">
+                        <button onclick="confirmarSalvamento(true)" class="btn-auto" style="padding: 6px 12px;">Sim</button>
+                        <button onclick="confirmarSalvamento(false)" class="secondary btn-auto" style="padding: 6px 12px;">Não</button>
                     </div>
                 </div>
             </div>
@@ -133,13 +138,13 @@
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h4 style="color: var(--primary); margin:0;">Pendentes (<span id="count-pend">0</span>)</h4>
-                <button onclick="limparPendentes()" class="danger btn-auto" style="padding: 4px 8px; font-size: 9px;">🗑️ Limpar</button>
+                <button onclick="limparPendentes()" class="danger btn-auto" style="padding: 6px 12px; font-size: 11px;">🗑️ Limpar</button>
             </div>
             <div id="lista-pendentes"></div>
             <div id="paginacao-pend" class="pagination-ctrl"></div>
             
             <h4 style="color: var(--blue);">Salvos (<span id="count-saved">0</span>)</h4>
-            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
                 <button onclick="baixarSalvos()" class="secondary btn-auto">📥 Extrair</button>
                 <button onclick="document.getElementById('file-saved').click()" class="secondary btn-auto">📂 Arquivo</button>
                 <input type="file" id="file-saved" accept=".txt" hidden onchange="lerArquivoSalvos(this)">
@@ -151,7 +156,7 @@
             <div class="discarded-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <h4 style="color: var(--gray); margin:0;">Não Salvos (<span id="count-discarded">0</span>)</h4>
-                    <button onclick="limparDescartados()" class="danger btn-auto" style="padding: 4px 8px; font-size: 9px;">🗑️ Limpar</button>
+                    <button onclick="limparDescartados()" class="danger btn-auto" style="padding: 6px 12px; font-size: 11px;">🗑️ Limpar</button>
                 </div>
                 <div id="lista-descartados"></div>
                 <div id="paginacao-desc" class="pagination-ctrl"></div>
@@ -161,22 +166,22 @@
 
     <div id="modal-admin" class="modal-overlay">
         <div class="modal-content">
-            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:24px;" onclick="fecharModal('modal-admin')">&times;</span>
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-admin')">&times;</span>
             <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="color: var(--dark); font-size: 18px; margin:0;">⚙️ Gestão Master</h2>
-                <div style="display:flex; gap:5px;">
+                <h2 style="color: var(--dark); font-size: 20px; margin:0;">⚙️ Gestão Master</h2>
+                <div style="display:flex; gap:8px;">
                     <button class="secondary btn-auto" onclick="abrirAdminPanel()">🔄</button>
                     <button class="chat-btn btn-auto" onclick="abrirModalCreate()">➕ Novo</button>
                 </div>
             </div>
             
-            <div style="background:#f9fafb; border:1px dashed #ccc; padding:10px; border-radius:8px; margin-bottom:15px;">
-                <div style="font-size:11px; font-weight:bold; margin-bottom:5px; color:#333;">Carregar Arquivo Geral (Público)</div>
-                <div style="display:flex; gap:5px;">
-                    <input type="file" id="admin-file-upload" style="margin:0; padding:5px; font-size:11px; color:#333;">
+            <div style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:20px;">
+                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#333;">Carregar Arquivo Geral (Público)</div>
+                <div style="display:flex; gap:8px;">
+                    <input type="file" id="admin-file-upload" style="margin:0; padding:8px; font-size:12px; color:#333;">
                     <button class="btn-auto" onclick="fazerUploadArquivo()">Enviar</button>
                 </div>
-                <div id="upload-status" style="font-size:10px; color:#666; margin-top:3px;"></div>
+                <div id="upload-status" style="font-size:11px; color:#666; margin-top:5px;"></div>
             </div>
 
             <input type="text" id="search-user" placeholder="🔍 Pesquisar usuário..." onkeyup="filtrarUsuarios()" style="margin-bottom: 15px;">
@@ -186,7 +191,7 @@
 
     <div id="modal-create" class="modal-overlay" style="z-index: 1001;">
         <div class="modal-content" style="max-width: 400px;">
-            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:24px;" onclick="fecharModal('modal-create')">&times;</span>
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-create')">&times;</span>
             <h3 style="margin-top:0;">Novo Acesso</h3>
             <div class="form-grid">
                 <input type="text" id="new-user" placeholder="Usuário">
@@ -217,7 +222,7 @@
 
     <div id="modal-edit" class="modal-overlay" style="z-index: 1002;">
         <div class="modal-content" style="max-width: 400px;">
-            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:24px;" onclick="fecharModal('modal-edit')">&times;</span>
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-edit')">&times;</span>
             <h3 style="margin-top:0; color:#3b82f6">Editar: <span id="edit-user-display"></span></h3>
             <div class="form-grid">
                 <div class="full-width">
@@ -247,8 +252,8 @@
             <span style="position:absolute; top:15px; right:15px; cursor:pointer;" onclick="fecharModal('modal-renovar')">&times;</span>
             <h3 style="text-align: center; color: var(--primary);">💎 Renovar Acesso</h3>
             <div class="pay-card">
-                <div style="font-size: 11px; font-weight: bold;">PIX PARA PAGAMENTO</div>
-                <div class="pay-key" id="pix-display">...</div>
+                <div style="font-size: 12px; font-weight: bold;">PIX PARA PAGAMENTO</div>
+                <div class="pay-key" id="pix-display" style="font-size:16px; padding:15px;">...</div>
             </div>
             <button onclick="copiarPixReal()" class="chat-btn" style="border-radius: 50px; width:100%">📋 Copiar Chave PIX</button>
         </div>
@@ -373,14 +378,14 @@
             }
         }
 
-        // --- FUNÇÃO ANTI-DUPLICIDADE COM 3 VERIFICAÇÕES ---
+        // --- FUNÇÃO ANTI-DUPLICIDADE ---
         function processarNovosLinks(listaBruta) {
             const u = currentUserData.user;
             if (!db[u]) db[u] = { links: [], salvos: [], naoSalvos: [] };
             if (!db[u].salvos) db[u].salvos = []; 
             if (!db[u].naoSalvos) db[u].naoSalvos = []; 
 
-            // Verifica em Pendentes + Salvos + Não Salvos
+            // Verifica em todas as listas
             const jaExistem = new Set([...db[u].links, ...db[u].salvos, ...db[u].naoSalvos]);
 
             let adicionados = 0;
@@ -461,7 +466,6 @@
 
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
         
-        // --- FUNÇÃO DE STATUS DO ADMIN ---
         async function alterarStatus(targetUser) {
             if(!confirm("Deseja alterar o status deste usuário (Aprovar/Bloquear)?")) return;
             
@@ -478,7 +482,7 @@
                 const res = await req.json();
                 if(res.success) {
                     alert("Status alterado para: " + res.novoStatus);
-                    abrirAdminPanel(); // Recarrega a lista
+                    abrirAdminPanel(); 
                 } else {
                     alert("Erro: " + res.msg);
                 }
@@ -526,13 +530,13 @@
                     });
 
                     html += `
-                                    <th style="width: 100px;">Ações</th>
+                                    <th style="width: 140px;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                     `;
 
-                    // --- AQUI ESTÁ A LÓGICA DO SUB-ADMIN ---
+                    // LÓGICA DE BOTÃO AUMENTADO
                     const isSubAdmin = currentUserData.cargo === 'Sub-Admin';
 
                     dados.forEach((row) => {
@@ -552,14 +556,12 @@
                         const statusAcc = row[8] || "Ativo"; 
                         const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : '✅');
 
-                        // --- Lógica do Botão ---
+                        // BOTÃO MAIOR (35px)
                         let statusBtn = '';
                         if (isSubAdmin) {
-                            // Sub-Admin: Apenas vê, sem clique
-                            statusBtn = `<button class="status-btn btn-auto" style="width:25px; height:25px; padding:0; cursor: not-allowed; opacity: 0.6;" title="Status: ${statusAcc}">${statusIcon}</button>`;
+                            statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px; cursor: not-allowed; opacity: 0.6;" title="Status: ${statusAcc}">${statusIcon}</button>`;
                         } else {
-                            // Admin: Pode clicar
-                            statusBtn = `<button class="status-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>`;
+                            statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>`;
                         }
 
                         html += `
@@ -575,9 +577,9 @@
                             <td>
                                 <div style="display:flex; gap:5px;">
                                     ${statusBtn} 
-                                    <button class="chat-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button>
-                                    <button class="vip-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button>
-                                    <button class="edit-btn btn-auto" style="width:25px; height:25px; padding:0;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button>
+                                    <button class="chat-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button>
+                                    <button class="vip-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button>
+                                    <button class="edit-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button>
                                 </div>
                             </td>
                         </tr>
@@ -643,7 +645,6 @@
             reader.readAsDataURL(file);
         }
 
-        // --- FUNÇÃO DE DOWNLOAD ---
         function baixarArquivoGeral() {
             if(currentFileUrl) {
                 const link = document.createElement("a");
@@ -832,7 +833,6 @@
         
         function lerArquivoSalvos(i) { const r=new FileReader(); r.onload=(e)=>{if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; const linhas = e.target.result.split('\n'); const novos = linhas.filter(l => l.trim() && !db[currentUserData.user].salvos.includes(l.trim())); db[currentUserData.user].salvos.push(...novos); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
 
-        // --- ALTERAÇÃO NA ABERTURA DE LINKS ---
         function tratarAberturaLink(idx, link) { 
             if (lastOpenedLink) {
                 if(!db[currentUserData.user].naoSalvos) db[currentUserData.user].naoSalvos = [];
