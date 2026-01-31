@@ -41,7 +41,7 @@
         
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(5px); }
         .modal-overlay.show { display:flex; }
-        .modal-content { background:var(--card); padding:25px; border-radius:20px; width:90%; max-width:350px; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-content { background:var(--card); padding:25px; border-radius:20px; width:90%; max-width:400px; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
         .pay-key { font-family: monospace; font-size: 14px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
         
@@ -71,47 +71,63 @@
         .msg-box { min-height: 60px; resize: vertical; margin-bottom: 15px; }
         .tutorial-step { text-align: left; margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 10px; font-size: 13px; }
 
-        /* Botão Tutorial Chamativo - Estilo Forçado */
+        /* Botão Tutorial na Home */
         .tutorial-badge {
             background: linear-gradient(45deg, #f59e0b, #ea580c);
-            color: white !important; 
-            padding: 8px 16px; 
-            border-radius: 50px;
-            font-size: 12px; 
-            font-weight: bold; 
-            cursor: pointer;
-            display: inline-block !important; /* Força display */
-            margin-top: 10px; 
-            text-transform: uppercase;
+            color: white !important; padding: 8px 16px; border-radius: 50px;
+            font-size: 12px; font-weight: bold; cursor: pointer;
+            display: inline-block !important; margin-top: 10px; text-transform: uppercase;
             box-shadow: 0 4px 10px rgba(234, 88, 12, 0.4);
-            animation: pulse 2s infinite; 
-            border: 1px solid rgba(255,255,255,0.3);
-            text-align: center; 
-            width: auto;
-            min-width: 140px;
+            animation: pulse 2s infinite; border: 1px solid rgba(255,255,255,0.3);
+            text-align: center; width: auto; min-width: 140px;
         }
         .tutorial-badge:hover { filter: brightness(1.1); }
 
-        /* Estilo para o botão "Assistir" mais fino e elegante */
-        .btn-watch-elegant {
-            background: #ea580c; 
-            color: white; 
-            border: none;
-            padding: 8px 24px; 
-            border-radius: 50px; 
-            font-size: 14px; 
-            font-weight: 500;
-            display: inline-flex; 
-            align-items: center; 
-            gap: 8px;
-            box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3);
-            transition: 0.3s;
-            width: auto !important; 
-            min-width: 150px;
-            justify-content: center;
-            cursor: pointer;
+        /* === ESTILOS DA LISTA DE TUTORIAIS === */
+        .tutorial-list-container {
+            max-height: 350px;
+            overflow-y: auto;
+            margin-top: 15px;
+            text-align: left;
         }
-        .btn-watch-elegant:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4); }
+        
+        .tutorial-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            transition: 0.2s;
+        }
+        body.dark-mode .tutorial-item { background: #374151; border-color: #4b5563; }
+        
+        .tutorial-info { flex-grow: 1; overflow: hidden; }
+        .tutorial-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; color: var(--text); }
+        .tutorial-icon { font-size: 20px; color: #ea580c; }
+
+        .btn-watch-mini {
+            background: #ea580c; color: white; border: none;
+            padding: 6px 12px; border-radius: 20px; font-size: 11px;
+            font-weight: bold; cursor: pointer; white-space: nowrap;
+        }
+        
+        .admin-controls-mini { display: flex; gap: 5px; }
+        .btn-icon { width: 30px !important; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; border-radius: 8px; }
+
+        /* Botão Flutuante Adicionar */
+        .fab-add {
+            position: absolute; bottom: 20px; right: 20px;
+            width: 50px; height: 50px; border-radius: 50%;
+            background: var(--primary); color: white;
+            font-size: 24px; border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -145,7 +161,7 @@
                     
                     <div id="tutorial-area" style="display:none;">
                         <div class="tutorial-badge" onclick="abrirModalTutorial()">
-                            📺 Assistir Tutorial
+                            📺 Central de Ajuda
                         </div>
                     </div>
                 </div>
@@ -193,12 +209,6 @@
                 </div>
             </div>
 
-            <div style="background: #e0f2fe; padding: 10px; border-radius: var(--radius); border: 1px solid #bae6fd; margin-bottom: 10px; display: none !important; align-items: center; gap: 10px; justify-content: space-between;">
-                <button id="btn-auto" onclick="toggleAuto()" class="btn-auto" style="background: #0ea5e9; width: 80px !important;">Iniciar</button>
-                <input type="number" id="auto-time" value="5">
-                <span id="countdown-display"></span>
-            </div>
-
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h4 style="color: var(--primary); margin:0;">Pendentes (<span id="count-pend">0</span>)</h4>
                 <button onclick="limparPendentes()" class="danger btn-auto" style="padding: 6px 12px; font-size: 11px;">🗑️ Limpar</button>
@@ -228,51 +238,29 @@
     </div>
 
     <div id="modal-tutorial-video" class="modal-overlay">
-        <div class="modal-content" style="max-width: 400px; text-align: left;">
+        <div class="modal-content" style="max-width: 400px; text-align: left; padding-bottom: 60px;">
             <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-tutorial-video')">&times;</span>
             
             <h3 style="margin-top:0; color: var(--gold);">🎓 Central de Ajuda</h3>
+            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Selecione um tutorial para assistir:</p>
             
-            <div id="tutorial-view-container" style="display: none;">
-                <div style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: 15px; margin-bottom: 10px; text-align: center;">
-                    <div style="font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase;">Tutorial em Destaque</div>
-                    <h2 id="display-tutorial-title" style="margin: 10px 0 20px 0; font-size: 18px; line-height: 1.3;">...</h2>
-                    
-                    <button id="btn-watch-video" class="btn-watch-elegant">
-                        <span style="font-size: 18px;">▶</span> Assistir Vídeo
-                    </button>
-                </div>
+            <div id="tutorial-list-container" class="tutorial-list-container">
+                <div style="text-align:center; padding:20px; color:#999;">Carregando...</div>
             </div>
 
-            <div id="tutorial-empty-state" style="display: none; text-align: center; padding: 20px; border: 2px dashed #ccc; border-radius: 15px; margin-bottom: 15px;">
-                <div style="font-size: 30px; margin-bottom: 10px;">📹</div>
-                <div style="color: #666; font-size: 13px;">Nenhum tutorial configurado.</div>
-            </div>
-
-            <div id="admin-tutorial-controls" style="display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+            <div id="tutorial-form" style="display:none; background: #fff; position: absolute; top:0; left:0; width:100%; height:100%; z-index: 20; padding: 25px; border-radius: 20px;">
+                <h3 id="form-title">Novo Tutorial</h3>
+                <input type="text" id="tut-title" placeholder="Título do Vídeo">
+                <input type="text" id="tut-link" placeholder="Link (YouTube/Drive)">
+                <input type="hidden" id="tut-id">
                 
-                <div id="admin-actions-bar" style="display: flex; gap: 10px; justify-content: center;">
-                    <button id="btn-admin-add" class="btn-auto" style="background: var(--primary);" onclick="mostrarFormulario('add')">➕ Adicionar Novo</button>
-                    
-                    <button id="btn-admin-edit" class="btn-auto secondary" onclick="mostrarFormulario('edit')">✏️ Editar</button>
-                    <button id="btn-admin-del" class="btn-auto danger" onclick="apagarTutorial()">🗑️ Apagar</button>
-                </div>
-
-                <div id="admin-edit-form" style="display: none; margin-top: 15px; background: #f9fafb; padding: 15px; border-radius: 10px; border: 1px solid #e5e7eb;">
-                    <h4 style="margin:0 0 10px 0; color: var(--dark);">Configurar Tutorial</h4>
-                    
-                    <label style="font-size: 11px; font-weight: bold;">Título do Vídeo:</label>
-                    <input type="text" id="edit-tutorial-title" placeholder="Ex: Como configurar o sistema">
-                    
-                    <label style="font-size: 11px; font-weight: bold;">Link do YouTube/Drive:</label>
-                    <input type="text" id="edit-tutorial-link" placeholder="https://...">
-                    
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <button onclick="cancelarEdicao()" class="secondary btn-auto" style="flex: 1;">Cancelar</button>
-                        <button onclick="salvarConfigTutorial()" class="btn-auto" style="background: var(--primary); flex: 1;">💾 Salvar</button>
-                    </div>
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button onclick="fecharFormTutorial()" class="secondary btn-auto" style="flex:1;">Cancelar</button>
+                    <button onclick="salvarItemTutorial()" class="btn-auto" style="flex:1;">Salvar</button>
                 </div>
             </div>
+
+            <button id="btn-add-tut" class="fab-add" onclick="abrirFormTutorial()" style="display:none;">+</button>
         </div>
     </div>
 
@@ -450,8 +438,8 @@
         // VARIÁVEIS TEMPORÁRIAS
         let tempUser="", tempPass="", tempWa="", tempDate="", tempVal="";
 
-        // CONFIG TUTORIAL PADRÃO (Inicia nulo para testar a lógica de "vazio")
-        let tutorialData = null; 
+        // ARRAY DE TUTORIAIS (Lista)
+        let tutorialList = []; 
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -465,8 +453,15 @@
             }
             
             // Tenta carregar tutorial salvo localmente
-            const savedTut = localStorage.getItem('zapflow_tutorial_config');
-            if(savedTut) tutorialData = JSON.parse(savedTut);
+            const savedTut = localStorage.getItem('zapflow_tutorial_data');
+            if(savedTut) {
+                try {
+                    // Tenta fazer parse como array
+                    const parsed = JSON.parse(savedTut);
+                    if(Array.isArray(parsed)) tutorialList = parsed;
+                    else if(parsed.title) tutorialList = [parsed]; // Converte legado para array
+                } catch(e) { console.log("Erro parse local"); }
+            }
 
             setTimeout(verificarInstalacaoApp, 1000);
 
@@ -479,146 +474,128 @@
             }
         };
 
-        // --- LÓGICA TUTORIAL (CRUD COMPLETO) ---
+        // --- LÓGICA TUTORIAL (LISTA + CRUD) ---
         function abrirModalTutorial() {
-            atualizarInterfaceTutorial();
+            renderizarListaTutoriais();
+            if (currentUserData && currentUserData.cargo === 'Admin') {
+                document.getElementById('btn-add-tut').style.display = 'flex';
+            } else {
+                document.getElementById('btn-add-tut').style.display = 'none';
+            }
             document.getElementById('modal-tutorial-video').classList.add('show');
         }
 
-        function atualizarInterfaceTutorial() {
-            const hasVideo = (tutorialData && tutorialData.title && tutorialData.link);
+        function renderizarListaTutoriais() {
+            const container = document.getElementById('tutorial-list-container');
+            container.innerHTML = '';
+
+            if(!tutorialList || tutorialList.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:30px; color:#999;">Nenhum tutorial disponível.</div>';
+                return;
+            }
+
             const isAdmin = (currentUserData && currentUserData.cargo === 'Admin');
 
-            // 1. ÁREA DE VISUALIZAÇÃO (Vídeo)
-            if (hasVideo) {
-                document.getElementById('tutorial-view-container').style.display = 'block';
-                document.getElementById('tutorial-empty-state').style.display = 'none';
-                document.getElementById('display-tutorial-title').innerText = tutorialData.title;
-                document.getElementById('btn-watch-video').onclick = function() {
-                    window.open(tutorialData.link, '_blank');
-                };
-            } else {
-                // Sem vídeo
-                document.getElementById('tutorial-view-container').style.display = 'none';
-                if (isAdmin) {
-                    document.getElementById('tutorial-empty-state').style.display = 'block';
-                } else {
-                    document.getElementById('tutorial-empty-state').style.display = 'none';
+            tutorialList.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'tutorial-item';
+                
+                let adminBtns = '';
+                if(isAdmin) {
+                    adminBtns = `
+                        <div class="admin-controls-mini">
+                            <button class="btn-icon secondary" onclick="editarItem(${index})">✏️</button>
+                            <button class="btn-icon danger" onclick="apagarItem(${index})">🗑️</button>
+                        </div>
+                    `;
                 }
-            }
 
-            // 2. CONTROLES DO ADMIN
-            if (isAdmin) {
-                document.getElementById('admin-tutorial-controls').style.display = 'block';
-                document.getElementById('admin-edit-form').style.display = 'none'; // Reseta formulário
-                document.getElementById('admin-actions-bar').style.display = 'flex';
+                div.innerHTML = `
+                    <div class="tutorial-icon">▶</div>
+                    <div class="tutorial-info">
+                        <div class="tutorial-title">${item.title}</div>
+                        <button class="btn-watch-mini" onclick="window.open('${item.link}', '_blank')">Assistir</button>
+                    </div>
+                    ${adminBtns}
+                `;
+                container.appendChild(div);
+            });
+        }
 
-                if (hasVideo) {
-                    document.getElementById('btn-admin-add').style.display = 'none';
-                    document.getElementById('btn-admin-edit').style.display = 'block';
-                    document.getElementById('btn-admin-del').style.display = 'block';
-                } else {
-                    document.getElementById('btn-admin-add').style.display = 'block';
-                    document.getElementById('btn-admin-edit').style.display = 'none';
-                    document.getElementById('btn-admin-del').style.display = 'none';
-                }
+        function abrirFormTutorial() {
+            document.getElementById('form-title').innerText = "Novo Tutorial";
+            document.getElementById('tut-title').value = '';
+            document.getElementById('tut-link').value = '';
+            document.getElementById('tut-id').value = '-1'; // -1 indica novo
+            document.getElementById('tutorial-form').style.display = 'block';
+        }
+
+        function editarItem(index) {
+            const item = tutorialList[index];
+            document.getElementById('form-title').innerText = "Editar Tutorial";
+            document.getElementById('tut-title').value = item.title;
+            document.getElementById('tut-link').value = item.link;
+            document.getElementById('tut-id').value = index; 
+            document.getElementById('tutorial-form').style.display = 'block';
+        }
+
+        function fecharFormTutorial() {
+            document.getElementById('tutorial-form').style.display = 'none';
+        }
+
+        function salvarItemTutorial() {
+            const title = document.getElementById('tut-title').value;
+            const link = document.getElementById('tut-link').value;
+            const id = parseInt(document.getElementById('tut-id').value);
+
+            if(!title || !link) return alert("Preencha tudo!");
+
+            if(id === -1) {
+                // Adicionar Novo
+                tutorialList.push({ title, link });
             } else {
-                document.getElementById('admin-tutorial-controls').style.display = 'none';
+                // Editar Existente
+                tutorialList[id] = { title, link };
             }
+
+            salvarNoBanco();
+            fecharFormTutorial();
+            renderizarListaTutoriais();
         }
 
-        function mostrarFormulario(modo) {
-            document.getElementById('admin-actions-bar').style.display = 'none';
-            document.getElementById('admin-edit-form').style.display = 'block';
-            
-            if (modo === 'edit' && tutorialData) {
-                document.getElementById('edit-tutorial-title').value = tutorialData.title;
-                document.getElementById('edit-tutorial-link').value = tutorialData.link;
-            } else {
-                document.getElementById('edit-tutorial-title').value = '';
-                document.getElementById('edit-tutorial-link').value = '';
-            }
+        function apagarItem(index) {
+            if(!confirm("Apagar este vídeo?")) return;
+            tutorialList.splice(index, 1);
+            salvarNoBanco();
+            renderizarListaTutoriais();
         }
 
-        function cancelarEdicao() {
-            document.getElementById('admin-edit-form').style.display = 'none';
-            document.getElementById('admin-actions-bar').style.display = 'flex';
-        }
+        async function salvarNoBanco() {
+            // Salva Local
+            localStorage.setItem('zapflow_tutorial_data', JSON.stringify(tutorialList));
+            atualizarBotaoHome();
 
-        async function salvarConfigTutorial() {
-            const t = document.getElementById('edit-tutorial-title').value;
-            const l = document.getElementById('edit-tutorial-link').value;
-            
-            if(!t || !l) return alert("Preencha título e link!");
-
-            // Atualiza Local e Backend
-            tutorialData = { title: t, link: l };
-            localStorage.setItem('zapflow_tutorial_config', JSON.stringify(tutorialData));
-            
+            // Salva no Server
             try {
-                const req = await fetch(API_URL, {
+                await fetch(API_URL, {
                     method: 'POST',
                     body: JSON.stringify({
-                        action: 'save_tutorial_config', 
+                        action: 'update_tutorial_list',
                         user: currentUserData.user,
                         pass: currentUserData.pass,
-                        title: t,
-                        link: l
+                        listaTutoriais: tutorialList
                     })
                 });
-                const res = await req.json();
-                if(res.success) {
-                    alert("Tutorial salvo!");
-                    atualizarInterfaceTutorial();
-                    atualizarBotaoHome(); 
-                } else {
-                    alert("Erro: " + res.msg);
-                }
             } catch(e) {
-                alert("Salvo localmente (Erro de conexão).");
-                atualizarInterfaceTutorial();
-                atualizarBotaoHome();
+                console.log("Erro ao salvar no server (mas salvou local)");
             }
         }
 
-        async function apagarTutorial() {
-            if(!confirm("Tem certeza que deseja remover o tutorial? Ninguém mais verá.")) return;
-
-            tutorialData = null;
-            localStorage.removeItem('zapflow_tutorial_config');
-
-            try {
-                const req = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'delete_tutorial_config', 
-                        user: currentUserData.user,
-                        pass: currentUserData.pass
-                    })
-                });
-                const res = await req.json();
-                if(res.success) {
-                    alert("Tutorial removido!");
-                    atualizarInterfaceTutorial();
-                    atualizarBotaoHome();
-                } else {
-                    alert("Erro ao apagar: " + res.msg);
-                }
-            } catch(e) {
-                alert("Erro de conexão ao apagar.");
-                atualizarInterfaceTutorial();
-                atualizarBotaoHome();
-            }
-        }
-
-        // Função para mostrar/esconder o botão na Home baseado se existe tutorial
         function atualizarBotaoHome() {
             const area = document.getElementById('tutorial-area');
-            const hasData = (tutorialData && tutorialData.title);
+            const hasData = (tutorialList && tutorialList.length > 0);
             const isAdmin = (currentUserData && currentUserData.cargo === 'Admin');
 
-            // Se for Admin SEMPRE mostra (para ele poder adicionar).
-            // Se for User, só mostra se tiver dados.
             if (isAdmin || hasData) {
                 area.style.display = 'block';
             } else {
@@ -737,11 +714,20 @@
                     document.getElementById('ola-user').innerText = "Olá, " + currentUserData.user;
                     document.getElementById('status-acesso').innerText = "Vence: " + currentUserData.date;
                     
-                    // --- CARREGAR DADOS DO TUTORIAL ---
+                    // --- CARREGAR DADOS DO TUTORIAL (NOVO FORMATO ARRAY) ---
                     if (dados.tutorialConfig) {
-                        tutorialData = dados.tutorialConfig;
+                        // Se vier array direto
+                        if(Array.isArray(dados.tutorialConfig)) {
+                            tutorialList = dados.tutorialConfig;
+                        } 
+                        // Se vier objeto antigo (legado)
+                        else if(dados.tutorialConfig.title) {
+                            tutorialList = [dados.tutorialConfig];
+                        }
+                        // Salva para cache
+                        localStorage.setItem('zapflow_tutorial_data', JSON.stringify(tutorialList));
                     }
-                    atualizarBotaoHome(); // Decide se mostra botão ou não
+                    atualizarBotaoHome();
 
                     if(diff <= 5 && !dados.isMaster && dados.cargo !== 'Teste') {
                         document.getElementById('vencimento-alert').style.display = 'block';
@@ -1021,65 +1007,4 @@
                     tempUser = u; tempPass = p; tempDate = (cargo === 'Teste' ? "1 Hora (Teste)" : dataFinal); tempWa = w; tempVal = v;
                     fecharModal('modal-create');
                     document.getElementById('modal-created-success').classList.add('show');
-                    abrirAdminPanel(); 
-                } else { 
-                    msg.innerText = res.msg; 
-                } 
-            } catch(e) { msg.innerText = "Erro."; } finally { btn.disabled = false; btn.innerText = "💾 Salvar"; } 
-        }
-
-        function fecharModalSucessoCriacao() {
-            document.getElementById('modal-created-success').classList.remove('show');
-        }
-
-        function prepararEnvioAposCriacao() {
-            fecharModalSucessoCriacao();
-            prepararEnvioWhatsApp(tempUser, tempPass, tempWa, tempDate, tempVal);
-        }
-
-        function prepararEnvioWhatsApp(u, p, w, d, v) {
-            tempUser = u; tempPass = p; tempWa = w; tempDate = d; tempVal = v;
-            document.getElementById('send-dest').innerText = u;
-            
-            // PREVIEW DOS DADOS
-            const previewHtml = `
-                👤 <b>Usuário:</b> ${u}<br>
-                🔑 <b>Senha:</b> ${p}<br>
-                📅 <b>Vencimento:</b> ${d}<br>
-                🌐 <b>Site:</b> www.gerenciadorwa.com.br
-            `;
-            document.getElementById('preview-msg-content').innerHTML = previewHtml;
-
-            document.getElementById('whatsapp-extra-msg').value = ""; 
-            document.getElementById('modal-send-whatsapp').classList.add('show');
-        }
-
-        function finalizarEnvioWhatsApp() {
-            const extra = document.getElementById('whatsapp-extra-msg').value;
-            const quebra = extra ? `\n\n${extra}` : "";
-            
-            const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${tempUser}\n🔑 *Senha:* ${tempPass}\n📅 *Vencimento:* ${tempDate}\n🌐 *Site:* www.gerenciadorwa.com.br${quebra}`;
-            
-            window.open(`https://wa.me/55${String(tempWa).replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
-            fecharModal('modal-send-whatsapp');
-        }
-
-        function abrirModalEdit(user, pass, date, wa, val) { userEditing = user; document.getElementById('edit-user-display').innerText = user; document.getElementById('edit-pass').value = pass; document.getElementById('edit-date').value = date; document.getElementById('edit-wa').value = wa; document.getElementById('edit-val').value = val; document.getElementById('msg-edit').innerText = ''; document.getElementById('modal-edit').classList.add('show'); }
-        async function salvarEdicao() { const btn = document.getElementById('btn-save-edit'); const msg = document.getElementById('msg-edit'); const payload = { userOriginal: userEditing, pass: document.getElementById('edit-pass').value, date: document.getElementById('edit-date').value, wa: document.getElementById('edit-wa').value, val: document.getElementById('edit-val').value }; btn.disabled = true; btn.innerText = "Atualizando..."; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'edit_user', user: currentUserData.user, pass: currentUserData.pass, dadosEditados: payload }) }); const res = await req.json(); if(res.success) { alert("Atualizado!"); fecharModal('modal-edit'); abrirAdminPanel(); } else { msg.innerText = res.msg; } } catch(e) { msg.innerText = "Erro."; } finally { btn.disabled = false; btn.innerText = "💾 Atualizar Dados"; } }
-        function filtrarUsuarios() { const termo = document.getElementById('search-user').value.toLowerCase(); const linhas = document.querySelectorAll('.admin-table tbody tr'); linhas.forEach(tr => { const texto = tr.innerText.toLowerCase(); tr.style.display = texto.includes(termo) ? '' : 'none'; }); }
-        function abrirModalRenovar() { let chave = currentUserData.pix; if (!chave || chave === "undefined") chave = "Chave não cadastrada"; document.getElementById('pix-display').innerText = chave; document.getElementById('modal-renovar').classList.add('show'); }
-        function copiarPixReal() { const t = document.getElementById('pix-display').innerText; if(navigator.clipboard) { navigator.clipboard.writeText(t).then(()=>alert("Copiado!")); } else { const el = document.createElement("input"); el.value = t; document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el); alert("Copiado!"); } }
-        function baixarSalvos() { const u = currentUserData.user; if(!db[u].salvos.length) return alert("Nada."); const blob = new Blob([db[u].salvos.join('\n')], {type: 'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `extraidos.txt`; a.click(); }
-        function limparPendentes() { if(confirm("Apagar?")) { db[currentUserData.user].links = []; pgPend = 0; renderizar(); } }
-        function limparSalvos() { if(confirm("Limpar?")) { db[currentUserData.user].salvos = []; pgSalv = 0; renderizar(); } }
-        function limparDescartados() { if(confirm("Limpar?")) { db[currentUserData.user].naoSalvos = []; pgDesc = 0; renderizar(); } }
-        function resgatarDescartado(idx) { const u = currentUserData.user; const link = db[u].naoSalvos[idx]; db[u].links.push(link); db[u].naoSalvos.splice(idx, 1); renderizar(); }
-        function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
-        function logout(){ localStorage.removeItem(SESSION_KEY); location.reload(); }
-        function lerArquivoSalvos(i) { const r=new FileReader(); r.onload=(e)=>{if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; const linhas = e.target.result.split('\n'); const novos = linhas.filter(l => l.trim() && !db[currentUserData.user].salvos.includes(l.trim())); db[currentUserData.user].salvos.push(...novos); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
-        function tratarAberturaLink(idx, link) { if (lastOpenedLink) { if(!db[currentUserData.user].naoSalvos) db[currentUserData.user].naoSalvos = []; db[currentUserData.user].naoSalvos.push(lastOpenedLink); } lastOpenedLink = link; if(link.includes('http')) { window.open(link); } else { window.open(`whatsapp://send?phone=55${link.replace(/\D/g,'')}`); } db[currentUserData.user].links.splice(idx, 1); document.getElementById('last-link-opened').innerText = link; document.getElementById('save-prompt').style.display = 'flex'; renderizar(); }
-        function confirmarSalvamento(sim) { const u = currentUserData.user; if(!db[u].salvos) db[u].salvos=[]; if(!db[u].naoSalvos) db[u].naoSalvos=[]; if(sim && lastOpenedLink) { db[u].salvos.push(lastOpenedLink); } else if (!sim && lastOpenedLink) { db[u].naoSalvos.push(lastOpenedLink); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
-        function toggleAuto() { /* ... */ }
-    </script>
-</body>
-</html>
+                    abrirAdminPanel();
