@@ -98,7 +98,7 @@
                 <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
                     <span style="font-size: 24px;">📥</span>
                     <div style="overflow: hidden;">
-                        <div style="font-weight: bold; font-size: 14px; color: #1f2937;" id="file-title">Arquivo Geral</div>
+                        <div style="font-weight: bold; font-size: 14px; color: #1f2937;" id="file-title">Arquivo</div>
                         <div style="font-size: 11px; color: #4b5563; white-space: nowrap;">Atualizado: <span id="file-date"></span></div>
                     </div>
                 </div>
@@ -277,7 +277,7 @@
     </div>
 
     <script>
-        // === URL DA SUA API ===
+        // === URL DA SUA API - ATUALIZE AQUI SE AINDA NÃO FEZ ===
         const API_URL = 'https://script.google.com/macros/s/AKfycbzh5LpH26j4OyfMINRHP0XXikBZwFHKFYseMv8eXyJKP5X4cJKbij37wNJS3wg3YUUm/exec';
 
         const DB_KEY = 'zapflow_v36';
@@ -357,15 +357,20 @@
                     }
                     if(dados.isMaster) document.getElementById('btn-open-admin').classList.remove('hidden');
                     
-                    // --- LÓGICA DE ARQUIVO (RESTRIÇÃO TOTAL SUB-ADMIN) ---
-                    if (dados.file && dados.file.url && dados.cargo !== 'Sub-Admin') {
+                    // --- ARQUIVO INTELIGENTE ---
+                    if (dados.file && dados.file.url) {
                         document.getElementById('file-download-card').style.display = 'flex';
                         document.getElementById('file-date').innerText = dados.file.time;
                         document.getElementById('file-title').innerText = (dados.cargo === 'Teste') ? "Arquivo Teste (1h)" : "Arquivo Geral";
                         currentFileUrl = dados.file.url;
-                        document.getElementById('btn-download-file').style.display = 'block'; 
+                        
+                        // Lógica Sub-Admin (V36 original mantida)
+                        if (dados.cargo === 'Sub-Admin') {
+                            document.getElementById('btn-download-file').style.display = 'none';
+                        } else {
+                            document.getElementById('btn-download-file').style.display = 'block';
+                        }
                     } else {
-                        // Sub-Admin ou Sem arquivo -> Esconde TUDO
                         document.getElementById('file-download-card').style.display = 'none';
                     }
 
@@ -387,7 +392,7 @@
         function marcarMensagemLida() { const msg = document.getElementById('msg-text').innerText; localStorage.setItem('zapflow_last_msg_' + currentUserData.user, msg); fecharModal('modal-global-msg'); }
         function checkRole() { const r = document.getElementById('new-role').value; document.getElementById('days-container').style.display = (r === 'Teste') ? 'none' : 'flex'; }
         
-        // --- FUNÇÃO DE UPLOAD CORRIGIDA ---
+        // --- FUNÇÃO DE UPLOAD CORRIGIDA (V44) ---
         function fazerUploadArquivo(modo) {
             const idInput = (modo === 'teste') ? 'admin-file-test' : 'admin-file-upload';
             const input = document.getElementById(idInput);
