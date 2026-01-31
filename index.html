@@ -41,7 +41,7 @@
         
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(5px); }
         .modal-overlay.show { display:flex; }
-        .modal-content { background:var(--card); padding:25px; border-radius:20px; width:90%; max-width:400px; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-content { background:var(--card); padding:25px; border-radius:20px; width:90%; max-width:350px; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
         .pay-key { font-family: monospace; font-size: 14px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
         
@@ -62,72 +62,16 @@
         .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 15px; margin-bottom: 20px; font-size: 13px; }
         .loader { border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-
+        
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .full-width { grid-column: span 2; }
         .discarded-section { margin-top: 30px; border-top: 2px dashed #e5e7eb; padding-top: 20px; }
         .card-discarded { border-left: 4px solid var(--gray); opacity: 0.8; }
+        
         .msg-box { min-height: 60px; resize: vertical; margin-bottom: 15px; }
+
+        /* Estilo Tutorial Install */
         .tutorial-step { text-align: left; margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 10px; font-size: 13px; }
-
-        /* Botão Tutorial na Home */
-        .tutorial-badge {
-            background: linear-gradient(45deg, #f59e0b, #ea580c);
-            color: white !important; padding: 8px 16px; border-radius: 50px;
-            font-size: 12px; font-weight: bold; cursor: pointer;
-            display: inline-block !important; margin-top: 10px; text-transform: uppercase;
-            box-shadow: 0 4px 10px rgba(234, 88, 12, 0.4);
-            animation: pulse 2s infinite; border: 1px solid rgba(255,255,255,0.3);
-            text-align: center; width: auto; min-width: 140px;
-        }
-        .tutorial-badge:hover { filter: brightness(1.1); }
-
-        /* === ESTILOS DA LISTA DE TUTORIAIS === */
-        .tutorial-list-container {
-            max-height: 350px;
-            overflow-y: auto;
-            margin-top: 15px;
-            text-align: left;
-        }
-        
-        .tutorial-item {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            transition: 0.2s;
-        }
-        body.dark-mode .tutorial-item { background: #374151; border-color: #4b5563; }
-        
-        .tutorial-info { flex-grow: 1; overflow: hidden; }
-        .tutorial-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; color: var(--text); }
-        .tutorial-icon { font-size: 20px; color: #ea580c; }
-
-        .btn-watch-mini {
-            background: #ea580c; color: white; border: none;
-            padding: 6px 12px; border-radius: 20px; font-size: 11px;
-            font-weight: bold; cursor: pointer; white-space: nowrap;
-        }
-        
-        .admin-controls-mini { display: flex; gap: 5px; }
-        .btn-icon { width: 30px !important; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; border-radius: 8px; }
-
-        /* Botão Flutuante Adicionar */
-        .fab-add {
-            position: absolute; bottom: 20px; right: 20px;
-            width: 50px; height: 50px; border-radius: 50%;
-            background: var(--primary); color: white;
-            font-size: 24px; border: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 10;
-        }
     </style>
 </head>
 <body>
@@ -155,15 +99,9 @@
 
         <div id="app-screen" class="hidden">
             <div class="header">
-                <div style="max-width: 70%; display: flex; flex-direction: column; align-items: flex-start;">
+                <div style="max-width: 70%;">
                     <h3 id="ola-user" style="margin:0; font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">...</h3>
-                    <div id="status-acesso" style="font-size: 13px; margin-bottom: 5px;"></div>
-                    
-                    <div id="tutorial-area" style="display:none;">
-                        <div class="tutorial-badge" onclick="abrirModalTutorial()">
-                            📺 Central de Ajuda
-                        </div>
-                    </div>
+                    <small id="status-acesso"></small>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
                     <button id="btn-open-admin" class="admin-btn btn-auto hidden" onclick="abrirAdminPanel()">⚙️ Master</button>
@@ -209,6 +147,12 @@
                 </div>
             </div>
 
+            <div style="background: #e0f2fe; padding: 10px; border-radius: var(--radius); border: 1px solid #bae6fd; margin-bottom: 10px; display: none !important; align-items: center; gap: 10px; justify-content: space-between;">
+                <button id="btn-auto" onclick="toggleAuto()" class="btn-auto" style="background: #0ea5e9; width: 80px !important;">Iniciar</button>
+                <input type="number" id="auto-time" value="5">
+                <span id="countdown-display"></span>
+            </div>
+
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h4 style="color: var(--primary); margin:0;">Pendentes (<span id="count-pend">0</span>)</h4>
                 <button onclick="limparPendentes()" class="danger btn-auto" style="padding: 6px 12px; font-size: 11px;">🗑️ Limpar</button>
@@ -237,33 +181,6 @@
         </div>
     </div>
 
-    <div id="modal-tutorial-video" class="modal-overlay">
-        <div class="modal-content" style="max-width: 400px; text-align: left; padding-bottom: 60px;">
-            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-tutorial-video')">&times;</span>
-            
-            <h3 style="margin-top:0; color: var(--gold);">🎓 Central de Ajuda</h3>
-            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Selecione um tutorial para assistir:</p>
-            
-            <div id="tutorial-list-container" class="tutorial-list-container">
-                <div style="text-align:center; padding:20px; color:#999;">Carregando...</div>
-            </div>
-
-            <div id="tutorial-form" style="display:none; background: #fff; position: absolute; top:0; left:0; width:100%; height:100%; z-index: 20; padding: 25px; border-radius: 20px;">
-                <h3 id="form-title">Novo Tutorial</h3>
-                <input type="text" id="tut-title" placeholder="Título do Vídeo">
-                <input type="text" id="tut-link" placeholder="Link (YouTube/Drive)">
-                <input type="hidden" id="tut-id">
-                
-                <div style="display:flex; gap:10px; margin-top:20px;">
-                    <button onclick="fecharFormTutorial()" class="secondary btn-auto" style="flex:1;">Cancelar</button>
-                    <button onclick="salvarItemTutorial()" class="btn-auto" style="flex:1;">Salvar</button>
-                </div>
-            </div>
-
-            <button id="btn-add-tut" class="fab-add" onclick="abrirFormTutorial()" style="display:none;">+</button>
-        </div>
-    </div>
-
     <div id="modal-install-tutorial" class="modal-overlay" style="z-index: 9999;">
         <div class="modal-content" style="max-width: 350px;">
             <div style="text-align:center; margin-bottom:20px;">
@@ -271,15 +188,19 @@
                 <h3 style="margin-top:0; font-size: 20px; font-weight: 700;">Instalar App</h3>
                 <p style="font-size:14px; color: var(--text); line-height: 1.5;">Para a melhor experiência, adicione este app à sua tela inicial.</p>
             </div>
+            
             <button id="btn-android-install" class="hidden" style="width:100% !important; margin-bottom:15px; font-size: 16px; padding: 15px;" onclick="instalarAndroid()">📲 Instalar Agora</button>
+
             <div id="tutorial-ios" class="hidden">
                 <div class="tutorial-step">1. Toque no botão <b>Compartilhar</b> <span style="font-size:18px;">⎋</span> abaixo.</div>
                 <div class="tutorial-step">2. Role e selecione <b>Adicionar à Tela de Início</b> <span style="font-size:18px;">⊞</span>.</div>
             </div>
+
             <div id="tutorial-android" class="hidden">
                 <div class="tutorial-step">1. Toque nos <b>3 pontinhos</b> <span style="font-size:18px;">⋮</span> no topo do navegador.</div>
                 <div class="tutorial-step">2. Selecione <b>Adicionar à tela inicial</b> ou <b>Instalar app</b>.</div>
             </div>
+
             <button class="secondary btn-auto" style="width:100% !important; margin-top:15px;" onclick="fecharInstallModal()">Agora não</button>
         </div>
     </div>
@@ -298,12 +219,15 @@
             <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-send-whatsapp')">&times;</span>
             <h3 style="margin-top:0; color: #25d366;">📲 Enviar Acesso</h3>
             <p style="font-size:12px; margin:0 0 10px 0;">Para: <b id="send-dest">...</b></p>
+            
             <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px; margin-bottom:15px; font-size:12px; color:#166534;">
                 <div style="font-weight:bold; margin-bottom:5px;">📋 Dados que serão enviados:</div>
                 <div id="preview-msg-content" style="font-family:monospace; line-height:1.4;"></div>
             </div>
+
             <label style="font-size:12px; font-weight:bold;">Mensagem Complementar (Opcional):</label>
             <textarea id="whatsapp-extra-msg" class="msg-box" placeholder="Ex: 'Aproveite sua tela!', 'Pagamento Confirmado', etc."></textarea>
+            
             <button class="chat-btn" onclick="finalizarEnvioWhatsApp()">🚀 Enviar via WhatsApp</button>
         </div>
     </div>
@@ -313,6 +237,7 @@
             <div style="font-size: 50px;">✅</div>
             <h3 style="margin: 10px 0;">Usuário Criado!</h3>
             <p style="font-size:13px; color:#666; margin-bottom:20px;">O que deseja fazer agora?</p>
+            
             <div style="display:flex; flex-direction:column; gap:10px;">
                 <button class="chat-btn" onclick="prepararEnvioAposCriacao()">📲 Enviar Acesso</button>
                 <button class="secondary" onclick="fecharModalSucessoCriacao()">❌ Fechar</button>
@@ -330,11 +255,13 @@
                     <button class="chat-btn btn-auto" onclick="abrirModalCreate()">➕ Novo</button>
                 </div>
             </div>
+            
             <div id="admin-msg-area" style="background:#fff7ed; border:1px dashed #f97316; padding:15px; border-radius:8px; margin-bottom:10px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#c2410c;">🔔 Mensagem Global (Popup)</div>
                 <textarea id="global-msg-input" rows="2" placeholder="Escreva um aviso para todos os usuários..." style="margin-bottom:5px; font-size:12px;"></textarea>
                 <button class="btn-auto" style="background:#f97316; width:100% !important;" onclick="salvarMensagem()">Enviar Aviso</button>
             </div>
+
             <div id="upload-section-geral" style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:10px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#333;">📁 Arquivo OFICIAL (Todos)</div>
                 <div style="display:flex; gap:8px;">
@@ -342,6 +269,7 @@
                     <button class="btn-auto" onclick="fazerUploadArquivo('geral')">Enviar</button>
                 </div>
             </div>
+
             <div id="upload-section-teste" style="background:#f0fdf4; border:1px dashed #16a34a; padding:15px; border-radius:8px; margin-bottom:20px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#15803d;">🧪 Arquivo TESTE (Apenas Testes)</div>
                 <div style="display:flex; gap:8px;">
@@ -350,6 +278,7 @@
                 </div>
             </div>
             <div id="upload-status" style="font-size:11px; color:#666; margin-bottom:10px;"></div>
+
             <input type="text" id="search-user" placeholder="🔍 Pesquisar usuário..." onkeyup="filtrarUsuarios()" style="margin-bottom: 15px;">
             <div id="admin-users-list"></div>
         </div>
@@ -362,15 +291,18 @@
             <div class="form-grid">
                 <input type="text" id="new-user" placeholder="Usuário">
                 <input type="text" id="new-pass" placeholder="Senha">
+                
                 <div class="full-width" id="days-container" style="display:flex; gap:5px; align-items:center;">
                     <input type="number" id="new-days" placeholder="Dias" style="width: 80px; margin:0">
                     <span style="font-size:12px; color:#666">dias de validade</span>
                 </div>
+
                 <div class="full-width" id="role-container">
                     <label style="font-size:12px; font-weight:bold; color:#333;">Tipo de Acesso:</label>
                     <select id="new-role" onchange="checkRole()">
-                    </select>
+                        </select>
                 </div>
+
                 <input type="text" id="new-wa" placeholder="WhatsApp (só números)" class="full-width">
                 <input type="text" id="new-val" placeholder="Valor (ex: 30,00)">
                 <input type="text" id="new-pix" placeholder="Chave PIX (opcional)">
@@ -421,7 +353,7 @@
 
     <script>
         // === URL DA SUA API ===
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwVmhih6bL_0GABpVH7PHHa6HO1t6tCwF1nN8k6uW6imZaaBi72D1jdsLV8HWmEBonH-A/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxupEUQjLkPPmSAhMjmXCO_SBcvEN2zWsS8IaHh4kdQVk009ZrwoV8rz_pZBHVsQX8iUQ/exec';
 
         const DB_KEY = 'zapflow_v36';
         const SESSION_KEY = 'zapflow_session_v36';
@@ -433,14 +365,12 @@
         let countdownRef = null;
         let userEditing = null;
         let currentFileUrl = "";
-        let deferredPrompt; 
+        let deferredPrompt; // Para instalação Android
 
         // VARIÁVEIS TEMPORÁRIAS
         let tempUser="", tempPass="", tempWa="", tempDate="", tempVal="";
 
-        // ARRAY DE TUTORIAIS (Lista)
-        let tutorialList = []; 
-
+        // Captura o evento de instalação (Android)
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
@@ -452,16 +382,7 @@
                 document.querySelector('.theme-toggle').innerText = '☀️';
             }
             
-            // Tenta carregar tutorial salvo localmente
-            const savedTut = localStorage.getItem('zapflow_tutorial_data');
-            if(savedTut) {
-                try {
-                    const parsed = JSON.parse(savedTut);
-                    if(Array.isArray(parsed)) tutorialList = parsed;
-                    else if(parsed.title) tutorialList = [parsed]; 
-                } catch(e) { console.log("Erro parse local"); }
-            }
-
+            // Verifica instalação (abre o modal direto após 1s)
             setTimeout(verificarInstalacaoApp, 1000);
 
             const session = localStorage.getItem(SESSION_KEY);
@@ -473,158 +394,42 @@
             }
         };
 
-        // --- LÓGICA TUTORIAL (LISTA + CRUD) ---
-        function abrirModalTutorial() {
-            renderizarListaTutoriais();
-            if (currentUserData && currentUserData.cargo === 'Admin') {
-                document.getElementById('btn-add-tut').style.display = 'flex';
-            } else {
-                document.getElementById('btn-add-tut').style.display = 'none';
-            }
-            document.getElementById('modal-tutorial-video').classList.add('show');
-        }
-
-        function renderizarListaTutoriais() {
-            const container = document.getElementById('tutorial-list-container');
-            container.innerHTML = '';
-
-            if(!tutorialList || tutorialList.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:30px; color:#999;">Nenhum tutorial disponível.</div>';
-                return;
-            }
-
-            const isAdmin = (currentUserData && currentUserData.cargo === 'Admin');
-
-            tutorialList.forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = 'tutorial-item';
-                
-                let adminBtns = '';
-                if(isAdmin) {
-                    adminBtns = `
-                        <div class="admin-controls-mini">
-                            <button class="btn-icon secondary" onclick="editarItem(${index})">✏️</button>
-                            <button class="btn-icon danger" onclick="apagarItem(${index})">🗑️</button>
-                        </div>
-                    `;
-                }
-
-                div.innerHTML = `
-                    <div class="tutorial-icon">▶</div>
-                    <div class="tutorial-info">
-                        <div class="tutorial-title">${item.title}</div>
-                        <button class="btn-watch-mini" onclick="window.open('${item.link}', '_blank')">Assistir</button>
-                    </div>
-                    ${adminBtns}
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function abrirFormTutorial() {
-            document.getElementById('form-title').innerText = "Novo Tutorial";
-            document.getElementById('tut-title').value = '';
-            document.getElementById('tut-link').value = '';
-            document.getElementById('tut-id').value = '-1'; 
-            document.getElementById('tutorial-form').style.display = 'block';
-        }
-
-        function editarItem(index) {
-            const item = tutorialList[index];
-            document.getElementById('form-title').innerText = "Editar Tutorial";
-            document.getElementById('tut-title').value = item.title;
-            document.getElementById('tut-link').value = item.link;
-            document.getElementById('tut-id').value = index; 
-            document.getElementById('tutorial-form').style.display = 'block';
-        }
-
-        function fecharFormTutorial() {
-            document.getElementById('tutorial-form').style.display = 'none';
-        }
-
-        function salvarItemTutorial() {
-            const title = document.getElementById('tut-title').value;
-            const link = document.getElementById('tut-link').value;
-            const id = parseInt(document.getElementById('tut-id').value);
-
-            if(!title || !link) return alert("Preencha tudo!");
-
-            if(id === -1) {
-                tutorialList.push({ title, link });
-            } else {
-                tutorialList[id] = { title, link };
-            }
-
-            salvarNoBanco();
-            fecharFormTutorial();
-            renderizarListaTutoriais();
-        }
-
-        function apagarItem(index) {
-            if(!confirm("Apagar este vídeo?")) return;
-            tutorialList.splice(index, 1);
-            salvarNoBanco();
-            renderizarListaTutoriais();
-        }
-
-        async function salvarNoBanco() {
-            localStorage.setItem('zapflow_tutorial_data', JSON.stringify(tutorialList));
-            atualizarBotaoHome();
-
-            try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'update_tutorial_list',
-                        user: currentUserData.user,
-                        pass: currentUserData.pass,
-                        listaTutoriais: tutorialList
-                    })
-                });
-            } catch(e) {
-                console.log("Erro ao salvar no server (mas salvou local)");
-            }
-        }
-
-        function atualizarBotaoHome() {
-            const area = document.getElementById('tutorial-area');
-            const hasData = (tutorialList && tutorialList.length > 0);
-            const isAdmin = (currentUserData && currentUserData.cargo === 'Admin');
-
-            if (isAdmin || hasData) {
-                area.style.display = 'block';
-            } else {
-                area.style.display = 'none';
-            }
-        }
-
-        // --- LÓGICA DE INSTALAÇÃO ---
+        // === LÓGICA DE INSTALAÇÃO ATUALIZADA ===
         function verificarInstalacaoApp() {
+            // Se já for app, não faz nada
             if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) return;
+
+            // Verifica se fechou nas últimas 24h
             const bannerFechadoEm = localStorage.getItem('install_banner_closed');
             if (bannerFechadoEm) {
                 const agora = new Date().getTime();
                 const umDia = 24 * 60 * 60 * 1000;
                 if (agora - parseInt(bannerFechadoEm) < umDia) return; 
             }
+
             abrirTutorialInstall();
         }
 
         function abrirTutorialInstall() {
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            
             if (deferredPrompt) {
+                // Se o navegador permite instalação direta (Android moderno)
                 document.getElementById('btn-android-install').classList.remove('hidden');
                 document.getElementById('tutorial-android').classList.add('hidden');
                 document.getElementById('tutorial-ios').classList.add('hidden');
             } else if (isIOS) {
+                // iPhone
                 document.getElementById('btn-android-install').classList.add('hidden');
                 document.getElementById('tutorial-ios').classList.remove('hidden');
                 document.getElementById('tutorial-android').classList.add('hidden');
             } else {
+                // Android Manual ou PC
                 document.getElementById('btn-android-install').classList.add('hidden');
                 document.getElementById('tutorial-ios').classList.add('hidden');
                 document.getElementById('tutorial-android').classList.remove('hidden');
             }
+            
             document.getElementById('modal-install-tutorial').classList.add('show');
         }
 
@@ -709,18 +514,6 @@
                     document.getElementById('ola-user').innerText = "Olá, " + currentUserData.user;
                     document.getElementById('status-acesso').innerText = "Vence: " + currentUserData.date;
                     
-                    // --- CARREGAR DADOS DO TUTORIAL ---
-                    if (dados.tutorialConfig) {
-                        if(Array.isArray(dados.tutorialConfig)) {
-                            tutorialList = dados.tutorialConfig;
-                        } 
-                        else if(dados.tutorialConfig.title) {
-                            tutorialList = [dados.tutorialConfig];
-                        }
-                        localStorage.setItem('zapflow_tutorial_data', JSON.stringify(tutorialList));
-                    }
-                    atualizarBotaoHome();
-
                     if(diff <= 5 && !dados.isMaster && dados.cargo !== 'Teste') {
                         document.getElementById('vencimento-alert').style.display = 'block';
                         document.getElementById('dias-restantes-alerta').innerText = diff < 0 ? 0 : diff;
@@ -741,6 +534,7 @@
                         }
                     }
 
+                    // --- CHECK MENSAGEM GLOBAL (LÓGICA "LIDA") ---
                     if(dados.message && dados.message.trim() !== "") {
                         const savedMsg = localStorage.getItem('zapflow_last_msg_' + currentUserData.user);
                         if (savedMsg !== dados.message) {
@@ -764,12 +558,14 @@
             }
         }
 
+        // --- NOVA FUNÇÃO: MARCAR COMO LIDA ---
         function marcarMensagemLida() {
             const msg = document.getElementById('msg-text').innerText;
             localStorage.setItem('zapflow_last_msg_' + currentUserData.user, msg);
             fecharModal('modal-global-msg');
         }
 
+        // --- FUNÇÕES DE INTERFACE DO ADMIN ---
         function checkRole() {
             const r = document.getElementById('new-role').value;
             if(r === 'Teste') {
