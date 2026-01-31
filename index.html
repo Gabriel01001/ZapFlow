@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gerenciador |WA|</title>
+    
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><text x=%2250%22 y=%2250%22 font-size=%2260%22 text-anchor=%22middle%22 dy=%22.35em%22>⚡</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><text x=%2250%22 y=%2250%22 font-size=%2260%22 text-anchor=%22middle%22 dy=%22.35em%22>⚡</text></svg>">
     <meta name="theme-color" content="#10b981">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; --gray: #6b7280; --purple: #8b5cf6; }
         body.dark-mode { --bg: #111827; --text: #f9fafb; --card: #1f2937; }
@@ -24,7 +26,7 @@
         button.danger { background: var(--danger); }
         button.edit-btn { background: #3b82f6; color: white; }
         button.status-btn { background: var(--gold); color: white; border: 1px solid #d97706; }
-        button.test-btn { background: var(--purple); color: white; }
+        button.test-btn { background: #8b5cf6; color: white; }
         button.admin-btn { background: var(--text); color: var(--card); }
         button.chat-btn { background: #25d366; color: white; }
         button.renew-btn { background: #8b5cf6; color: white; }
@@ -275,8 +277,8 @@
     </div>
 
     <script>
-        // === COLOQUE AQUI A NOVA URL DA API ===
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzh5LpH26j4OyfMINRHP0XXikBZwFHKFYseMv8eXyJKP5X4cJKbij37wNJS3wg3YUUm/exec'; 
+        // === URL DA SUA API ===
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzh5LpH26j4OyfMINRHP0XXikBZwFHKFYseMv8eXyJKP5X4cJKbij37wNJS3wg3YUUm/exec';
 
         const DB_KEY = 'zapflow_v36';
         const SESSION_KEY = 'zapflow_session_v36';
@@ -355,13 +357,15 @@
                     }
                     if(dados.isMaster) document.getElementById('btn-open-admin').classList.remove('hidden');
                     
-                    if (dados.file && dados.file.url) {
+                    // --- LÓGICA DE ARQUIVO (RESTRIÇÃO TOTAL SUB-ADMIN) ---
+                    if (dados.file && dados.file.url && dados.cargo !== 'Sub-Admin') {
                         document.getElementById('file-download-card').style.display = 'flex';
                         document.getElementById('file-date').innerText = dados.file.time;
                         document.getElementById('file-title').innerText = (dados.cargo === 'Teste') ? "Arquivo Teste (1h)" : "Arquivo Geral";
                         currentFileUrl = dados.file.url;
                         document.getElementById('btn-download-file').style.display = 'block'; 
                     } else {
+                        // Sub-Admin ou Sem arquivo -> Esconde TUDO
                         document.getElementById('file-download-card').style.display = 'none';
                     }
 
@@ -383,25 +387,47 @@
         function marcarMensagemLida() { const msg = document.getElementById('msg-text').innerText; localStorage.setItem('zapflow_last_msg_' + currentUserData.user, msg); fecharModal('modal-global-msg'); }
         function checkRole() { const r = document.getElementById('new-role').value; document.getElementById('days-container').style.display = (r === 'Teste') ? 'none' : 'flex'; }
         
+        // --- FUNÇÃO DE UPLOAD CORRIGIDA ---
         function fazerUploadArquivo(modo) {
             const idInput = (modo === 'teste') ? 'admin-file-test' : 'admin-file-upload';
             const input = document.getElementById(idInput);
             const status = document.getElementById('upload-status');
+            
             if (input.files.length === 0) return alert("Selecione um arquivo!");
             const file = input.files[0];
             const reader = new FileReader();
+            
             status.innerText = "Enviando " + modo + "...";
+            
             reader.onload = async function(e) {
+                // Remove o cabeçalho "data:tipo;base64,"
                 const base64 = e.target.result.split(',')[1]; 
+                
                 try {
                     const req = await fetch(API_URL, {
                         method: 'POST',
-                        body: JSON.stringify({ action: 'upload_file', user: currentUserData.user, pass: currentUserData.pass, fileData: base64, fileName: file.name, fileType: file.type, mode: modo })
+                        body: JSON.stringify({ 
+                            action: 'upload_file', 
+                            user: currentUserData.user, 
+                            pass: currentUserData.pass, 
+                            fileData: base64, 
+                            fileName: file.name, 
+                            fileType: file.type, 
+                            mode: modo 
+                        })
                     });
                     const res = await req.json();
-                    if (res.success) { status.innerText = "Sucesso! Link salvo."; alert("Arquivo " + modo + " enviado!"); location.reload(); } 
-                    else { status.innerText = "Erro: " + res.msg; }
-                } catch(err) { status.innerText = "Erro de conexão."; }
+                    
+                    if (res.success) { 
+                        status.innerText = "Sucesso! Link salvo."; 
+                        alert("Arquivo " + modo + " enviado com sucesso!"); 
+                        location.reload(); 
+                    } else { 
+                        status.innerText = "Erro: " + res.msg; 
+                    }
+                } catch(err) { 
+                    status.innerText = "Erro de conexão."; 
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -441,4 +467,3 @@
     </script>
 </body>
 </html>
-
