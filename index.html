@@ -6,7 +6,7 @@
     <title>Gerenciador |WA|</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; --gray: #6b7280; }
+        :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; --gray: #6b7280; --purple: #8b5cf6; }
         body.dark-mode { --bg: #111827; --text: #f9fafb; --card: #1f2937; }
         * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; transition: 0.3s; }
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -14,18 +14,16 @@
         input, textarea, select { width: 100%; padding: 14px; margin-bottom: 12px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; color: #333; font-size: 14px; }
         body.dark-mode input, body.dark-mode select { background: #374151; color: white; border-color: #4b5563; }
         
-        /* BOTÕES GERAIS MAIORES */
         button { width: 100%; padding: 14px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; }
         button:hover { filter: brightness(0.9); transform: translateY(-2px); }
         button.secondary { background: #e5e7eb; color: #333; }
         button.danger { background: var(--danger); }
         button.edit-btn { background: #3b82f6; color: white; }
         button.status-btn { background: var(--gold); color: white; border: 1px solid #d97706; }
+        button.test-btn { background: var(--purple); color: white; }
         button.admin-btn { background: var(--text); color: var(--card); }
         button.chat-btn { background: #25d366; color: white; }
         button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
-        
-        /* BOTÕES PEQUENOS (Auto) MAIORES */
         .btn-auto { width: auto !important; padding: 8px 16px; font-size: 13px; margin: 3px; flex-shrink: 0; }
         
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
@@ -38,7 +36,6 @@
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
         .pay-key { font-family: monospace; font-size: 14px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
         
-        /* TABELA DINAMICA */
         .table-responsive { overflow-x: auto; border: 1px solid #eee; border-radius: 10px; margin-top: 10px; }
         .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 800px; }
         .admin-table th { background: #f3f4f6; color: #374151; padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
@@ -96,7 +93,7 @@
                 <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
                     <span style="font-size: 24px;">📥</span>
                     <div style="overflow: hidden;">
-                        <div style="font-weight: bold; font-size: 14px; color: #1f2937;">Arquivo Geral</div>
+                        <div style="font-weight: bold; font-size: 14px; color: #1f2937;" id="file-title">Arquivo Geral</div>
                         <div style="font-size: 11px; color: #4b5563; white-space: nowrap;">Atualizado: <span id="file-date"></span></div>
                     </div>
                 </div>
@@ -175,14 +172,22 @@
                 </div>
             </div>
             
-            <div style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:20px;">
-                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#333;">Carregar Arquivo Geral (Público)</div>
+            <div style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:10px;">
+                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#333;">📁 Arquivo OFICIAL (Todos)</div>
                 <div style="display:flex; gap:8px;">
                     <input type="file" id="admin-file-upload" style="margin:0; padding:8px; font-size:12px; color:#333;">
-                    <button class="btn-auto" onclick="fazerUploadArquivo()">Enviar</button>
+                    <button class="btn-auto" onclick="fazerUploadArquivo('geral')">Enviar</button>
                 </div>
-                <div id="upload-status" style="font-size:11px; color:#666; margin-top:5px;"></div>
             </div>
+
+            <div style="background:#f0fdf4; border:1px dashed #16a34a; padding:15px; border-radius:8px; margin-bottom:20px;">
+                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#15803d;">🧪 Arquivo TESTE (Apenas Testes)</div>
+                <div style="display:flex; gap:8px;">
+                    <input type="file" id="admin-file-test" style="margin:0; padding:8px; font-size:12px; color:#333;">
+                    <button class="btn-auto" style="background:#16a34a;" onclick="fazerUploadArquivo('teste')">Enviar</button>
+                </div>
+            </div>
+            <div id="upload-status" style="font-size:11px; color:#666; margin-bottom:10px;"></div>
 
             <input type="text" id="search-user" placeholder="🔍 Pesquisar usuário..." onkeyup="filtrarUsuarios()" style="margin-bottom: 15px;">
             <div id="admin-users-list"></div>
@@ -197,15 +202,16 @@
                 <input type="text" id="new-user" placeholder="Usuário">
                 <input type="text" id="new-pass" placeholder="Senha">
                 
-                <div class="full-width" style="display:flex; gap:5px; align-items:center;">
+                <div class="full-width" id="days-container" style="display:flex; gap:5px; align-items:center;">
                     <input type="number" id="new-days" placeholder="Dias" style="width: 80px; margin:0">
                     <span style="font-size:12px; color:#666">dias de validade</span>
                 </div>
 
                 <div class="full-width" id="role-container">
                     <label style="font-size:12px; font-weight:bold; color:#333;">Tipo de Acesso:</label>
-                    <select id="new-role">
+                    <select id="new-role" onchange="checkRole()">
                         <option value="User">Usuário Comum</option>
+                        <option value="Teste">Teste (1 Hora)</option>
                         <option value="Sub-Admin">Sub-Admin (Pode criar Users)</option>
                         <option value="Admin">Admin Master</option>
                     </select>
@@ -326,15 +332,19 @@
 
                 if (res.success) {
                     const dados = res.data;
-                    const dV = formatarData(dados.date); dV.setHours(0,0,0,0);
-                    const hoje = new Date(); hoje.setHours(0,0,0,0);
-                    const diff = Math.ceil((dV - hoje) / 86400000);
+                    let diff = 0;
 
-                    if(diff < 0 && !dados.isMaster) {
-                        msg.innerText = "Acesso expirado.";
-                        localStorage.removeItem(SESSION_KEY);
-                        btn.disabled = false; txt.style.display = 'block'; loader.style.display = 'none';
-                        return;
+                    // Tratamento para data ou teste
+                    if (dados.cargo !== 'Teste') {
+                        const dV = formatarData(dados.date); dV.setHours(0,0,0,0);
+                        const hoje = new Date(); hoje.setHours(0,0,0,0);
+                        diff = Math.ceil((dV - hoje) / 86400000);
+                        if(diff < 0 && !dados.isMaster) {
+                            msg.innerText = "Acesso expirado.";
+                            localStorage.removeItem(SESSION_KEY);
+                            btn.disabled = false; txt.style.display = 'block'; loader.style.display = 'none';
+                            return;
+                        }
                     }
 
                     currentUserData = dados;
@@ -350,21 +360,26 @@
                     document.getElementById('ola-user').innerText = "Olá, " + currentUserData.user;
                     document.getElementById('status-acesso').innerText = "Vence: " + currentUserData.date;
                     
-                    if(diff <= 5 && !dados.isMaster) {
+                    // Alerta de Vencimento
+                    if(diff <= 5 && !dados.isMaster && dados.cargo !== 'Teste') {
                         document.getElementById('vencimento-alert').style.display = 'block';
                         document.getElementById('dias-restantes-alerta').innerText = diff < 0 ? 0 : diff;
                     }
 
                     if(dados.isMaster) document.getElementById('btn-open-admin').classList.remove('hidden');
                     
+                    // --- EXIBIÇÃO DO ARQUIVO ---
                     if (dados.file && dados.file.url) {
                         document.getElementById('file-download-card').style.display = 'flex';
                         document.getElementById('file-date').innerText = dados.file.time;
+                        document.getElementById('file-title').innerText = (dados.cargo === 'Teste') ? "Arquivo Teste (1h)" : "Arquivo Geral";
                         currentFileUrl = dados.file.url;
                         
-                        // --- TRAVA: SE FOR SUB-ADMIN, ESCONDE O BOTÃO ---
+                        // SE FOR SUB-ADMIN, ESCONDE O BOTÃO DE DOWNLOAD
                         if (dados.cargo === 'Sub-Admin') {
                             document.getElementById('btn-download-file').style.display = 'none';
+                        } else {
+                            document.getElementById('btn-download-file').style.display = 'block';
                         }
                     }
 
@@ -383,223 +398,77 @@
             }
         }
 
-        function processarNovosLinks(listaBruta) {
-            const u = currentUserData.user;
-            if (!db[u]) db[u] = { links: [], salvos: [], naoSalvos: [] };
-            if (!db[u].salvos) db[u].salvos = []; 
-            if (!db[u].naoSalvos) db[u].naoSalvos = []; 
-
-            const jaExistem = new Set([...db[u].links, ...db[u].salvos, ...db[u].naoSalvos]);
-
-            let adicionados = 0;
-            let duplicados = 0;
-
-            listaBruta.forEach(link => {
-                const l = link.trim();
-                if (l) {
-                    if (jaExistem.has(l)) {
-                        duplicados++;
-                    } else {
-                        db[u].links.push(l);
-                        jaExistem.add(l); 
-                        adicionados++;
-                    }
-                }
-            });
-
-            if (duplicados > 0) alert(`Filtrado: ${adicionados} novos adicionados. ${duplicados} repetidos removidos.`);
-            renderizar();
-        }
-
-        function addLinks(){ 
-            const t=document.getElementById('links-input'); 
-            const linhas = t.value.split('\n');
-            processarNovosLinks(linhas);
-            t.value=''; 
-            pgPend = 0; 
-        }
-        
-        function lerArquivo(i) { 
-            const r=new FileReader(); 
-            r.onload=(e)=>{
-                const linhas = e.target.result.split('\n');
-                processarNovosLinks(linhas);
-            }; 
-            r.readAsText(i.files[0]); 
-            i.value=''; 
-        }
-
-        function renderizar() {
-            const u = currentUserData.user;
-            if(!db[u]) db[u] = {links:[], salvos:[], naoSalvos:[]};
-            if(!db[u].naoSalvos) db[u].naoSalvos = [];
-
-            const p = document.getElementById('lista-pendentes');
-            p.innerHTML = '';
-            const tP = db[u].links.length;
-            document.getElementById('count-pend').innerText = tP;
-            db[u].links.slice(pgPend*ITENS_PAG, (pgPend+1)*ITENS_PAG).forEach((l,i) => { 
-                p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button class="btn-auto" onclick="tratarAberturaLink(${pgPend*ITENS_PAG+i},'${l}')">Abrir ↗</button></div>`; 
-            });
-            renderControles('paginacao-pend', tP, pgPend, (n)=> {pgPend=n; renderizar();});
-
-            const s = document.getElementById('lista-salvos');
-            s.innerHTML = '';
-            const tS = db[u].salvos ? db[u].salvos.length : 0;
-            document.getElementById('count-saved').innerText = tS;
-            if(db[u].salvos) db[u].salvos.slice(pgSalv*ITENS_PAG, (pgSalv+1)*ITENS_PAG).forEach((l,i) => { 
-                s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button class="danger btn-auto" onclick="db['${u}'].salvos.splice(${pgSalv*ITENS_PAG+i},1);renderizar();">X</button></div>`; 
-            });
-            renderControles('paginacao-salv', tS, pgSalv, (n)=> {pgSalv=n; renderizar();});
-
-            const d = document.getElementById('lista-descartados');
-            d.innerHTML = '';
-            const tD = db[u].naoSalvos ? db[u].naoSalvos.length : 0;
-            document.getElementById('count-discarded').innerText = tD;
-            if(db[u].naoSalvos) db[u].naoSalvos.slice(pgDesc*ITENS_PAG, (pgDesc+1)*ITENS_PAG).forEach((l,i) => { 
-                d.innerHTML += `<div class="card card-discarded"><span class="link-text">${l}</span><button class="btn-auto" onclick="resgatarDescartado(${pgDesc*ITENS_PAG+i})">♻️</button><button class="danger btn-auto" onclick="db['${u}'].naoSalvos.splice(${pgDesc*ITENS_PAG+i},1);renderizar();">X</button></div>`; 
-            });
-            renderControles('paginacao-desc', tD, pgDesc, (n)=> {pgDesc=n; renderizar();});
-
-            localStorage.setItem(DB_KEY, JSON.stringify(db));
-        }
-
-        function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
-        
-        async function alterarStatus(targetUser) {
-            if(!confirm("Deseja alterar o status deste usuário (Aprovar/Bloquear)?")) return;
-            try {
-                const req = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'toggle_status', user: currentUserData.user, pass: currentUserData.pass, targetUser: targetUser })
-                });
-                const res = await req.json();
-                if(res.success) {
-                    alert("Status alterado para: " + res.novoStatus);
-                    abrirAdminPanel(); 
-                } else {
-                    alert("Erro: " + res.msg);
-                }
-            } catch(e) {
-                alert("Erro de conexão.");
+        // --- FUNÇÕES DE INTERFACE DO ADMIN ---
+        function checkRole() {
+            const r = document.getElementById('new-role').value;
+            if(r === 'Teste') {
+                document.getElementById('days-container').style.display = 'none';
+            } else {
+                document.getElementById('days-container').style.display = 'flex';
             }
         }
 
-        async function abrirAdminPanel() {
-            document.getElementById('modal-admin').classList.add('show');
-            const lista = document.getElementById('admin-users-list');
-            lista.innerHTML = '<div class="loader" style="display:block; border-color:#ccc; border-top-color:#333; margin-top: 20px;"></div>';
-
-            try {
-                const req = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'admin_list', user: currentUserData.user, pass: currentUserData.pass })
-                });
-                const res = await req.json();
-
-                if(res.success && Array.isArray(res.list)) {
-                    const headers = res.headers || []; 
-                    const dados = res.list; 
-                    const hoje = new Date(); hoje.setHours(0,0,0,0);
-                    
-                    if(dados.length === 0) {
-                        lista.innerHTML = '<p style="text-align:center; color:#666;">Nenhum usuário encontrado.</p>';
-                        return;
-                    }
-
-                    let html = `
-                    <div class="table-responsive">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 50px;">Status</th>`;
-                    headers.forEach(h => { html += `<th>${h}</th>`; });
-                    html += `<th style="width: 140px;">Ações</th></tr></thead><tbody>`;
-
-                    const isSubAdmin = currentUserData.cargo === 'Sub-Admin';
-
-                    dados.forEach((row) => {
-                        const dateVal = row[2]; 
-                        const dV = formatarData(dateVal); dV.setHours(0,0,0,0);
-                        const diff = Math.ceil((dV - hoje) / 86400000);
-                        const isExpired = diff < 0;
-                        const statusClass = isExpired ? 'status-expired' : 'status-active';
-                        const statusText = isExpired ? `Expirado` : `${diff}d`;
-                        
-                        const uUser = row[0] || "";
-                        const uPass = row[1] || "";
-                        const uDate = row[2] || "";
-                        const uWa   = row[3] || "";
-                        const uVal  = row[4] || "";
-                        
-                        const statusAcc = row[8] || "Ativo"; 
-                        const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : '✅');
-
-                        let statusBtn = '';
-                        if (isSubAdmin) {
-                            statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px; cursor: not-allowed; opacity: 0.6;" title="Status: ${statusAcc}">${statusIcon}</button>`;
-                        } else {
-                            statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>`;
-                        }
-
-                        html += `<tr><td><span class="status-dot ${statusClass}" title="${statusText}"></span><small>${statusText}</small></td>`;
-                        row.forEach(cell => { html += `<td>${cell}</td>`; });
-                        html += `<td><div style="display:flex; gap:5px;">${statusBtn}<button class="chat-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button><button class="vip-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button><button class="edit-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button></div></td></tr>`;
-                    });
-
-                    html += `</tbody></table></div>`;
-                    lista.innerHTML = html;
-                } else {
-                    lista.innerHTML = '<p style="text-align:center; color:red">Erro ao carregar lista.</p>';
-                }
-            } catch(e) {
-                console.error(e);
-                lista.innerHTML = '<p style="text-align:center; color:red">Erro de conexão com o servidor.</p>';
-            }
-        }
-
-        function fazerUploadArquivo() {
-            const input = document.getElementById('admin-file-upload');
+        function fazerUploadArquivo(modo) {
+            const idInput = (modo === 'teste') ? 'admin-file-test' : 'admin-file-upload';
+            const input = document.getElementById(idInput);
             const status = document.getElementById('upload-status');
+            
             if (input.files.length === 0) return alert("Selecione um arquivo!");
             const file = input.files[0];
             const reader = new FileReader();
-            status.innerText = "Lendo arquivo...";
+            
+            status.innerText = "Enviando " + modo + "...";
+            
             reader.onload = async function(e) {
                 const base64 = e.target.result.split(',')[1]; 
-                status.innerText = "Enviando para o Drive...";
                 try {
-                    const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'upload_file', user: currentUserData.user, pass: currentUserData.pass, fileData: base64, fileName: file.name, fileType: file.type }) });
+                    const req = await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'upload_file',
+                            user: currentUserData.user,
+                            pass: currentUserData.pass,
+                            fileData: base64,
+                            fileName: file.name,
+                            fileType: file.type,
+                            mode: modo
+                        })
+                    });
                     const res = await req.json();
-                    if (res.success) { status.innerText = "Sucesso! Link salvo."; alert("Arquivo enviado com sucesso!"); location.reload(); } else { status.innerText = "Erro: " + res.msg; }
-                } catch(err) { status.innerText = "Erro de conexão."; }
+                    if (res.success) {
+                        status.innerText = "Sucesso! Link salvo.";
+                        alert("Arquivo " + modo + " enviado!");
+                        location.reload(); 
+                    } else {
+                        status.innerText = "Erro: " + res.msg;
+                    }
+                } catch(err) {
+                    status.innerText = "Erro de conexão.";
+                }
             };
             reader.readAsDataURL(file);
         }
 
-        function baixarArquivoGeral() {
-            if(currentFileUrl) {
-                const link = document.createElement("a");
-                link.href = currentFileUrl;
-                link.setAttribute("download", "");
-                link.setAttribute("target", "_blank");
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-        }
-
-        function abrirModalCreate() { /* ... Código Igual ... */ document.getElementById('new-user').value = ''; document.getElementById('new-pass').value = ''; document.getElementById('new-days').value = '30'; document.getElementById('new-wa').value = ''; document.getElementById('new-val').value = ''; if (currentUserData.cargo === 'Sub-Admin') { document.getElementById('new-pix').value = ''; document.getElementById('role-container').style.display = 'none'; document.getElementById('new-role').value = 'User'; } else { document.getElementById('new-pix').value = currentUserData.pix || ''; document.getElementById('role-container').style.display = 'block'; document.getElementById('new-role').value = 'User'; } document.getElementById('msg-create').innerText = ''; document.getElementById('modal-create').classList.add('show'); }
-        async function salvarNovoUsuario() { /* ... Código Igual ... */ const btn = document.getElementById('btn-save-user'); const msg = document.getElementById('msg-create'); const u = document.getElementById('new-user').value; const p = document.getElementById('new-pass').value; const d = parseInt(document.getElementById('new-days').value); const w = document.getElementById('new-wa').value; const v = document.getElementById('new-val').value; const x = document.getElementById('new-pix').value; const cargo = document.getElementById('new-role').value; if(!u || !p || !d) { msg.innerText = "Preencha usuário, senha e dias."; return; } const dataVenc = new Date(); dataVenc.setDate(dataVenc.getDate() + d); const dia = ("0" + dataVenc.getDate()).slice(-2); const mes = ("0" + (dataVenc.getMonth() + 1)).slice(-2); const ano = dataVenc.getFullYear(); const dataFinal = `${dia}/${mes}/${ano}`; const payload = { user: u, pass: p, date: dataFinal, wa: w, val: v, pix: x, cargo: cargo }; btn.disabled = true; btn.innerText = "Salvando..."; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'create_user', user: currentUserData.user, pass: currentUserData.pass, novoUsuario: payload }) }); const res = await req.json(); if(res.success) { alert("Usuário criado com sucesso!"); fecharModal('modal-create'); abrirAdminPanel(); } else { msg.innerText = res.msg || "Erro ao criar."; } } catch(e) { msg.innerText = "Erro de conexão."; } finally { btn.disabled = false; btn.innerText = "💾 Salvar"; } }
-        function abrirModalEdit(user, pass, date, wa, val) { /* ... Código Igual ... */ userEditing = user; document.getElementById('edit-user-display').innerText = user; document.getElementById('edit-pass').value = pass; document.getElementById('edit-date').value = date; document.getElementById('edit-wa').value = wa; document.getElementById('edit-val').value = val; document.getElementById('msg-edit').innerText = ''; document.getElementById('modal-edit').classList.add('show'); }
-        async function salvarEdicao() { /* ... Código Igual ... */ const btn = document.getElementById('btn-save-edit'); const msg = document.getElementById('msg-edit'); const payload = { userOriginal: userEditing, pass: document.getElementById('edit-pass').value, date: document.getElementById('edit-date').value, wa: document.getElementById('edit-wa').value, val: document.getElementById('edit-val').value }; btn.disabled = true; btn.innerText = "Atualizando..."; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'edit_user', user: currentUserData.user, pass: currentUserData.pass, dadosEditados: payload }) }); const res = await req.json(); if(res.success) { alert("Usuário atualizado!"); fecharModal('modal-edit'); abrirAdminPanel(); } else { msg.innerText = res.msg || "Erro ao atualizar."; } } catch(e) { msg.innerText = "Erro de conexão."; } finally { btn.disabled = false; btn.innerText = "💾 Atualizar Dados"; } }
+        // --- MANTIDAS IGUAIS (addLinks, renderizar, etc) ---
+        function processarNovosLinks(listaBruta) { const u = currentUserData.user; if (!db[u]) db[u] = { links: [], salvos: [], naoSalvos: [] }; if (!db[u].salvos) db[u].salvos = []; if (!db[u].naoSalvos) db[u].naoSalvos = []; const jaExistem = new Set([...db[u].links, ...db[u].salvos, ...db[u].naoSalvos]); let adicionados = 0; let duplicados = 0; listaBruta.forEach(link => { const l = link.trim(); if (l) { if (jaExistem.has(l)) { duplicados++; } else { db[u].links.push(l); jaExistem.add(l); adicionados++; } } }); if (duplicados > 0) alert(`Filtrado: ${adicionados} novos adicionados. ${duplicados} repetidos removidos.`); renderizar(); }
+        function addLinks(){ const t=document.getElementById('links-input'); const linhas = t.value.split('\n'); processarNovosLinks(linhas); t.value=''; pgPend = 0; }
+        function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{ const linhas = e.target.result.split('\n'); processarNovosLinks(linhas); }; r.readAsText(i.files[0]); i.value=''; }
+        function renderizar() { const u = currentUserData.user; if(!db[u]) db[u] = {links:[], salvos:[], naoSalvos:[]}; if(!db[u].naoSalvos) db[u].naoSalvos = []; const p = document.getElementById('lista-pendentes'); p.innerHTML = ''; const tP = db[u].links.length; document.getElementById('count-pend').innerText = tP; db[u].links.slice(pgPend*ITENS_PAG, (pgPend+1)*ITENS_PAG).forEach((l,i) => { p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button class="btn-auto" onclick="tratarAberturaLink(${pgPend*ITENS_PAG+i},'${l}')">Abrir ↗</button></div>`; }); renderControles('paginacao-pend', tP, pgPend, (n)=> {pgPend=n; renderizar();}); const s = document.getElementById('lista-salvos'); s.innerHTML = ''; const tS = db[u].salvos ? db[u].salvos.length : 0; document.getElementById('count-saved').innerText = tS; if(db[u].salvos) db[u].salvos.slice(pgSalv*ITENS_PAG, (pgSalv+1)*ITENS_PAG).forEach((l,i) => { s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button class="danger btn-auto" onclick="db['${u}'].salvos.splice(${pgSalv*ITENS_PAG+i},1);renderizar();">X</button></div>`; }); renderControles('paginacao-salv', tS, pgSalv, (n)=> {pgSalv=n; renderizar();}); const d = document.getElementById('lista-descartados'); d.innerHTML = ''; const tD = db[u].naoSalvos ? db[u].naoSalvos.length : 0; document.getElementById('count-discarded').innerText = tD; if(db[u].naoSalvos) db[u].naoSalvos.slice(pgDesc*ITENS_PAG, (pgDesc+1)*ITENS_PAG).forEach((l,i) => { d.innerHTML += `<div class="card card-discarded"><span class="link-text">${l}</span><button class="btn-auto" onclick="resgatarDescartado(${pgDesc*ITENS_PAG+i})">♻️</button><button class="danger btn-auto" onclick="db['${u}'].naoSalvos.splice(${pgDesc*ITENS_PAG+i},1);renderizar();">X</button></div>`; }); renderControles('paginacao-desc', tD, pgDesc, (n)=> {pgDesc=n; renderizar();}); localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+        function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
+        async function alterarStatus(targetUser) { if(!confirm("Deseja alterar o status deste usuário?")) return; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'toggle_status', user: currentUserData.user, pass: currentUserData.pass, targetUser: targetUser }) }); const res = await req.json(); if(res.success) { alert("Status alterado: " + res.novoStatus); abrirAdminPanel(); } else { alert("Erro: " + res.msg); } } catch(e) { alert("Erro de conexão."); } }
+        async function abrirAdminPanel() { document.getElementById('modal-admin').classList.add('show'); const lista = document.getElementById('admin-users-list'); lista.innerHTML = '<div class="loader" style="display:block; border-color:#ccc; border-top-color:#333; margin-top: 20px;"></div>'; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'admin_list', user: currentUserData.user, pass: currentUserData.pass }) }); const res = await req.json(); if(res.success && Array.isArray(res.list)) { const headers = res.headers || []; const dados = res.list; const hoje = new Date(); hoje.setHours(0,0,0,0); if(dados.length === 0) { lista.innerHTML = '<p style="text-align:center; color:#666;">Nenhum usuário.</p>'; return; } let html = `<div class="table-responsive"><table class="admin-table"><thead><tr><th style="width: 50px;">Status</th>`; headers.forEach(h => { html += `<th>${h}</th>`; }); html += `<th style="width: 140px;">Ações</th></tr></thead><tbody>`; const isSubAdmin = currentUserData.cargo === 'Sub-Admin'; dados.forEach((row) => { const dateVal = row[2]; const dV = formatarData(dateVal); dV.setHours(0,0,0,0); const diff = Math.ceil((dV - hoje) / 86400000); const isExpired = diff < 0; const statusClass = isExpired ? 'status-expired' : 'status-active'; const statusText = isExpired ? `Expirado` : `${diff}d`; const uUser = row[0] || ""; const uPass = row[1] || ""; const uDate = row[2] || ""; const uWa = row[3] || ""; const uVal = row[4] || ""; const statusAcc = row[8] || "Ativo"; const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : '✅'); let statusBtn = ''; if (isSubAdmin) { statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px; cursor: not-allowed; opacity: 0.6;" title="Status: ${statusAcc}">${statusIcon}</button>`; } else { statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>`; } html += `<tr><td><span class="status-dot ${statusClass}" title="${statusText}"></span><small>${statusText}</small></td>`; row.forEach(cell => { html += `<td>${cell}</td>`; }); html += `<td><div style="display:flex; gap:5px;">${statusBtn}<button class="chat-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button><button class="vip-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button><button class="edit-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button></div></td></tr>`; }); html += `</tbody></table></div>`; lista.innerHTML = html; } else { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } } catch(e) { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } }
+        function baixarArquivoGeral() { if(currentFileUrl) { const link = document.createElement("a"); link.href = currentFileUrl; link.setAttribute("download", ""); link.setAttribute("target", "_blank"); document.body.appendChild(link); link.click(); document.body.removeChild(link); } }
+        function abrirModalCreate() { document.getElementById('new-user').value = ''; document.getElementById('new-pass').value = ''; document.getElementById('new-days').value = '30'; document.getElementById('new-wa').value = ''; document.getElementById('new-val').value = ''; if (currentUserData.cargo === 'Sub-Admin') { document.getElementById('new-pix').value = ''; document.getElementById('role-container').style.display = 'none'; document.getElementById('new-role').value = 'User'; document.getElementById('days-container').style.display = 'flex'; } else { document.getElementById('new-pix').value = currentUserData.pix || ''; document.getElementById('role-container').style.display = 'block'; document.getElementById('new-role').value = 'User'; document.getElementById('days-container').style.display = 'flex'; } document.getElementById('msg-create').innerText = ''; document.getElementById('modal-create').classList.add('show'); }
+        async function salvarNovoUsuario() { const btn = document.getElementById('btn-save-user'); const msg = document.getElementById('msg-create'); const u = document.getElementById('new-user').value; const p = document.getElementById('new-pass').value; const d = parseInt(document.getElementById('new-days').value); const w = document.getElementById('new-wa').value; const v = document.getElementById('new-val').value; const x = document.getElementById('new-pix').value; const cargo = document.getElementById('new-role').value; if(!u || !p || (!d && cargo !== 'Teste')) { msg.innerText = "Preencha os campos."; return; } const dataVenc = new Date(); dataVenc.setDate(dataVenc.getDate() + (d||0)); const dia = ("0" + dataVenc.getDate()).slice(-2); const mes = ("0" + (dataVenc.getMonth() + 1)).slice(-2); const ano = dataVenc.getFullYear(); const dataFinal = `${dia}/${mes}/${ano}`; const payload = { user: u, pass: p, date: dataFinal, wa: w, val: v, pix: x, cargo: cargo }; btn.disabled = true; btn.innerText = "Salvando..."; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'create_user', user: currentUserData.user, pass: currentUserData.pass, novoUsuario: payload }) }); const res = await req.json(); if(res.success) { alert("Sucesso!"); fecharModal('modal-create'); abrirAdminPanel(); } else { msg.innerText = res.msg; } } catch(e) { msg.innerText = "Erro."; } finally { btn.disabled = false; btn.innerText = "💾 Salvar"; } }
+        function abrirModalEdit(user, pass, date, wa, val) { userEditing = user; document.getElementById('edit-user-display').innerText = user; document.getElementById('edit-pass').value = pass; document.getElementById('edit-date').value = date; document.getElementById('edit-wa').value = wa; document.getElementById('edit-val').value = val; document.getElementById('msg-edit').innerText = ''; document.getElementById('modal-edit').classList.add('show'); }
+        async function salvarEdicao() { const btn = document.getElementById('btn-save-edit'); const msg = document.getElementById('msg-edit'); const payload = { userOriginal: userEditing, pass: document.getElementById('edit-pass').value, date: document.getElementById('edit-date').value, wa: document.getElementById('edit-wa').value, val: document.getElementById('edit-val').value }; btn.disabled = true; btn.innerText = "Atualizando..."; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'edit_user', user: currentUserData.user, pass: currentUserData.pass, dadosEditados: payload }) }); const res = await req.json(); if(res.success) { alert("Atualizado!"); fecharModal('modal-edit'); abrirAdminPanel(); } else { msg.innerText = res.msg; } } catch(e) { msg.innerText = "Erro."; } finally { btn.disabled = false; btn.innerText = "💾 Atualizar Dados"; } }
         function filtrarUsuarios() { const termo = document.getElementById('search-user').value.toLowerCase(); const linhas = document.querySelectorAll('.admin-table tbody tr'); linhas.forEach(tr => { const texto = tr.innerText.toLowerCase(); tr.style.display = texto.includes(termo) ? '' : 'none'; }); }
-        function abrirModalRenovar() { let chaveDaPlanilha = currentUserData.pix; if (!chaveDaPlanilha || chaveDaPlanilha === "undefined") { chaveDaPlanilha = "Chave não cadastrada"; } document.getElementById('pix-display').innerText = chaveDaPlanilha; document.getElementById('modal-renovar').classList.add('show'); }
-        function copiarPixReal() { const t = document.getElementById('pix-display').innerText; if(navigator.clipboard) { navigator.clipboard.writeText(t).then(()=>alert("Copiado!")).catch(()=>alert("Erro ao copiar")); } else { const el = document.createElement("input"); el.value = t; document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el); alert("Copiado!"); } }
-        function baixarSalvos() { const u = currentUserData.user; if(!db[u].salvos.length) return alert("Nada para extrair."); const blob = new Blob([db[u].salvos.join('\n')], {type: 'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `extraidos.txt`; a.click(); }
-        function limparPendentes() { if(confirm("Apagar pendentes?")) { db[currentUserData.user].links = []; pgPend = 0; renderizar(); } }
-        function limparSalvos() { if(confirm("Limpar salvos?")) { db[currentUserData.user].salvos = []; pgSalv = 0; renderizar(); } }
-        function limparDescartados() { if(confirm("Limpar descartados?")) { db[currentUserData.user].naoSalvos = []; pgDesc = 0; renderizar(); } }
+        function abrirModalRenovar() { let chave = currentUserData.pix; if (!chave || chave === "undefined") chave = "Chave não cadastrada"; document.getElementById('pix-display').innerText = chave; document.getElementById('modal-renovar').classList.add('show'); }
+        function copiarPixReal() { const t = document.getElementById('pix-display').innerText; if(navigator.clipboard) { navigator.clipboard.writeText(t).then(()=>alert("Copiado!")); } else { const el = document.createElement("input"); el.value = t; document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el); alert("Copiado!"); } }
+        function baixarSalvos() { const u = currentUserData.user; if(!db[u].salvos.length) return alert("Nada."); const blob = new Blob([db[u].salvos.join('\n')], {type: 'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `extraidos.txt`; a.click(); }
+        function limparPendentes() { if(confirm("Apagar?")) { db[currentUserData.user].links = []; pgPend = 0; renderizar(); } }
+        function limparSalvos() { if(confirm("Limpar?")) { db[currentUserData.user].salvos = []; pgSalv = 0; renderizar(); } }
+        function limparDescartados() { if(confirm("Limpar?")) { db[currentUserData.user].naoSalvos = []; pgDesc = 0; renderizar(); } }
         function resgatarDescartado(idx) { const u = currentUserData.user; const link = db[u].naoSalvos[idx]; db[u].links.push(link); db[u].naoSalvos.splice(idx, 1); renderizar(); }
         function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
         function logout(){ localStorage.removeItem(SESSION_KEY); location.reload(); }
@@ -607,7 +476,7 @@
         function tratarAberturaLink(idx, link) { if (lastOpenedLink) { if(!db[currentUserData.user].naoSalvos) db[currentUserData.user].naoSalvos = []; db[currentUserData.user].naoSalvos.push(lastOpenedLink); } lastOpenedLink = link; if(link.includes('http')) { window.open(link); } else { window.open(`whatsapp://send?phone=55${link.replace(/\D/g,'')}`); } db[currentUserData.user].links.splice(idx, 1); document.getElementById('last-link-opened').innerText = link; document.getElementById('save-prompt').style.display = 'flex'; renderizar(); }
         function confirmarSalvamento(sim) { const u = currentUserData.user; if(!db[u].salvos) db[u].salvos=[]; if(!db[u].naoSalvos) db[u].naoSalvos=[]; if(sim && lastOpenedLink) { db[u].salvos.push(lastOpenedLink); } else if (!sim && lastOpenedLink) { db[u].naoSalvos.push(lastOpenedLink); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
         function enviarDadosWhatsApp(u,p,w,d,v) { const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u}\n🔑 *Senha:* ${p}\n📅 *Vencimento:* ${d}\n💰 *Valor:* R$ ${v}`; window.open(`https://wa.me/55${String(w).replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
-        function toggleAuto() { /* code hidden */ }
+        function toggleAuto() { /* ... */ }
     </script>
 </body>
 </html>
