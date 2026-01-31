@@ -172,7 +172,7 @@
                 </div>
             </div>
             
-            <div style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:10px;">
+            <div id="upload-section-geral" style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:10px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#333;">📁 Arquivo OFICIAL (Todos)</div>
                 <div style="display:flex; gap:8px;">
                     <input type="file" id="admin-file-upload" style="margin:0; padding:8px; font-size:12px; color:#333;">
@@ -180,7 +180,7 @@
                 </div>
             </div>
 
-            <div style="background:#f0fdf4; border:1px dashed #16a34a; padding:15px; border-radius:8px; margin-bottom:20px;">
+            <div id="upload-section-teste" style="background:#f0fdf4; border:1px dashed #16a34a; padding:15px; border-radius:8px; margin-bottom:20px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#15803d;">🧪 Arquivo TESTE (Apenas Testes)</div>
                 <div style="display:flex; gap:8px;">
                     <input type="file" id="admin-file-test" style="margin:0; padding:8px; font-size:12px; color:#333;">
@@ -210,11 +210,7 @@
                 <div class="full-width" id="role-container">
                     <label style="font-size:12px; font-weight:bold; color:#333;">Tipo de Acesso:</label>
                     <select id="new-role" onchange="checkRole()">
-                        <option value="User">Usuário Comum</option>
-                        <option value="Teste">Teste (1 Hora)</option>
-                        <option value="Sub-Admin">Sub-Admin (Pode criar Users)</option>
-                        <option value="Admin">Admin Master</option>
-                    </select>
+                        </select>
                 </div>
 
                 <input type="text" id="new-wa" placeholder="WhatsApp (só números)" class="full-width">
@@ -229,7 +225,7 @@
     <div id="modal-edit" class="modal-overlay" style="z-index: 1002;">
         <div class="modal-content" style="max-width: 400px;">
             <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-edit')">&times;</span>
-            <h3 style="margin-top:0; color:#3b82f6">Editar: <span id="edit-user-display"></span></h3>
+            <h3 style="margin-top:0;">Novo Acesso</h3>
             <div class="form-grid">
                 <div class="full-width">
                     <label style="font-size:11px; font-weight:bold;">Nova Senha:</label>
@@ -334,7 +330,6 @@
                     const dados = res.data;
                     let diff = 0;
 
-                    // Tratamento para data ou teste
                     if (dados.cargo !== 'Teste') {
                         const dV = formatarData(dados.date); dV.setHours(0,0,0,0);
                         const hoje = new Date(); hoje.setHours(0,0,0,0);
@@ -360,7 +355,6 @@
                     document.getElementById('ola-user').innerText = "Olá, " + currentUserData.user;
                     document.getElementById('status-acesso').innerText = "Vence: " + currentUserData.date;
                     
-                    // Alerta de Vencimento
                     if(diff <= 5 && !dados.isMaster && dados.cargo !== 'Teste') {
                         document.getElementById('vencimento-alert').style.display = 'block';
                         document.getElementById('dias-restantes-alerta').innerText = diff < 0 ? 0 : diff;
@@ -368,14 +362,12 @@
 
                     if(dados.isMaster) document.getElementById('btn-open-admin').classList.remove('hidden');
                     
-                    // --- EXIBIÇÃO DO ARQUIVO ---
                     if (dados.file && dados.file.url) {
                         document.getElementById('file-download-card').style.display = 'flex';
                         document.getElementById('file-date').innerText = dados.file.time;
                         document.getElementById('file-title').innerText = (dados.cargo === 'Teste') ? "Arquivo Teste (1h)" : "Arquivo Geral";
                         currentFileUrl = dados.file.url;
                         
-                        // SE FOR SUB-ADMIN, ESCONDE O BOTÃO DE DOWNLOAD
                         if (dados.cargo === 'Sub-Admin') {
                             document.getElementById('btn-download-file').style.display = 'none';
                         } else {
@@ -449,16 +441,59 @@
             reader.readAsDataURL(file);
         }
 
-        // --- MANTIDAS IGUAIS (addLinks, renderizar, etc) ---
         function processarNovosLinks(listaBruta) { const u = currentUserData.user; if (!db[u]) db[u] = { links: [], salvos: [], naoSalvos: [] }; if (!db[u].salvos) db[u].salvos = []; if (!db[u].naoSalvos) db[u].naoSalvos = []; const jaExistem = new Set([...db[u].links, ...db[u].salvos, ...db[u].naoSalvos]); let adicionados = 0; let duplicados = 0; listaBruta.forEach(link => { const l = link.trim(); if (l) { if (jaExistem.has(l)) { duplicados++; } else { db[u].links.push(l); jaExistem.add(l); adicionados++; } } }); if (duplicados > 0) alert(`Filtrado: ${adicionados} novos adicionados. ${duplicados} repetidos removidos.`); renderizar(); }
         function addLinks(){ const t=document.getElementById('links-input'); const linhas = t.value.split('\n'); processarNovosLinks(linhas); t.value=''; pgPend = 0; }
         function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{ const linhas = e.target.result.split('\n'); processarNovosLinks(linhas); }; r.readAsText(i.files[0]); i.value=''; }
         function renderizar() { const u = currentUserData.user; if(!db[u]) db[u] = {links:[], salvos:[], naoSalvos:[]}; if(!db[u].naoSalvos) db[u].naoSalvos = []; const p = document.getElementById('lista-pendentes'); p.innerHTML = ''; const tP = db[u].links.length; document.getElementById('count-pend').innerText = tP; db[u].links.slice(pgPend*ITENS_PAG, (pgPend+1)*ITENS_PAG).forEach((l,i) => { p.innerHTML += `<div class="card"><span class="link-text">${l}</span><button class="btn-auto" onclick="tratarAberturaLink(${pgPend*ITENS_PAG+i},'${l}')">Abrir ↗</button></div>`; }); renderControles('paginacao-pend', tP, pgPend, (n)=> {pgPend=n; renderizar();}); const s = document.getElementById('lista-salvos'); s.innerHTML = ''; const tS = db[u].salvos ? db[u].salvos.length : 0; document.getElementById('count-saved').innerText = tS; if(db[u].salvos) db[u].salvos.slice(pgSalv*ITENS_PAG, (pgSalv+1)*ITENS_PAG).forEach((l,i) => { s.innerHTML += `<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button class="danger btn-auto" onclick="db['${u}'].salvos.splice(${pgSalv*ITENS_PAG+i},1);renderizar();">X</button></div>`; }); renderControles('paginacao-salv', tS, pgSalv, (n)=> {pgSalv=n; renderizar();}); const d = document.getElementById('lista-descartados'); d.innerHTML = ''; const tD = db[u].naoSalvos ? db[u].naoSalvos.length : 0; document.getElementById('count-discarded').innerText = tD; if(db[u].naoSalvos) db[u].naoSalvos.slice(pgDesc*ITENS_PAG, (pgDesc+1)*ITENS_PAG).forEach((l,i) => { d.innerHTML += `<div class="card card-discarded"><span class="link-text">${l}</span><button class="btn-auto" onclick="resgatarDescartado(${pgDesc*ITENS_PAG+i})">♻️</button><button class="danger btn-auto" onclick="db['${u}'].naoSalvos.splice(${pgDesc*ITENS_PAG+i},1);renderizar();">X</button></div>`; }); renderControles('paginacao-desc', tD, pgDesc, (n)=> {pgDesc=n; renderizar();}); localStorage.setItem(DB_KEY, JSON.stringify(db)); }
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
         async function alterarStatus(targetUser) { if(!confirm("Deseja alterar o status deste usuário?")) return; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'toggle_status', user: currentUserData.user, pass: currentUserData.pass, targetUser: targetUser }) }); const res = await req.json(); if(res.success) { alert("Status alterado: " + res.novoStatus); abrirAdminPanel(); } else { alert("Erro: " + res.msg); } } catch(e) { alert("Erro de conexão."); } }
-        async function abrirAdminPanel() { document.getElementById('modal-admin').classList.add('show'); const lista = document.getElementById('admin-users-list'); lista.innerHTML = '<div class="loader" style="display:block; border-color:#ccc; border-top-color:#333; margin-top: 20px;"></div>'; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'admin_list', user: currentUserData.user, pass: currentUserData.pass }) }); const res = await req.json(); if(res.success && Array.isArray(res.list)) { const headers = res.headers || []; const dados = res.list; const hoje = new Date(); hoje.setHours(0,0,0,0); if(dados.length === 0) { lista.innerHTML = '<p style="text-align:center; color:#666;">Nenhum usuário.</p>'; return; } let html = `<div class="table-responsive"><table class="admin-table"><thead><tr><th style="width: 50px;">Status</th>`; headers.forEach(h => { html += `<th>${h}</th>`; }); html += `<th style="width: 140px;">Ações</th></tr></thead><tbody>`; const isSubAdmin = currentUserData.cargo === 'Sub-Admin'; dados.forEach((row) => { const dateVal = row[2]; const dV = formatarData(dateVal); dV.setHours(0,0,0,0); const diff = Math.ceil((dV - hoje) / 86400000); const isExpired = diff < 0; const statusClass = isExpired ? 'status-expired' : 'status-active'; const statusText = isExpired ? `Expirado` : `${diff}d`; const uUser = row[0] || ""; const uPass = row[1] || ""; const uDate = row[2] || ""; const uWa = row[3] || ""; const uVal = row[4] || ""; const statusAcc = row[8] || "Ativo"; const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : '✅'); let statusBtn = ''; if (isSubAdmin) { statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px; cursor: not-allowed; opacity: 0.6;" title="Status: ${statusAcc}">${statusIcon}</button>`; } else { statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>`; } html += `<tr><td><span class="status-dot ${statusClass}" title="${statusText}"></span><small>${statusText}</small></td>`; row.forEach(cell => { html += `<td>${cell}</td>`; }); html += `<td><div style="display:flex; gap:5px;">${statusBtn}<button class="chat-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button><button class="vip-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button><button class="edit-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button></div></td></tr>`; }); html += `</tbody></table></div>`; lista.innerHTML = html; } else { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } } catch(e) { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } }
+        
+        async function abrirAdminPanel() { 
+            document.getElementById('modal-admin').classList.add('show'); 
+            const lista = document.getElementById('admin-users-list'); 
+            lista.innerHTML = '<div class="loader" style="display:block; border-color:#ccc; border-top-color:#333; margin-top: 20px;"></div>'; 
+            
+            // --- Ocultar áreas de upload se for Sub-Admin ---
+            const isSub = currentUserData.cargo === 'Sub-Admin';
+            document.getElementById('upload-section-geral').style.display = isSub ? 'none' : 'block';
+            document.getElementById('upload-section-teste').style.display = isSub ? 'none' : 'block';
+
+            try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'admin_list', user: currentUserData.user, pass: currentUserData.pass }) }); const res = await req.json(); if(res.success && Array.isArray(res.list)) { const headers = res.headers || []; const dados = res.list; const hoje = new Date(); hoje.setHours(0,0,0,0); if(dados.length === 0) { lista.innerHTML = '<p style="text-align:center; color:#666;">Nenhum usuário.</p>'; return; } let html = `<div class="table-responsive"><table class="admin-table"><thead><tr><th style="width: 50px;">Status</th>`; headers.forEach(h => { html += `<th>${h}</th>`; }); html += `<th style="width: 140px;">Ações</th></tr></thead><tbody>`; const isSubAdmin = currentUserData.cargo === 'Sub-Admin'; dados.forEach((row) => { const dateVal = row[2]; const dV = formatarData(dateVal); dV.setHours(0,0,0,0); const diff = Math.ceil((dV - hoje) / 86400000); const isExpired = diff < 0; const statusClass = isExpired ? 'status-expired' : 'status-active'; const statusText = isExpired ? `Expirado` : `${diff}d`; const uUser = row[0] || ""; const uPass = row[1] || ""; const uDate = row[2] || ""; const uWa = row[3] || ""; const uVal = row[4] || ""; const statusAcc = row[8] || "Ativo"; const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : '✅'); let statusBtn = ''; if (isSubAdmin) { statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px; cursor: not-allowed; opacity: 0.6;" title="Status: ${statusAcc}">${statusIcon}</button>`; } else { statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>`; } html += `<tr><td><span class="status-dot ${statusClass}" title="${statusText}"></span><small>${statusText}</small></td>`; row.forEach(cell => { html += `<td>${cell}</td>`; }); html += `<td><div style="display:flex; gap:5px;">${statusBtn}<button class="chat-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button><button class="vip-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button><button class="edit-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button></div></td></tr>`; }); html += `</tbody></table></div>`; lista.innerHTML = html; } else { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } } catch(e) { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } }
+        
         function baixarArquivoGeral() { if(currentFileUrl) { const link = document.createElement("a"); link.href = currentFileUrl; link.setAttribute("download", ""); link.setAttribute("target", "_blank"); document.body.appendChild(link); link.click(); document.body.removeChild(link); } }
-        function abrirModalCreate() { document.getElementById('new-user').value = ''; document.getElementById('new-pass').value = ''; document.getElementById('new-days').value = '30'; document.getElementById('new-wa').value = ''; document.getElementById('new-val').value = ''; if (currentUserData.cargo === 'Sub-Admin') { document.getElementById('new-pix').value = ''; document.getElementById('role-container').style.display = 'none'; document.getElementById('new-role').value = 'User'; document.getElementById('days-container').style.display = 'flex'; } else { document.getElementById('new-pix').value = currentUserData.pix || ''; document.getElementById('role-container').style.display = 'block'; document.getElementById('new-role').value = 'User'; document.getElementById('days-container').style.display = 'flex'; } document.getElementById('msg-create').innerText = ''; document.getElementById('modal-create').classList.add('show'); }
+        
+        // --- CRIAÇÃO DE USUÁRIO COM OPÇÕES DINÂMICAS ---
+        function abrirModalCreate() { 
+            document.getElementById('new-user').value = ''; 
+            document.getElementById('new-pass').value = ''; 
+            document.getElementById('new-days').value = '30'; 
+            document.getElementById('new-wa').value = ''; 
+            document.getElementById('new-val').value = ''; 
+            
+            const roleSelect = document.getElementById('new-role');
+            roleSelect.innerHTML = ''; // Limpa opções anteriores
+
+            // Opções Básicas (Todos vêem)
+            const optUser = document.createElement('option'); optUser.value = 'User'; optUser.innerText = 'Usuário Comum'; roleSelect.appendChild(optUser);
+            const optTest = document.createElement('option'); optTest.value = 'Teste'; optTest.innerText = 'Teste (1 Hora)'; roleSelect.appendChild(optTest);
+
+            if (currentUserData.cargo === 'Sub-Admin') { 
+                document.getElementById('new-pix').value = ''; 
+                // Sub-Admin só vê as 2 opções acima
+            } else { 
+                // Master vê opções extras
+                const optSub = document.createElement('option'); optSub.value = 'Sub-Admin'; optSub.innerText = 'Sub-Admin'; roleSelect.appendChild(optSub);
+                const optAdmin = document.createElement('option'); optAdmin.value = 'Admin'; optAdmin.innerText = 'Admin Master'; roleSelect.appendChild(optAdmin);
+                
+                document.getElementById('new-pix').value = currentUserData.pix || ''; 
+            } 
+            
+            document.getElementById('role-container').style.display = 'block';
+            document.getElementById('days-container').style.display = 'flex';
+            document.getElementById('msg-create').innerText = ''; 
+            document.getElementById('modal-create').classList.add('show'); 
+        }
+
         async function salvarNovoUsuario() { const btn = document.getElementById('btn-save-user'); const msg = document.getElementById('msg-create'); const u = document.getElementById('new-user').value; const p = document.getElementById('new-pass').value; const d = parseInt(document.getElementById('new-days').value); const w = document.getElementById('new-wa').value; const v = document.getElementById('new-val').value; const x = document.getElementById('new-pix').value; const cargo = document.getElementById('new-role').value; if(!u || !p || (!d && cargo !== 'Teste')) { msg.innerText = "Preencha os campos."; return; } const dataVenc = new Date(); dataVenc.setDate(dataVenc.getDate() + (d||0)); const dia = ("0" + dataVenc.getDate()).slice(-2); const mes = ("0" + (dataVenc.getMonth() + 1)).slice(-2); const ano = dataVenc.getFullYear(); const dataFinal = `${dia}/${mes}/${ano}`; const payload = { user: u, pass: p, date: dataFinal, wa: w, val: v, pix: x, cargo: cargo }; btn.disabled = true; btn.innerText = "Salvando..."; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'create_user', user: currentUserData.user, pass: currentUserData.pass, novoUsuario: payload }) }); const res = await req.json(); if(res.success) { alert("Sucesso!"); fecharModal('modal-create'); abrirAdminPanel(); } else { msg.innerText = res.msg; } } catch(e) { msg.innerText = "Erro."; } finally { btn.disabled = false; btn.innerText = "💾 Salvar"; } }
         function abrirModalEdit(user, pass, date, wa, val) { userEditing = user; document.getElementById('edit-user-display').innerText = user; document.getElementById('edit-pass').value = pass; document.getElementById('edit-date').value = date; document.getElementById('edit-wa').value = wa; document.getElementById('edit-val').value = val; document.getElementById('msg-edit').innerText = ''; document.getElementById('modal-edit').classList.add('show'); }
         async function salvarEdicao() { const btn = document.getElementById('btn-save-edit'); const msg = document.getElementById('msg-edit'); const payload = { userOriginal: userEditing, pass: document.getElementById('edit-pass').value, date: document.getElementById('edit-date').value, wa: document.getElementById('edit-wa').value, val: document.getElementById('edit-val').value }; btn.disabled = true; btn.innerText = "Atualizando..."; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'edit_user', user: currentUserData.user, pass: currentUserData.pass, dadosEditados: payload }) }); const res = await req.json(); if(res.success) { alert("Atualizado!"); fecharModal('modal-edit'); abrirAdminPanel(); } else { msg.innerText = res.msg; } } catch(e) { msg.innerText = "Erro."; } finally { btn.disabled = false; btn.innerText = "💾 Atualizar Dados"; } }
