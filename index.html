@@ -43,13 +43,12 @@
         .card { background: var(--card); border: 1px solid #e5e7eb; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; overflow: hidden; }
         .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; min-width: 0; word-break: break-all; }
         
-        /* --- MODAL RESPONSIVO (CORREÇÃO) --- */
         .modal-overlay { 
             position: fixed; top:0; left:0; width:100%; height:100%; 
             background:rgba(0,0,0,0.85); 
             display:none; justify-content:center; align-items:center; 
             z-index:1000; backdrop-filter: blur(4px); 
-            padding: 20px; /* Evita colar nas bordas */
+            padding: 20px; 
         }
         .modal-overlay.show { display:flex; }
         
@@ -57,15 +56,11 @@
             background:var(--card); 
             padding: 20px; 
             border-radius:20px; 
-            width: 100%; /* Ocupa largura disponível */
-            max-width: 400px; /* Mas para em 400px */
+            width: 100%; max-width: 400px; 
             position:relative; 
             color: var(--text); 
-            
-            /* Lógica de Altura para não cortar */
             max-height: 80vh; 
             overflow-y: auto; 
-            
             text-align: center; 
             box-shadow: 0 15px 40px rgba(0,0,0,0.3); 
         }
@@ -97,6 +92,10 @@
         .card-discarded { border-left: 4px solid var(--gray); opacity: 0.8; }
         .msg-box { min-height: 60px; resize: vertical; margin-bottom: 15px; }
         .tutorial-step { text-align: left; margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 10px; font-size: 13px; }
+        
+        /* Video Container */
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 10px; background: #000; margin-bottom:10px; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
     </style>
 </head>
 <body>
@@ -123,6 +122,9 @@
                 <div style="max-width: 70%;">
                     <h3 id="ola-user" style="margin:0; font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">...</h3>
                     <small id="status-acesso"></small>
+                    <div style="margin-top: 5px;">
+                        <button class="secondary btn-auto" style="padding: 5px 12px; font-size: 11px; border: 1px solid #ccc;" onclick="abrirTutoriais()">📚 Tutoriais</button>
+                    </div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
                     <button id="btn-open-admin" class="admin-btn btn-auto hidden" onclick="abrirAdminPanel()">⚙️ Master</button>
@@ -189,6 +191,24 @@
                     <button onclick="limparDescartados()" class="danger btn-auto" style="padding: 6px 12px; font-size: 11px;">🗑️ Limpar</button>
                 </div>
                 <div id="lista-descartados"></div><div id="paginacao-desc" class="pagination-ctrl"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-tutorials" class="modal-overlay" style="z-index: 1500;">
+        <div class="modal-content">
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-tutorials')">&times;</span>
+            <h3 style="margin-top:0; color:var(--primary);">📚 Central de Ajuda</h3>
+            
+            <div id="admin-tutorial-area" style="background:#fff7ed; padding:10px; border-radius:10px; margin-bottom:15px; border:1px dashed #f97316; display:none;">
+                <h4 style="margin:0 0 10px 0; font-size:12px; color:#c2410c;">➕ Adicionar Vídeo (Admin)</h4>
+                <input type="text" id="tut-title" placeholder="Título do Vídeo" style="font-size:12px; padding:8px;">
+                <input type="text" id="tut-link" placeholder="Link do YouTube/Drive" style="font-size:12px; padding:8px;">
+                <button onclick="salvarTutorial()" class="btn-auto" style="background:#f97316; width:100% !important;">Salvar Vídeo</button>
+            </div>
+
+            <div id="tutorials-list" style="text-align:left;">
+                <p style="text-align:center; color:#666; font-size:13px;">Carregando...</p>
             </div>
         </div>
     </div>
@@ -319,7 +339,7 @@
     </div>
 
     <script>
-        // === URL DA SUA API ===
+        // === URL DA SUA API - ATUALIZE AQUI SE AINDA NÃO FEZ ===
         const API_URL = 'https://script.google.com/macros/s/AKfycbzh5LpH26j4OyfMINRHP0XXikBZwFHKFYseMv8eXyJKP5X4cJKbij37wNJS3wg3YUUm/exec';
 
         const DB_KEY = 'zapflow_v36';
@@ -399,7 +419,7 @@
                     }
                     if(dados.isMaster) document.getElementById('btn-open-admin').classList.remove('hidden');
                     
-                    // --- ARQUIVO INTELIGENTE (BLOQUEADO SUB-ADMIN) ---
+                    // --- ARQUIVO INTELIGENTE ---
                     if (dados.file && dados.file.url && dados.cargo !== 'Sub-Admin') {
                         document.getElementById('file-download-card').style.display = 'flex';
                         document.getElementById('file-date').innerText = dados.file.time;
@@ -428,6 +448,65 @@
         function marcarMensagemLida() { const msg = document.getElementById('msg-text').innerText; localStorage.setItem('zapflow_last_msg_' + currentUserData.user, msg); fecharModal('modal-global-msg'); }
         function checkRole() { const r = document.getElementById('new-role').value; document.getElementById('days-container').style.display = (r === 'Teste') ? 'none' : 'flex'; }
         
+        // --- FUNÇÕES TUTORIAIS ---
+        function abrirTutoriais() {
+            document.getElementById('modal-tutorials').classList.add('show');
+            const isAdmin = currentUserData.cargo === 'Admin'; // Apenas ADMIN pode adicionar
+            document.getElementById('admin-tutorial-area').style.display = isAdmin ? 'block' : 'none';
+            carregarListaTutoriais(isAdmin);
+        }
+
+        async function carregarListaTutoriais(isAdmin) {
+            const listDiv = document.getElementById('tutorials-list');
+            try {
+                const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'get_tutorials' }) });
+                const res = await req.json();
+                
+                if(res.success && res.list.length > 0) {
+                    listDiv.innerHTML = '';
+                    res.list.forEach(vid => {
+                        let embedUrl = vid.link;
+                        if(vid.link.includes('youtu.be')) embedUrl = vid.link.replace('youtu.be/','youtube.com/embed/');
+                        else if(vid.link.includes('watch?v=')) embedUrl = vid.link.replace('watch?v=','embed/');
+                        
+                        const btnDelete = isAdmin ? `<button class="danger btn-auto" style="margin-top:5px;" onclick="deletarTutorial(${vid.id})">Apagar</button>` : '';
+                        
+                        listDiv.innerHTML += `
+                            <div style="margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                                <div style="font-weight:bold; margin-bottom:5px; font-size:14px;">${vid.title}</div>
+                                <div class="video-container">
+                                    <iframe src="${embedUrl}" frameborder="0" allowfullscreen></iframe>
+                                </div>
+                                ${btnDelete}
+                            </div>
+                        `;
+                    });
+                } else {
+                    listDiv.innerHTML = '<p style="text-align:center; color:#666; font-size:13px;">Nenhum tutorial disponível.</p>';
+                }
+            } catch(e) { listDiv.innerHTML = 'Erro ao carregar.'; }
+        }
+
+        async function salvarTutorial() {
+            const t = document.getElementById('tut-title').value;
+            const l = document.getElementById('tut-link').value;
+            if(!t || !l) return alert("Preencha tudo.");
+            if(!confirm("Adicionar este vídeo?")) return;
+            try {
+                const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'save_tutorial', user: currentUserData.user, pass: currentUserData.pass, title: t, link: l }) });
+                const res = await req.json();
+                if(res.success) { alert("Salvo!"); document.getElementById('tut-title').value=''; document.getElementById('tut-link').value=''; carregarListaTutoriais(true); }
+            } catch(e) { alert("Erro."); }
+        }
+
+        async function deletarTutorial(id) {
+            if(!confirm("Apagar vídeo?")) return;
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete_tutorial', user: currentUserData.user, pass: currentUserData.pass, id: id }) });
+                carregarListaTutoriais(true);
+            } catch(e) { alert("Erro."); }
+        }
+
         function fazerUploadArquivo(modo) {
             const idInput = (modo === 'teste') ? 'admin-file-test' : 'admin-file-upload';
             const input = document.getElementById(idInput);
