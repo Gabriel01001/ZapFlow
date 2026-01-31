@@ -1,166 +1,432 @@
-// =========================================================
-//  BACKEND V42 - CORREÇÃO DE DOWNLOAD (FALLBACK INTELIGENTE)
-// =========================================================
-
-function doPost(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("Usuarios");
-  if (!sheet) sheet = ss.getSheets()[0];
-
-  var dados = JSON.parse(e.postData.contents);
-  var action = dados.action;
-  var response = { success: false, msg: "Ação desconhecida." };
-
-  // =========================================================
-  //  LOGIN (ENTREGA O ARQUIVO GARANTIDO)
-  // =========================================================
-  if (action == "login") {
-    var user = dados.user;
-    var pass = dados.pass;
-    var data = sheet.getDataRange().getValues();
-    var found = false;
-    var userData = {};
-
-    for (var i = 1; i < data.length; i++) {
-      if (String(data[i][0]).toLowerCase() == String(user).toLowerCase() && String(data[i][1]) == String(pass)) {
-        
-        if (data[i][7] == "Bloqueado") {
-          return outputJSON({ success: false, msg: "Conta bloqueada." });
-        }
-
-        var scriptProps = PropertiesService.getScriptProperties();
-        var savedMsg = scriptProps.getProperty('GLOBAL_MSG') || "";
-        var savedTut = scriptProps.getProperty('TUTORIAL_DATA');
-        var tutorialConfig = savedTut ? JSON.parse(savedTut) : []; 
-        
-        // --- LÓGICA DE ARQUIVO (CORRIGIDA) ---
-        var cargoUsuario = data[i][5]; 
-        var fileJson = null;
-
-        // 1. Tenta pegar os arquivos salvos
-        var rawTeste = scriptProps.getProperty('FILE_DATA_TESTE');
-        var rawGeral = scriptProps.getProperty('FILE_DATA_GERAL');
-        
-        // Fallback para versão antiga se não achar o novo Geral
-        if (!rawGeral) { rawGeral = scriptProps.getProperty('FILE_DATA'); }
-
-        if (cargoUsuario === 'Teste') {
-            // Se for Teste, tenta o arquivo de teste. SE NÃO TIVER, entrega o Geral.
-            if (rawTeste) {
-                fileJson = JSON.parse(rawTeste);
-            } else if (rawGeral) {
-                fileJson = JSON.parse(rawGeral); // Fallback: entrega o geral
-            }
-        } else {
-            // Usuários normais e Admins recebem o Geral
-            if (rawGeral) {
-                fileJson = JSON.parse(rawGeral);
-            }
-        }
-
-        userData = {
-          user: data[i][0],
-          pass: data[i][1],
-          date: formatarData(data[i][2]),
-          wa: data[i][3],
-          val: data[i][4],
-          cargo: cargoUsuario, 
-          pix: data[i][6],
-          isMaster: (String(cargoUsuario).toLowerCase() === "admin"),
-          message: savedMsg,
-          tutorialConfig: tutorialConfig,
-          file: fileJson // Aqui vai o arquivo encontrado
-        };
-        found = true;
-        break;
-      }
-    }
-
-    if (found) {
-      return outputJSON({ success: true, data: userData });
-    } else {
-      return outputJSON({ success: false, msg: "Dados incorretos." });
-    }
-  }
-
-  // =========================================================
-  //  UPLOAD (Google Drive)
-  // =========================================================
-  if (action == "upload_file") {
-    if (!verificarCredenciais(sheet, dados.user, dados.pass)) return outputJSON({success:false});
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gerenciador |WA|</title>
     
-    try {
-      var folderName = "ZapFlow_Arquivos";
-      var folders = DriveApp.getFoldersByName(folderName);
-      var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><text x=%2250%22 y=%2250%22 font-size=%2260%22 text-anchor=%22middle%22 dy=%22.35em%22>⚡</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><text x=%2250%22 y=%2250%22 font-size=%2260%22 text-anchor=%22middle%22 dy=%22.35em%22>⚡</text></svg>">
+    <meta name="theme-color" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; --gray: #6b7280; --purple: #8b5cf6; }
+        body.dark-mode { --bg: #111827; --text: #f9fafb; --card: #1f2937; }
+        * { box-sizing: border-box; } body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; transition: 0.3s; }
+        .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .hidden { display: none !important; }
+        input, textarea, select { width: 100%; padding: 14px; margin-bottom: 12px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; color: #333; font-size: 14px; }
+        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: #374151; color: white; border-color: #4b5563; }
+        button { width: 100%; padding: 14px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; }
+        button:hover { filter: brightness(0.9); transform: translateY(-2px); }
+        button.secondary { background: #e5e7eb; color: #333; }
+        button.danger { background: var(--danger); }
+        button.edit-btn { background: #3b82f6; color: white; }
+        button.status-btn { background: var(--gold); color: white; border: 1px solid #d97706; }
+        button.test-btn { background: #8b5cf6; color: white; }
+        button.admin-btn { background: var(--text); color: var(--card); }
+        button.chat-btn { background: #25d366; color: white; }
+        button.renew-btn { background: #8b5cf6; color: white; }
+        button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
+        .btn-auto { width: auto !important; padding: 8px 16px; font-size: 13px; margin: 3px; flex-shrink: 0; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .card { background: var(--card); border: 1px solid #e5e7eb; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; overflow: hidden; }
+        .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; min-width: 0; word-break: break-all; }
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(5px); }
+        .modal-overlay.show { display:flex; }
+        .modal-content { background:var(--card); padding:25px; border-radius:20px; width:90%; max-width:400px; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
+        .pay-key { font-family: monospace; font-size: 14px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
+        .table-responsive { overflow-x: auto; border: 1px solid #eee; border-radius: 10px; margin-top: 10px; }
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 800px; }
+        .admin-table th { background: #f3f4f6; color: #374151; padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+        .admin-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; white-space: nowrap; }
+        .admin-table tr:hover { background: rgba(0,0,0,0.02); }
+        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-active { background-color: #10b981; }
+        .status-expired { background-color: #ef4444; }
+        .status-pending { background-color: #f59e0b; }
+        .status-test { background-color: #8b5cf6; }
+        .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; padding: 0; background: var(--primary); color: white; border: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 24px; }
+        .save-prompt { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: var(--radius); border: 1px dashed #3b82f6; margin-top: 10px; display: none; align-items: center; justify-content: space-between; gap: 8px; }
+        .pagination-ctrl { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 15px; margin-bottom: 20px; font-size: 13px; }
+        .loader { border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .full-width { grid-column: span 2; }
+        .discarded-section { margin-top: 30px; border-top: 2px dashed #e5e7eb; padding-top: 20px; }
+        .card-discarded { border-left: 4px solid var(--gray); opacity: 0.8; }
+        .msg-box { min-height: 60px; resize: vertical; margin-bottom: 15px; }
+        .tutorial-step { text-align: left; margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 10px; font-size: 13px; }
+        .tutorial-badge { background: linear-gradient(45deg, #f59e0b, #ea580c); color: white !important; padding: 8px 16px; border-radius: 50px; font-size: 12px; font-weight: bold; cursor: pointer; display: inline-block !important; margin-top: 10px; text-transform: uppercase; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.4); animation: pulse 2s infinite; border: 1px solid rgba(255,255,255,0.3); text-align: center; width: auto; min-width: 140px; }
+        .tutorial-badge:hover { filter: brightness(1.1); }
+        .tutorial-list-container { max-height: 350px; overflow-y: auto; margin-top: 15px; text-align: left; }
+        .tutorial-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; transition: 0.2s; }
+        body.dark-mode .tutorial-item { background: #374151; border-color: #4b5563; }
+        .tutorial-info { flex-grow: 1; overflow: hidden; }
+        .tutorial-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; color: var(--text); }
+        .tutorial-icon { font-size: 20px; color: #ea580c; }
+        .btn-watch-mini { background: #ea580c; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+        .admin-controls-mini { display: flex; gap: 5px; }
+        .btn-icon { width: 30px !important; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; border-radius: 8px; }
+        .fab-add { position: absolute; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: white; font-size: 24px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; }
+    </style>
+</head>
+<body>
 
-      var decoded = Utilities.base64Decode(dados.fileData);
-      var blob = Utilities.newBlob(decoded, dados.fileType || "text/plain", dados.fileName);
-      var file = folder.createFile(blob);
-      
-      // Garante permissão pública
-      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      
-      var fileInfo = {
-        url: file.getDownloadUrl(),
-        time: new Date().toLocaleString("pt-BR"),
-        name: dados.fileName,
-        type: dados.mode
-      };
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
-      var saveKey = (dados.mode === 'teste') ? 'FILE_DATA_TESTE' : 'FILE_DATA_GERAL';
-      PropertiesService.getScriptProperties().setProperty(saveKey, JSON.stringify(fileInfo));
+    <div class="container">
+        <div id="login-screen" style="text-align: center; max-width: 400px; margin: 40px auto;">
+            <div style="background: var(--primary); width: 60px; height: 60px; border-radius: 15px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: white;">⚡</div>
+            <h2 style="font-weight: 700;">Gerenciador <span>|WA|</span></h2>
+            <input type="text" id="user" placeholder="Usuário">
+            <input type="password" id="pass" placeholder="Senha">
+            <button onclick="conectarBanco()" id="btn-login">
+                <span id="txt-login">Entrar</span>
+                <div class="loader" id="loader-login"></div>
+            </button>
+            <p id="msg-login" style="color: red; font-size: 14px; margin-top: 10px; font-weight: 600;"></p>
+            <button onclick="window.open('https://wa.me/5521970458286')" class="secondary btn-auto" style="margin-top:20px;">💬 Suporte Técnico</button>
+            <div style="margin-top: 40px; font-size: 11px; opacity: 0.6; color: var(--text);"><p style="margin:0;">&copy; 2026 Gerenciador |WA|</p><p style="margin:2px 0 0 0;">Dev: <b>Gabriel Martins</b></p></div>
+        </div>
 
-      return outputJSON({ success: true, url: fileInfo.url });
-    } catch(e) {
-      return outputJSON({ success: false, msg: e.toString() });
-    }
-  }
+        <div id="app-screen" class="hidden">
+            <div class="header">
+                <div style="max-width: 70%; display: flex; flex-direction: column; align-items: flex-start;">
+                    <h3 id="ola-user" style="margin:0; font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">...</h3>
+                    <div id="status-acesso" style="font-size: 13px; margin-bottom: 5px;"></div>
+                    <div id="tutorial-area" style="display:none;"><div class="tutorial-badge" onclick="abrirModalTutorial()">📺 Central de Ajuda</div></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
+                    <button id="btn-open-admin" class="admin-btn btn-auto hidden" onclick="abrirAdminPanel()">⚙️ Master</button>
+                    <button onclick="logout()" class="danger btn-auto">Sair</button>
+                </div>
+            </div>
 
-  // --- DEMAIS FUNÇÕES (Mantidas iguais para economizar espaço, mas necessárias) ---
-  if (action == "update_tutorial_list") {
-    if (!verificarCredenciais(sheet, dados.user, dados.pass, true)) return outputJSON({ success: false });
-    var p = PropertiesService.getScriptProperties();
-    if (!dados.listaTutoriais || dados.listaTutoriais.length === 0) p.deleteProperty('TUTORIAL_DATA'); else p.setProperty('TUTORIAL_DATA', JSON.stringify(dados.listaTutoriais));
-    return outputJSON({ success: true });
-  }
-  if (action == "admin_list") {
-    if (!verificarCredenciais(sheet, dados.user, dados.pass)) return outputJSON({ success: false });
-    var rows = sheet.getDataRange().getValues(), list = [], reqUser = dados.user, reqCargo = getCargo(sheet, reqUser);
-    for (var i = 1; i < rows.length; i++) {
-      if (reqCargo === 'Admin' || rows[i][8] === reqUser || rows[i][0] === reqUser) { rows[i][2] = formatarData(rows[i][2]); list.push(rows[i]); }
-    }
-    return outputJSON({ success: true, list: list });
-  }
-  if (action == "create_user") {
-    if (!verificarCredenciais(sheet, dados.user, dados.pass)) return outputJSON({ success: false, msg:"Sem Permissão" });
-    if (userExists(sheet, dados.novoUsuario.user)) return outputJSON({ success: false, msg: "Existe" });
-    var n = dados.novoUsuario; sheet.appendRow([n.user, n.pass, n.date, n.wa, n.val, n.cargo, n.pix, "Ativo", dados.user, ""]);
-    return outputJSON({ success: true });
-  }
-  if (action == "edit_user") {
-    var r = findUserRow(sheet, dados.dadosEditados.userOriginal);
-    if (r > 0) { var e = dados.dadosEditados; sheet.getRange(r, 2).setValue(e.pass); sheet.getRange(r, 3).setValue(e.date); sheet.getRange(r, 4).setValue(e.wa); sheet.getRange(r, 5).setValue(e.val); return outputJSON({ success: true }); }
-    return outputJSON({ success: false });
-  }
-  if (action == "renew_user") {
-    var r = findUserRow(sheet, dados.targetUser);
-    if (r > 0) { var base = new Date(), curr = sheet.getRange(r, 3).getValue(); if(curr instanceof Date && curr > base) base = curr; base.setDate(base.getDate() + parseInt(dados.days)); var y=base.getFullYear(), m=("0"+(base.getMonth()+1)).slice(-2), d=("0"+base.getDate()).slice(-2); sheet.getRange(r, 3).setValue(`${d}/${m}/${y}`); sheet.getRange(r, 8).setValue("Ativo"); return outputJSON({ success: true }); }
-    return outputJSON({ success: false });
-  }
-  if (action == "toggle_status") {
-    var r = findUserRow(sheet, dados.targetUser); if (r > 0) { var c = sheet.getRange(r, 8); c.setValue(c.getValue()==="Ativo"?"Bloqueado":"Ativo"); return outputJSON({ success: true }); } return outputJSON({ success: false });
-  }
-  if (action == "save_message") {
-    if (!verificarCredenciais(sheet, dados.user, dados.pass, true)) return outputJSON({success:false}); PropertiesService.getScriptProperties().setProperty('GLOBAL_MSG', dados.message); return outputJSON({ success: true });
-  }
+            <div id="file-download-card" class="card" style="background: #eff6ff; border: 1px solid #bfdbfe; display: none; color: #1f2937 !important;">
+                <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                    <span style="font-size: 24px;">📥</span>
+                    <div style="overflow: hidden;">
+                        <div style="font-weight: bold; font-size: 14px; color: #1f2937;" id="file-title">Arquivo</div>
+                        <div style="font-size: 11px; color: #4b5563; white-space: nowrap;">Atualizado: <span id="file-date"></span></div>
+                    </div>
+                </div>
+                <button id="btn-download-file" onclick="baixarArquivoGeral()" class="btn-auto" style="background: #3b82f6;">Baixar</button>
+            </div>
 
-  return outputJSON(response);
-}
+            <div id="vencimento-alert" class="card" style="background: #fff7ed; border: 1px solid #fdba74; display: none; margin-bottom: 20px; padding: 15px;">
+                <div style="display:flex; align-items:center; gap:5px; justify-content: space-between; width: 100%;">
+                    <span style="color:#333; font-size: 12px;">⚠️ Expira em <span id="dias-restantes-alerta" style="font-weight: bold;">0</span> dias.</span>
+                    <button onclick="abrirModalRenovar()" class="vip-btn btn-auto">Renovar</button>
+                </div>
+            </div>
 
-function outputJSON(data) { return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON); }
-function formatarData(v) { if (v instanceof Date) { var d = ("0" + v.getDate()).slice(-2), m = ("0" + (v.getMonth()+1)).slice(-2), y = v.getFullYear(); return `${d}/${m}/${y}`; } return v; }
-function verificarCredenciais(s, u, p, a) { var d = s.getDataRange().getValues(); for (var i = 1; i < d.length; i++) { if (String(d[i][0]).toLowerCase() == String(u).toLowerCase() && String(d[i][1]) == String(p)) { if (a && String(d[i][5]).toLowerCase() !== 'admin') return false; return true; } } return false; }
-function getCargo(s, u) { var d = s.getDataRange().getValues(); for (var i = 1; i < d.length; i++) { if (String(d[i][0]).toLowerCase() == String(u).toLowerCase()) return d[i][5]; } return "User"; }
-function userExists(s, u) { var d = s.getDataRange().getValues(); for (var i = 1; i < d.length; i++) { if (String(d[i][0]).toLowerCase() == String(u).toLowerCase()) return true; } return false; }
-function findUserRow(s, u) { var d = s.getDataRange().getValues(); for (var i = 1; i < d.length; i++) { if (String(d[i][0]).toLowerCase() == String(u).toLowerCase()) return i + 1; } return -1; }
+            <div style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: var(--radius); margin-bottom: 20px; border: 1px solid #e5e7eb;">
+                <h4 style="margin: 0 0 10px 0;">📥 Adicionar Dados</h4>
+                <textarea id="links-input" rows="1" placeholder="Cole links ou números..."></textarea>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="addLinks()" class="btn-auto">Carregar</button>
+                    <button onclick="document.getElementById('file').click()" class="secondary btn-auto">📂 Arquivo</button>
+                    <input type="file" id="file" accept=".txt" hidden onchange="lerArquivo(this)">
+                </div>
+                <div id="save-prompt" class="save-prompt">
+                    <div style="overflow: hidden; flex: 1;"><span style="font-size: 12px; font-weight: bold;">Salvar anterior?</span><div id="last-link-opened" style="font-size: 10px; opacity: 0.7; overflow: hidden; text-overflow: ellipsis;"></div></div>
+                    <div style="display: flex; gap: 6px;"><button onclick="confirmarSalvamento(true)" class="btn-auto" style="padding: 6px 12px;">Sim</button><button onclick="confirmarSalvamento(false)" class="secondary btn-auto" style="padding: 6px 12px;">Não</button></div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="color: var(--primary); margin:0;">Pendentes (<span id="count-pend">0</span>)</h4>
+                <button onclick="limparPendentes()" class="danger btn-auto" style="padding: 6px 12px; font-size: 11px;">🗑️ Limpar</button>
+            </div>
+            <div id="lista-pendentes"></div><div id="paginacao-pend" class="pagination-ctrl"></div>
+            
+            <h4 style="color: var(--blue);">Salvos (<span id="count-saved">0</span>)</h4>
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <button onclick="baixarSalvos()" class="secondary btn-auto">📥 Extrair</button>
+                <button onclick="document.getElementById('file-saved').click()" class="secondary btn-auto">📂 Arquivo</button>
+                <input type="file" id="file-saved" accept=".txt" hidden onchange="lerArquivoSalvos(this)">
+                <button onclick="limparSalvos()" class="danger btn-auto">🗑️ Limpar</button>
+            </div>
+            <div id="lista-salvos"></div><div id="paginacao-salv" class="pagination-ctrl"></div>
+
+            <div class="discarded-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h4 style="color: var(--gray); margin:0;">Não Salvos (<span id="count-discarded">0</span>)</h4>
+                    <button onclick="limparDescartados()" class="danger btn-auto" style="padding: 6px 12px; font-size: 11px;">🗑️ Limpar</button>
+                </div>
+                <div id="lista-descartados"></div><div id="paginacao-desc" class="pagination-ctrl"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-tutorial-video" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px; text-align: left; padding-bottom: 60px;">
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-tutorial-video')">&times;</span>
+            <h3 style="margin-top:0; color: var(--gold);">🎓 Central de Ajuda</h3>
+            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Selecione um tutorial para assistir:</p>
+            <div id="tutorial-list-container" class="tutorial-list-container"><div style="text-align:center; padding:20px; color:#999;">Carregando...</div></div>
+            <div id="tutorial-form" style="display:none; background: #fff; position: absolute; top:0; left:0; width:100%; height:100%; z-index: 20; padding: 25px; border-radius: 20px;">
+                <h3 id="form-title">Novo Tutorial</h3>
+                <input type="text" id="tut-title" placeholder="Título do Vídeo">
+                <input type="text" id="tut-link" placeholder="Link (YouTube/Drive)">
+                <input type="hidden" id="tut-id">
+                <div style="display:flex; gap:10px; margin-top:20px;"><button onclick="fecharFormTutorial()" class="secondary btn-auto" style="flex:1;">Cancelar</button><button onclick="salvarItemTutorial()" class="btn-auto" style="flex:1;">Salvar</button></div>
+            </div>
+            <button id="btn-add-tut" class="fab-add" onclick="abrirFormTutorial()" style="display:none;">+</button>
+        </div>
+    </div>
+
+    <div id="modal-admin" class="modal-overlay">
+        <div class="modal-content">
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-admin')">&times;</span>
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="color: var(--dark); font-size: 20px; margin:0;">⚙️ Gestão Master</h2>
+                <div style="display:flex; gap:8px;"><button class="secondary btn-auto" onclick="abrirAdminPanel()">🔄</button><button class="chat-btn btn-auto" onclick="abrirModalCreate()">➕ Novo</button></div>
+            </div>
+            <div id="admin-msg-area" style="background:#fff7ed; border:1px dashed #f97316; padding:15px; border-radius:8px; margin-bottom:10px;">
+                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#c2410c;">🔔 Mensagem Global</div>
+                <textarea id="global-msg-input" rows="2" placeholder="Escreva um aviso para todos os usuários..." style="margin-bottom:5px; font-size:12px;"></textarea>
+                <button class="btn-auto" style="background:#f97316; width:100% !important;" onclick="salvarMensagem()">Enviar Aviso</button>
+            </div>
+            <div id="upload-section-geral" style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:10px;">
+                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#333;">📁 Arquivo OFICIAL (Todos)</div>
+                <div style="display:flex; gap:8px;"><input type="file" id="admin-file-upload" style="margin:0; padding:8px; font-size:12px; color:#333;"><button class="btn-auto" onclick="fazerUploadArquivo('geral')">Enviar</button></div>
+            </div>
+            <div id="upload-section-teste" style="background:#f0fdf4; border:1px dashed #16a34a; padding:15px; border-radius:8px; margin-bottom:20px;">
+                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#15803d;">🧪 Arquivo TESTE (Apenas Testes)</div>
+                <div style="display:flex; gap:8px;"><input type="file" id="admin-file-test" style="margin:0; padding:8px; font-size:12px; color:#333;"><button class="btn-auto" style="background:#16a34a;" onclick="fazerUploadArquivo('teste')">Enviar</button></div>
+            </div>
+            <div id="upload-status" style="font-size:11px; color:#666; margin-bottom:10px;"></div>
+            <input type="text" id="search-user" placeholder="🔍 Pesquisar usuário..." onkeyup="filtrarUsuarios()" style="margin-bottom: 15px;">
+            <div id="admin-users-list"></div>
+        </div>
+    </div>
+
+    <div id="modal-create" class="modal-overlay" style="z-index: 1001;">
+        <div class="modal-content" style="max-width: 400px;">
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-create')">&times;</span>
+            <h3 style="margin-top:0;">Novo Acesso</h3>
+            <div class="form-grid">
+                <input type="text" id="new-user" placeholder="Usuário">
+                <input type="text" id="new-pass" placeholder="Senha">
+                <div class="full-width" id="days-container" style="display:flex; gap:5px; align-items:center;"><input type="number" id="new-days" placeholder="Dias" style="width: 80px; margin:0"><span style="font-size:12px; color:#666">dias de validade</span></div>
+                <div class="full-width" id="role-container"><label style="font-size:12px; font-weight:bold; color:#333;">Tipo de Acesso:</label><select id="new-role" onchange="checkRole()"></select></div>
+                <input type="text" id="new-wa" placeholder="WhatsApp" class="full-width">
+                <input type="text" id="new-val" placeholder="Valor (ex: 30,00)">
+                <input type="text" id="new-pix" placeholder="Chave PIX">
+            </div>
+            <button onclick="salvarNovoUsuario()" id="btn-save-user" style="margin-top:15px;">💾 Salvar</button>
+            <p id="msg-create" style="color:red; font-size:12px; text-align:center; margin-top:5px;"></p>
+        </div>
+    </div>
+
+    <div id="modal-edit" class="modal-overlay" style="z-index: 1002;">
+        <div class="modal-content" style="max-width: 400px;">
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-edit')">&times;</span>
+            <h3 style="margin-top:0; color:#3b82f6">Editar</h3>
+            <div class="form-grid">
+                <div class="full-width"><label style="font-size:11px; font-weight:bold;">Senha:</label><input type="text" id="edit-pass"></div>
+                <div class="full-width"><label style="font-size:11px; font-weight:bold;">Vencimento:</label><input type="text" id="edit-date"></div>
+                <div class="full-width"><label style="font-size:11px; font-weight:bold;">WhatsApp:</label><input type="text" id="edit-wa"></div>
+                <div class="full-width"><label style="font-size:11px; font-weight:bold;">Valor:</label><input type="text" id="edit-val"></div>
+            </div>
+            <button onclick="salvarEdicao()" id="btn-save-edit" class="edit-btn" style="margin-top:15px;">💾 Atualizar</button>
+        </div>
+    </div>
+
+    <div id="modal-renovar" class="modal-overlay"><div class="modal-content" style="max-width: 400px;"><span style="position:absolute; top:15px; right:15px; cursor:pointer;" onclick="fecharModal('modal-renovar')">&times;</span><h3 style="text-align: center; color: var(--primary);">💎 Renovar Acesso</h3><div class="pay-card"><div style="font-size: 12px; font-weight: bold;">PIX PARA PAGAMENTO</div><div class="pay-key" id="pix-display" style="font-size:16px; padding:15px;">...</div></div><button onclick="copiarPixReal()" class="chat-btn" style="border-radius: 50px; width:100%">📋 Copiar Chave PIX</button></div></div>
+    <div id="modal-install-tutorial" class="modal-overlay" style="z-index: 9999;"><div class="modal-content" style="max-width: 350px;"><div style="text-align:center; margin-bottom:20px;"><div style="font-size:50px; margin-bottom:10px;">⚡</div><h3 style="margin-top:0; font-size: 20px; font-weight: 700;">Instalar App</h3></div><button id="btn-android-install" class="hidden" style="width:100% !important; margin-bottom:15px; font-size: 16px; padding: 15px;" onclick="instalarAndroid()">📲 Instalar Agora</button><div id="tutorial-ios" class="hidden"><div class="tutorial-step">1. Botão <b>Compartilhar</b> <span style="font-size:18px;">⎋</span></div><div class="tutorial-step">2. <b>Adicionar à Tela de Início</b> <span style="font-size:18px;">⊞</span></div></div><div id="tutorial-android" class="hidden"><div class="tutorial-step">1. Toque nos <b>3 pontinhos</b> <span style="font-size:18px;">⋮</span></div><div class="tutorial-step">2. <b>Adicionar à tela inicial</b></div></div><button class="secondary btn-auto" style="width:100% !important; margin-top:15px;" onclick="fecharInstallModal()">Agora não</button></div></div>
+    <div id="modal-global-msg" class="modal-overlay" style="z-index: 1100;"><div class="modal-content" style="max-width: 400px; text-align: center;"><div style="font-size: 40px; margin-bottom: 10px;">🔔</div><h3 style="margin-top:0; color: var(--primary);">Comunicado</h3><p id="msg-text" style="font-size: 14px; background: #f3f4f6; padding: 15px; border-radius: 10px;"></p><button onclick="marcarMensagemLida()" class="btn-auto" style="margin-top: 15px; width: 100% !important;">Entendi</button></div></div>
+    <div id="modal-send-whatsapp" class="modal-overlay" style="z-index: 1200;"><div class="modal-content" style="max-width: 400px;"><span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-send-whatsapp')">&times;</span><h3 style="margin-top:0; color: #25d366;">📲 Enviar Acesso</h3><p style="font-size:12px; margin:0 0 10px 0;">Para: <b id="send-dest">...</b></p><div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px; margin-bottom:15px; font-size:12px; color:#166534;"><div id="preview-msg-content" style="font-family:monospace; line-height:1.4;"></div></div><textarea id="whatsapp-extra-msg" class="msg-box" placeholder="Mensagem extra..."></textarea><button class="chat-btn" onclick="finalizarEnvioWhatsApp()">🚀 Enviar</button></div></div>
+    <div id="modal-created-success" class="modal-overlay" style="z-index: 1300;"><div class="modal-content" style="max-width: 350px; text-align:center;"><div style="font-size: 50px;">✅</div><h3 style="margin: 10px 0;">Usuário Criado!</h3><div style="display:flex; flex-direction:column; gap:10px;"><button class="chat-btn" onclick="prepararEnvioAposCriacao()">📲 Enviar Acesso</button><button class="secondary" onclick="fecharModalSucessoCriacao()">❌ Fechar</button></div></div></div>
+
+    <script>
+        // === URL API V42 ===
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwVmhih6bL_0GABpVH7PHHa6HO1t6tCwF1nN8k6uW6imZaaBi72D1jdsLV8HWmEBonH-A/exec';
+
+        const DB_KEY = 'zapflow_v41'; const SESSION_KEY = 'zapflow_session_v41';
+        let db = JSON.parse(localStorage.getItem(DB_KEY)) || {};
+        let currentUserData = null; let lastOpenedLink = "";
+        let pgPend=0, pgSalv=0, pgDesc=0; const ITENS_PAG=5;
+        let userEditing=null; let currentFileUrl="";
+        let deferredPrompt; let tutorialList=[]; 
+        let tempUser="", tempPass="", tempWa="", tempDate="", tempVal="";
+
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
+
+        window.onload = () => {
+            if(localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); document.querySelector('.theme-toggle').innerText = '☀️'; }
+            const savedTut = localStorage.getItem('zapflow_tutorial_data');
+            if(savedTut) { try{ tutorialList = JSON.parse(savedTut); if(!Array.isArray(tutorialList)) tutorialList=[tutorialList]; }catch(e){} }
+            setTimeout(verificarInstalacaoApp, 1000);
+            const session = localStorage.getItem(SESSION_KEY);
+            if(session) { const s = JSON.parse(session); document.getElementById('user').value = s.user; document.getElementById('pass').value = s.pass; conectarBanco(); }
+        };
+
+        // --- TUTORIAL ---
+        function abrirModalTutorial() { renderTutorial(); document.getElementById('btn-add-tut').style.display = (currentUserData?.cargo === 'Admin') ? 'flex' : 'none'; document.getElementById('modal-tutorial-video').classList.add('show'); }
+        function renderTutorial() {
+            const c = document.getElementById('tutorial-list-container'); c.innerHTML = '';
+            if(!tutorialList || tutorialList.length === 0) { c.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">Nada aqui.</div>'; return; }
+            const adm = currentUserData?.cargo === 'Admin';
+            tutorialList.forEach((item, i) => {
+                c.innerHTML += `<div class="tutorial-item"><div class="tutorial-icon">▶</div><div class="tutorial-info"><div class="tutorial-title">${item.title}</div><button class="btn-watch-mini" onclick="window.open('${item.link}','_blank')">Assistir</button></div>${adm ? `<div class="admin-controls-mini"><button class="btn-icon secondary" onclick="editarItem(${i})">✏️</button><button class="btn-icon danger" onclick="apagarItem(${i})">🗑️</button></div>` : ''}</div>`;
+            });
+        }
+        function abrirFormTutorial() { document.getElementById('form-title').innerText="Novo"; document.getElementById('tut-title').value=''; document.getElementById('tut-link').value=''; document.getElementById('tut-id').value='-1'; document.getElementById('tutorial-form').style.display='block'; }
+        function editarItem(i) { const t=tutorialList[i]; document.getElementById('form-title').innerText="Editar"; document.getElementById('tut-title').value=t.title; document.getElementById('tut-link').value=t.link; document.getElementById('tut-id').value=i; document.getElementById('tutorial-form').style.display='block'; }
+        function fecharFormTutorial() { document.getElementById('tutorial-form').style.display='none'; }
+        function salvarItemTutorial() {
+            const t=document.getElementById('tut-title').value, l=document.getElementById('tut-link').value, id=parseInt(document.getElementById('tut-id').value);
+            if(!t || !l) return alert("Preencha!");
+            if(id===-1) tutorialList.push({title:t, link:l}); else tutorialList[id]={title:t, link:l};
+            salvarNoBanco(); fecharFormTutorial(); renderTutorial();
+        }
+        function apagarItem(i){ if(confirm("Apagar?")){ tutorialList.splice(i,1); salvarNoBanco(); renderTutorial(); } }
+        async function salvarNoBanco() { localStorage.setItem('zapflow_tutorial_data', JSON.stringify(tutorialList)); atualizarBotaoHome(); try{await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'update_tutorial_list', user:currentUserData.user, pass:currentUserData.pass, listaTutoriais:tutorialList})});}catch(e){} }
+        function atualizarBotaoHome(){ document.getElementById('tutorial-area').style.display = (currentUserData?.cargo==='Admin' || tutorialList.length>0) ? 'block' : 'none'; }
+
+        // --- CORE ---
+        async function conectarBanco() {
+            const u=document.getElementById('user').value.trim(), p=document.getElementById('pass').value.trim(), msg=document.getElementById('msg-login'), btn=document.getElementById('btn-login'), ldr=document.getElementById('loader-login');
+            if(!u || !p) return msg.innerText="Preencha tudo.";
+            btn.disabled=true; document.getElementById('txt-login').style.display='none'; ldr.style.display='block'; msg.innerText="";
+            try {
+                const res = await fetch(API_URL, {method:'POST', body:JSON.stringify({action:'login', user:u, pass:p})}).then(r=>r.json());
+                if(res.success) {
+                    const d=res.data;
+                    if(d.cargo!=='Teste') {
+                        const dv=formatarData(d.date); dv.setHours(0,0,0,0); const diff=Math.ceil((dv - new Date().setHours(0,0,0,0))/86400000);
+                        if(diff<0 && !d.isMaster) { msg.innerText="Expirado."; localStorage.removeItem(SESSION_KEY); btn.disabled=false; document.getElementById('txt-login').style.display='block'; ldr.style.display='none'; return; }
+                        if(diff<=5 && !d.isMaster) { document.getElementById('vencimento-alert').style.display='block'; document.getElementById('dias-restantes-alerta').innerText=diff<0?0:diff; }
+                    }
+                    currentUserData=d; currentUserData.pass=p; localStorage.setItem(SESSION_KEY, JSON.stringify({user:u, pass:p})); if(!db[u]) db[u]={links:[],salvos:[],naoSalvos:[]};
+                    document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-screen').classList.remove('hidden');
+                    document.getElementById('ola-user').innerText="Olá, "+d.user; document.getElementById('status-acesso').innerText="Vence: "+d.date;
+                    
+                    if(d.tutorialConfig) { tutorialList=Array.isArray(d.tutorialConfig)?d.tutorialConfig:[d.tutorialConfig]; localStorage.setItem('zapflow_tutorial_data', JSON.stringify(tutorialList)); } atualizarBotaoHome();
+                    if(d.isMaster) document.getElementById('btn-open-admin').classList.remove('hidden');
+                    
+                    // LÓGICA DE EXIBIÇÃO DE ARQUIVO
+                    if(d.file && d.file.url) {
+                        document.getElementById('file-download-card').style.display='flex';
+                        document.getElementById('file-date').innerText=d.file.time;
+                        document.getElementById('file-title').innerText=(d.cargo==='Teste')?"Arquivo Teste":"Arquivo Geral";
+                        currentFileUrl=d.file.url;
+                        document.getElementById('btn-download-file').style.display='block';
+                    } else {
+                        document.getElementById('file-download-card').style.display='none';
+                    }
+
+                    if(d.message && d.message.trim()!=="" && localStorage.getItem('zapflow_last_msg_'+d.user)!==d.message) {
+                        document.getElementById('msg-text').innerText=d.message; document.getElementById('modal-global-msg').classList.add('show');
+                    }
+                    renderizar();
+                } else { msg.innerText=res.msg; localStorage.removeItem(SESSION_KEY); }
+            } catch(e){ msg.innerText="Erro conexão."; }
+            finally { btn.disabled=false; document.getElementById('txt-login').style.display='block'; ldr.style.display='none'; }
+        }
+
+        // --- AUXILIARES ---
+        function marcarMensagemLida(){ localStorage.setItem('zapflow_last_msg_'+currentUserData.user, document.getElementById('msg-text').innerText); fecharModal('modal-global-msg'); }
+        function fazerUploadArquivo(m){
+            const inp=document.getElementById(m==='teste'?'admin-file-test':'admin-file-upload');
+            if(inp.files.length===0) return alert("Selecione!");
+            document.getElementById('upload-status').innerText="Enviando...";
+            const r=new FileReader();
+            r.onload=async function(e){
+                try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'upload_file', user:currentUserData.user, pass:currentUserData.pass, fileData:e.target.result.split(',')[1], fileName:inp.files[0].name, fileType:inp.files[0].type, mode:m})}); alert("Sucesso!"); location.reload(); }
+                catch(err){ alert("Erro upload."); }
+            }; r.readAsDataURL(inp.files[0]);
+        }
+        async function salvarMensagem(){ if(confirm("Salvar?")) fetch(API_URL,{method:'POST',body:JSON.stringify({action:'save_message', user:currentUserData.user, pass:currentUserData.pass, message:document.getElementById('global-msg-input').value})}).then(()=>alert("Salvo!")); }
+        
+        // --- LISTAS ---
+        function processarLinks(l){ const u=currentUserData.user; if(!db[u]) db[u]={links:[],salvos:[],naoSalvos:[]}; if(!db[u].naoSalvos) db[u].naoSalvos=[]; const s=new Set([...db[u].links,...db[u].salvos,...db[u].naoSalvos]); l.forEach(x=>{const v=x.trim(); if(v&&!s.has(v)){db[u].links.push(v); s.add(v);}}); renderizar(); }
+        function addLinks(){ const t=document.getElementById('links-input'); processarLinks(t.value.split('\n')); t.value=''; pgPend=0; }
+        function lerArquivo(i){ const r=new FileReader(); r.onload=e=>processarLinks(e.target.result.split('\n')); r.readAsText(i.files[0]); i.value=''; }
+        function renderizar(){
+            const u=currentUserData.user; if(!db[u]) db[u]={links:[],salvos:[],naoSalvos:[]};
+            const p=document.getElementById('lista-pendentes'); p.innerHTML=''; document.getElementById('count-pend').innerText=db[u].links.length;
+            db[u].links.slice(pgPend*ITENS_PAG,(pgPend+1)*ITENS_PAG).forEach((l,i)=>{p.innerHTML+=`<div class="card"><span class="link-text">${l}</span><button class="btn-auto" onclick="tratarLink(${pgPend*ITENS_PAG+i},'${l}')">Abrir ↗</button></div>`});
+            const s=document.getElementById('lista-salvos'); s.innerHTML=''; document.getElementById('count-saved').innerText=db[u].salvos.length;
+            db[u].salvos.slice(pgSalv*ITENS_PAG,(pgSalv+1)*ITENS_PAG).forEach((l,i)=>{s.innerHTML+=`<div class="card" style="border-left:4px solid var(--primary)"><span class="link-text">${l}</span><button class="danger btn-auto" onclick="db['${u}'].salvos.splice(${pgSalv*ITENS_PAG+i},1);renderizar()">X</button></div>`});
+            const d=document.getElementById('lista-descartados'); d.innerHTML=''; document.getElementById('count-discarded').innerText=db[u].naoSalvos.length;
+            db[u].naoSalvos.slice(pgDesc*ITENS_PAG,(pgDesc+1)*ITENS_PAG).forEach((l,i)=>{d.innerHTML+=`<div class="card card-discarded"><span class="link-text">${l}</span><button class="btn-auto" onclick="resgatar(${pgDesc*ITENS_PAG+i})">♻️</button><button class="danger btn-auto" onclick="db['${u}'].naoSalvos.splice(${pgDesc*ITENS_PAG+i},1);renderizar()">X</button></div>`});
+            
+            renderControles('paginacao-pend',db[u].links.length,pgPend,n=>{pgPend=n;renderizar()});
+            renderControles('paginacao-salv',db[u].salvos.length,pgSalv,n=>{pgSalv=n;renderizar()});
+            renderControles('paginacao-desc',db[u].naoSalvos.length,pgDesc,n=>{pgDesc=n;renderizar()});
+            localStorage.setItem(DB_KEY, JSON.stringify(db));
+        }
+        function renderControles(id,t,a,cb){ const d=document.getElementById(id), m=Math.ceil(t/ITENS_PAG); if(m<=1){d.innerHTML='';return} d.innerHTML=`<button class="secondary btn-auto" ${a===0?'disabled':''} onclick="(${cb})(${a-1})">«</button><span>${a+1}/${m}</span><button class="secondary btn-auto" ${a>=m-1?'disabled':''} onclick="(${cb})(${a+1})">»</button>`; }
+        function tratarLink(i,l){ if(lastOpenedLink) db[currentUserData.user].naoSalvos.push(lastOpenedLink); lastOpenedLink=l; window.open(l.includes('http')?l:`whatsapp://send?phone=55${l.replace(/\D/g,'')}`); db[currentUserData.user].links.splice(i,1); document.getElementById('last-link-opened').innerText=l; document.getElementById('save-prompt').style.display='flex'; renderizar(); }
+        function confirmarSalvamento(s){ const u=currentUserData.user; if(s && lastOpenedLink) db[u].salvos.push(lastOpenedLink); else if(!s && lastOpenedLink) db[u].naoSalvos.push(lastOpenedLink); document.getElementById('save-prompt').style.display='none'; lastOpenedLink=""; renderizar(); }
+        function resgatar(i){ db[currentUserData.user].links.push(db[currentUserData.user].naoSalvos[i]); db[currentUserData.user].naoSalvos.splice(i,1); renderizar(); }
+        function limparPendentes(){ if(confirm("Limpar?")){db[currentUserData.user].links=[]; renderizar();}}
+        function limparSalvos(){ if(confirm("Limpar?")){db[currentUserData.user].salvos=[]; renderizar();}}
+        function limparDescartados(){ if(confirm("Limpar?")){db[currentUserData.user].naoSalvos=[]; renderizar();}}
+        function baixarSalvos(){ const b=new Blob([db[currentUserData.user].salvos.join('\n')],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='salvos.txt'; a.click(); }
+        function lerArquivoSalvos(i){ const r=new FileReader(); r.onload=e=>{ processarLinks(e.target.result.split('\n')); }; r.readAsText(i.files[0]); i.value=''; }
+        function baixarArquivoGeral(){ if(currentFileUrl){const a=document.createElement('a'); a.href=currentFileUrl; a.download=''; a.target='_blank'; document.body.appendChild(a); a.click(); document.body.removeChild(a);}}
+
+        // --- ADMIN ---
+        async function abrirAdminPanel() {
+            document.getElementById('modal-admin').classList.add('show');
+            const l=document.getElementById('admin-users-list'); l.innerHTML='<div class="loader" style="display:block;margin-top:20px;"></div>';
+            const sub=currentUserData.cargo==='Sub-Admin';
+            document.getElementById('upload-section-geral').style.display=sub?'none':'block';
+            document.getElementById('upload-section-teste').style.display=sub?'none':'block';
+            document.getElementById('admin-msg-area').style.display=sub?'none':'block';
+            try {
+                const res=await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'admin_list', user:currentUserData.user, pass:currentUserData.pass})}).then(r=>r.json());
+                if(res.success){
+                    let h=`<div class="table-responsive"><table class="admin-table"><thead><tr><th>St</th><th>User</th><th>Senha</th><th>Val</th><th>WA</th><th>$$</th><th>Cargo</th><th>Pix</th><th>St</th><th>Criador</th><th>Ações</th></tr></thead><tbody>`;
+                    res.list.forEach(r=>{
+                        let stT="-", stC="status-active";
+                        if(r[2]==="Teste (1h)") { stT="Tst"; stC="status-test"; }
+                        else { const d=formatarData(r[2]); d.setHours(0,0,0,0); const diff=Math.ceil((d - new Date().setHours(0,0,0,0))/86400000); if(diff<0){stT="Exp";stC="status-expired";}else{stT=diff+"d";} }
+                        if(r[7]==="Bloqueado"){stT="Blk";stC="status-expired";}
+                        h+=`<tr><td><span class="status-dot ${stC}"></span><small>${stT}</small></td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td><td>${r[8]}</td><td><div style="display:flex;gap:2px;">${sub?'':`<button class="status-btn btn-auto" style="width:30px;padding:0;" onclick="alterarStatus('${r[0]}')">S</button>`}<button class="renew-btn btn-auto" style="width:30px;padding:0;" onclick="clickRenovar('${r[0]}')">R</button><button class="vip-btn btn-auto" style="width:30px;padding:0;" onclick="prepararEnvioWhatsApp('${r[0]}','${r[1]}','${r[3]}','${r[2]}')">W</button><button class="edit-btn btn-auto" style="width:30px;padding:0;" onclick="abrirModalEdit('${r[0]}','${r[1]}','${r[2]}','${r[3]}','${r[4]}')">E</button></div></td></tr>`;
+                    });
+                    l.innerHTML=h+'</tbody></table></div>';
+                }
+            } catch(e){ l.innerHTML="Erro."; }
+        }
+        function abrirModalCreate(){ document.getElementById('new-user').value=''; document.getElementById('new-pass').value=''; const s=document.getElementById('new-role'); s.innerHTML='<option value="User">Usuário</option><option value="Teste">Teste (1h)</option>'; if(currentUserData.cargo!=='Sub-Admin') s.innerHTML+='<option value="Sub-Admin">Sub-Admin</option><option value="Admin">Admin</option>'; document.getElementById('new-pix').value=(currentUserData.cargo==='Sub-Admin'?'':(currentUserData.pix||'')); document.getElementById('modal-create').classList.add('show'); }
+        async function salvarNovoUsuario(){
+            const u=document.getElementById('new-user').value, p=document.getElementById('new-pass').value, d=parseInt(document.getElementById('new-days').value), c=document.getElementById('new-role').value;
+            if(!u||!p)return;
+            const dt=new Date(); dt.setDate(dt.getDate()+(d||30));
+            const dtF=(c==='Teste')?"Teste (1h)":`${("0"+dt.getDate()).slice(-2)}/${("0"+(dt.getMonth()+1)).slice(-2)}/${dt.getFullYear()}`;
+            const pay={user:u,pass:p,date:dtF,wa:document.getElementById('new-wa').value,val:document.getElementById('new-val').value,pix:document.getElementById('new-pix').value,cargo:c};
+            try{ const r=await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'create_user', user:currentUserData.user, pass:currentUserData.pass, novoUsuario:pay})}).then(x=>x.json()); if(r.success){tempUser=u;tempPass=p;tempDate=dtF;tempWa=pay.wa;tempVal=pay.val;fecharModal('modal-create');document.getElementById('modal-created-success').classList.add('show');abrirAdminPanel();}else alert(r.msg); }catch(e){alert("Erro");}
+        }
+        function abrirModalEdit(u,p,d,w,v){userEditing=u; document.getElementById('edit-pass').value=p; document.getElementById('edit-date').value=d; document.getElementById('edit-wa').value=w; document.getElementById('edit-val').value=v; document.getElementById('modal-edit').classList.add('show');}
+        async function salvarEdicao(){ const pay={userOriginal:userEditing,pass:document.getElementById('edit-pass').value,date:document.getElementById('edit-date').value,wa:document.getElementById('edit-wa').value,val:document.getElementById('edit-val').value}; await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'edit_user', user:currentUserData.user, pass:currentUserData.pass, dadosEditados:pay})}); alert("Editado!"); fecharModal('modal-edit'); abrirAdminPanel(); }
+        async function clickRenovar(u){const d=prompt("Dias?","30");if(d){await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'renew_user',user:currentUserData.user,pass:currentUserData.pass,targetUser:u,days:d})}); alert("Renovado!"); abrirAdminPanel();}}
+        async function alterarStatus(u){if(confirm("Mudar?")){await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'toggle_status',user:currentUserData.user,pass:currentUserData.pass,targetUser:u})}); abrirAdminPanel();}}
+        function prepararEnvioWhatsApp(u,p,w,d){ tempUser=u; tempPass=p; tempWa=w; tempDate=d; document.getElementById('send-dest').innerText=u; document.getElementById('preview-msg-content').innerHTML=`User: ${u}<br>Pass: ${p}<br>Val: ${d}<br>Site: www.gerenciadorwa.com.br`; document.getElementById('whatsapp-extra-msg').value=""; document.getElementById('modal-send-whatsapp').classList.add('show'); }
+        function finalizarEnvioWhatsApp(){ const e=document.getElementById('whatsapp-extra-msg').value; window.open(`https://wa.me/55${tempWa.replace(/\D/g,'')}?text=${encodeURIComponent(`*SEU ACESSO*\nUser: ${tempUser}\nPass: ${tempPass}\nVal: ${tempDate}\nSite: www.gerenciadorwa.com.br\n\n${e}`)}`); fecharModal('modal-send-whatsapp'); }
+        function prepararEnvioAposCriacao(){ fecharModalSucessoCriacao(); prepararEnvioWhatsApp(tempUser,tempPass,tempWa,tempDate); }
+        function checkRole(){const r=document.getElementById('new-role').value; document.getElementById('days-container').style.display=(r==='Teste')?'none':'flex';}
+        function filtrarUsuarios(){const t=document.getElementById('search-user').value.toLowerCase(); document.querySelectorAll('.admin-table tbody tr').forEach(r=>{r.style.display=r.innerText.toLowerCase().includes(t)?'':'none';});}
+        function toggleTheme(){document.body.classList.toggle('dark-mode'); localStorage.setItem('theme',document.body.classList.contains('dark-mode')?'dark':'light'); document.querySelector('.theme-toggle').innerText=document.body.classList.contains('dark-mode')?'☀️':'🌙';}
+        function formatarData(d){if(!d)return new Date(); if(String(d).includes('/')){const p=d.split('/');return new Date(p[2],p[1]-1,p[0]);} return new Date(d);}
+        function logout(){localStorage.removeItem(SESSION_KEY); location.reload();}
+        function fecharModal(id){document.getElementById(id).classList.remove('show');}
+        function fecharModalSucessoCriacao(){document.getElementById('modal-created-success').classList.remove('show');}
+        function abrirModalRenovar(){document.getElementById('pix-display').innerText=currentUserData.pix||"Sem chave"; document.getElementById('modal-renovar').classList.add('show');}
+        function copiarPixReal(){navigator.clipboard.writeText(document.getElementById('pix-display').innerText).then(()=>alert("Copiado!"));}
+        function verificarInstalacaoApp(){if(!window.matchMedia('(display-mode: standalone)').matches) document.getElementById('modal-install-tutorial').classList.add('show');}
+        function fecharInstallModal(){document.getElementById('modal-install-tutorial').classList.remove('show');}
+        function instalarAndroid(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null;fecharInstallModal();}}
+    </script>
+</body>
+</html>
