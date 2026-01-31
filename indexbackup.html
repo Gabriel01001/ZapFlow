@@ -2,8 +2,16 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gerenciador |WA|</title>
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><text x=%2250%22 y=%2250%22 font-size=%2260%22 text-anchor=%22middle%22 dy=%22.35em%22>⚡</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2310b981%22/><text x=%2250%22 y=%2250%22 font-size=%2260%22 text-anchor=%22middle%22 dy=%22.35em%22>⚡</text></svg>">
+    
+    <meta name="theme-color" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #10b981; --dark: #064e3b; --bg: #f3f4f6; --text: #1f2937; --danger: #ef4444; --card: #fff; --radius: 12px; --blue: #3b82f6; --gold: #f59e0b; --gray: #6b7280; --purple: #8b5cf6; }
@@ -31,9 +39,9 @@
         .card { background: var(--card); border: 1px solid #e5e7eb; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; overflow: hidden; }
         .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; min-width: 0; word-break: break-all; }
         
-        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:1000; }
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:1000; backdrop-filter: blur(5px); }
         .modal-overlay.show { display:flex; }
-        .modal-content { background:var(--card); padding:20px; border-radius:20px; width:95%; max-width:95%; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; }
+        .modal-content { background:var(--card); padding:25px; border-radius:20px; width:90%; max-width:350px; position:relative; color: var(--text); max-height: 90vh; overflow-y: auto; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .pay-card { text-align: center; border: 2px solid #10b981; border-radius: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); margin-bottom: 15px; }
         .pay-key { font-family: monospace; font-size: 14px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed #ccc; margin: 15px 0; word-break: break-all; }
         
@@ -60,8 +68,10 @@
         .discarded-section { margin-top: 30px; border-top: 2px dashed #e5e7eb; padding-top: 20px; }
         .card-discarded { border-left: 4px solid var(--gray); opacity: 0.8; }
         
-        /* NOVO: Estilo para textarea expandível */
         .msg-box { min-height: 60px; resize: vertical; margin-bottom: 15px; }
+
+        /* Estilo Tutorial Install */
+        .tutorial-step { text-align: left; margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 10px; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -80,6 +90,11 @@
             </button>
             <p id="msg-login" style="color: red; font-size: 14px; margin-top: 10px; font-weight: 600;"></p>
             <button onclick="window.open('https://wa.me/5521970458286')" class="secondary btn-auto" style="margin-top:20px;">💬 Suporte Técnico</button>
+            
+            <div style="margin-top: 40px; font-size: 11px; opacity: 0.6; color: var(--text);">
+                <p style="margin:0;">&copy; 2026 Gerenciador |WA|</p>
+                <p style="margin:2px 0 0 0;">Dev: <b>Gabriel Martins</b></p>
+            </div>
         </div>
 
         <div id="app-screen" class="hidden">
@@ -166,12 +181,36 @@
         </div>
     </div>
 
+    <div id="modal-install-tutorial" class="modal-overlay" style="z-index: 9999;">
+        <div class="modal-content" style="max-width: 350px;">
+            <div style="text-align:center; margin-bottom:20px;">
+                <div style="font-size:50px; margin-bottom:10px;">⚡</div>
+                <h3 style="margin-top:0; font-size: 20px; font-weight: 700;">Instalar App</h3>
+                <p style="font-size:14px; color: var(--text); line-height: 1.5;">Para a melhor experiência, adicione este app à sua tela inicial.</p>
+            </div>
+            
+            <button id="btn-android-install" class="hidden" style="width:100% !important; margin-bottom:15px; font-size: 16px; padding: 15px;" onclick="instalarAndroid()">📲 Instalar Agora</button>
+
+            <div id="tutorial-ios" class="hidden">
+                <div class="tutorial-step">1. Toque no botão <b>Compartilhar</b> <span style="font-size:18px;">⎋</span> abaixo.</div>
+                <div class="tutorial-step">2. Role e selecione <b>Adicionar à Tela de Início</b> <span style="font-size:18px;">⊞</span>.</div>
+            </div>
+
+            <div id="tutorial-android" class="hidden">
+                <div class="tutorial-step">1. Toque nos <b>3 pontinhos</b> <span style="font-size:18px;">⋮</span> no topo do navegador.</div>
+                <div class="tutorial-step">2. Selecione <b>Adicionar à tela inicial</b> ou <b>Instalar app</b>.</div>
+            </div>
+
+            <button class="secondary btn-auto" style="width:100% !important; margin-top:15px;" onclick="fecharInstallModal()">Agora não</button>
+        </div>
+    </div>
+
     <div id="modal-global-msg" class="modal-overlay" style="z-index: 1100;">
         <div class="modal-content" style="max-width: 400px; text-align: center;">
             <div style="font-size: 40px; margin-bottom: 10px;">🔔</div>
             <h3 style="margin-top:0; color: var(--primary);">Comunicado</h3>
-            <p id="msg-text" style="font-size: 14px; color: var(--text); background: #f3f4f6; padding: 15px; border-radius: 10px;"></p>
-            <button onclick="fecharModal('modal-global-msg')" class="btn-auto" style="margin-top: 15px; width: 100% !important;">Entendi</button>
+            <p id="msg-text" style="font-size: 14px; color: #333 !important; background: #f3f4f6; padding: 15px; border-radius: 10px;"></p>
+            <button onclick="marcarMensagemLida()" class="btn-auto" style="margin-top: 15px; width: 100% !important;">Entendi</button>
         </div>
     </div>
 
@@ -179,10 +218,15 @@
         <div class="modal-content" style="max-width: 400px;">
             <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-send-whatsapp')">&times;</span>
             <h3 style="margin-top:0; color: #25d366;">📲 Enviar Acesso</h3>
-            <p style="font-size:12px; margin-bottom:10px;">Para: <b id="send-dest">...</b></p>
+            <p style="font-size:12px; margin:0 0 10px 0;">Para: <b id="send-dest">...</b></p>
             
-            <label style="font-size:12px; font-weight:bold;">Mensagem Complementar:</label>
-            <textarea id="whatsapp-extra-msg" class="msg-box" placeholder="Digite algo extra (opcional)... Ex: 'Aproveite sua tela!'"></textarea>
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px; margin-bottom:15px; font-size:12px; color:#166534;">
+                <div style="font-weight:bold; margin-bottom:5px;">📋 Dados que serão enviados:</div>
+                <div id="preview-msg-content" style="font-family:monospace; line-height:1.4;"></div>
+            </div>
+
+            <label style="font-size:12px; font-weight:bold;">Mensagem Complementar (Opcional):</label>
+            <textarea id="whatsapp-extra-msg" class="msg-box" placeholder="Ex: 'Aproveite sua tela!', 'Pagamento Confirmado', etc."></textarea>
             
             <button class="chat-btn" onclick="finalizarEnvioWhatsApp()">🚀 Enviar via WhatsApp</button>
         </div>
@@ -215,7 +259,7 @@
             <div id="admin-msg-area" style="background:#fff7ed; border:1px dashed #f97316; padding:15px; border-radius:8px; margin-bottom:10px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#c2410c;">🔔 Mensagem Global (Popup)</div>
                 <textarea id="global-msg-input" rows="2" placeholder="Escreva um aviso para todos os usuários..." style="margin-bottom:5px; font-size:12px;"></textarea>
-                <button class="btn-auto" style="background:#f97316; width:100% !important;" onclick="salvarMensagem()">Salvar Aviso</button>
+                <button class="btn-auto" style="background:#f97316; width:100% !important;" onclick="salvarMensagem()">Enviar Aviso</button>
             </div>
 
             <div id="upload-section-geral" style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:10px;">
@@ -321,15 +365,26 @@
         let countdownRef = null;
         let userEditing = null;
         let currentFileUrl = "";
+        let deferredPrompt; // Para instalação Android
 
-        // VARIÁVEIS TEMPORÁRIAS PARA ENVIO
+        // VARIÁVEIS TEMPORÁRIAS
         let tempUser="", tempPass="", tempWa="", tempDate="", tempVal="";
+
+        // Captura o evento de instalação (Android)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
 
         window.onload = () => {
             if(localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
                 document.querySelector('.theme-toggle').innerText = '☀️';
             }
+            
+            // Verifica instalação (abre o modal direto após 1s)
+            setTimeout(verificarInstalacaoApp, 1000);
+
             const session = localStorage.getItem(SESSION_KEY);
             if(session) {
                 const s = JSON.parse(session);
@@ -338,6 +393,61 @@
                 conectarBanco();
             }
         };
+
+        // === LÓGICA DE INSTALAÇÃO ATUALIZADA ===
+        function verificarInstalacaoApp() {
+            // Se já for app, não faz nada
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) return;
+
+            // Verifica se fechou nas últimas 24h
+            const bannerFechadoEm = localStorage.getItem('install_banner_closed');
+            if (bannerFechadoEm) {
+                const agora = new Date().getTime();
+                const umDia = 24 * 60 * 60 * 1000;
+                if (agora - parseInt(bannerFechadoEm) < umDia) return; 
+            }
+
+            abrirTutorialInstall();
+        }
+
+        function abrirTutorialInstall() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            
+            if (deferredPrompt) {
+                // Se o navegador permite instalação direta (Android moderno)
+                document.getElementById('btn-android-install').classList.remove('hidden');
+                document.getElementById('tutorial-android').classList.add('hidden');
+                document.getElementById('tutorial-ios').classList.add('hidden');
+            } else if (isIOS) {
+                // iPhone
+                document.getElementById('btn-android-install').classList.add('hidden');
+                document.getElementById('tutorial-ios').classList.remove('hidden');
+                document.getElementById('tutorial-android').classList.add('hidden');
+            } else {
+                // Android Manual ou PC
+                document.getElementById('btn-android-install').classList.add('hidden');
+                document.getElementById('tutorial-ios').classList.add('hidden');
+                document.getElementById('tutorial-android').classList.remove('hidden');
+            }
+            
+            document.getElementById('modal-install-tutorial').classList.add('show');
+        }
+
+        async function instalarAndroid() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    fecharInstallModal();
+                }
+                deferredPrompt = null;
+            }
+        }
+
+        function fecharInstallModal() {
+            document.getElementById('modal-install-tutorial').classList.remove('show');
+            localStorage.setItem('install_banner_closed', new Date().getTime());
+        }
 
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
@@ -424,10 +534,13 @@
                         }
                     }
 
-                    // --- CHECK MENSAGEM GLOBAL ---
+                    // --- CHECK MENSAGEM GLOBAL (LÓGICA "LIDA") ---
                     if(dados.message && dados.message.trim() !== "") {
-                        document.getElementById('msg-text').innerText = dados.message;
-                        document.getElementById('modal-global-msg').classList.add('show');
+                        const savedMsg = localStorage.getItem('zapflow_last_msg_' + currentUserData.user);
+                        if (savedMsg !== dados.message) {
+                            document.getElementById('msg-text').innerText = dados.message;
+                            document.getElementById('modal-global-msg').classList.add('show');
+                        }
                     }
 
                     renderizar();
@@ -443,6 +556,13 @@
                 txt.style.display = 'block';
                 loader.style.display = 'none';
             }
+        }
+
+        // --- NOVA FUNÇÃO: MARCAR COMO LIDA ---
+        function marcarMensagemLida() {
+            const msg = document.getElementById('msg-text').innerText;
+            localStorage.setItem('zapflow_last_msg_' + currentUserData.user, msg);
+            fecharModal('modal-global-msg');
         }
 
         // --- FUNÇÕES DE INTERFACE DO ADMIN ---
@@ -694,7 +814,17 @@
         function prepararEnvioWhatsApp(u, p, w, d, v) {
             tempUser = u; tempPass = p; tempWa = w; tempDate = d; tempVal = v;
             document.getElementById('send-dest').innerText = u;
-            document.getElementById('whatsapp-extra-msg').value = ""; // Limpa msg anterior
+            
+            // PREVIEW DOS DADOS
+            const previewHtml = `
+                👤 <b>Usuário:</b> ${u}<br>
+                🔑 <b>Senha:</b> ${p}<br>
+                📅 <b>Vencimento:</b> ${d}<br>
+                🌐 <b>Site:</b> www.gerenciadorwa.com.br
+            `;
+            document.getElementById('preview-msg-content').innerHTML = previewHtml;
+
+            document.getElementById('whatsapp-extra-msg').value = ""; 
             document.getElementById('modal-send-whatsapp').classList.add('show');
         }
 
