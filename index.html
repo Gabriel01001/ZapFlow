@@ -203,11 +203,18 @@
                 <button id="btn-watch-video" class="btn-auto" style="width: 100% !important; background: #c2410c; padding: 12px;">▶️ Assistir Vídeo</button>
             </div>
 
-            <div id="admin-tutorial-edit" style="display: none; border-top: 2px dashed #ccc; padding-top: 15px; margin-top: 15px;">
-                <div style="font-size: 11px; font-weight: bold; color: var(--primary); margin-bottom: 8px;">🛠️ Configurar Tutorial (Admin)</div>
-                <input type="text" id="edit-tutorial-title" placeholder="Título do Vídeo">
-                <input type="text" id="edit-tutorial-link" placeholder="Link do Vídeo (YouTube/Drive)">
-                <button onclick="salvarConfigTutorial()" class="secondary btn-auto" style="width: 100% !important;">💾 Salvar Configuração</button>
+            <div id="admin-tutorial-controls" style="display: none; border-top: 2px dashed #444; margin-top: 15px; padding-top: 10px;">
+                <button onclick="toggleEditForm()" class="secondary btn-auto" style="width:100% !important;">⚙️ Alterar Vídeo / Novo</button>
+
+                <div id="admin-edit-form" style="display: none; margin-top: 15px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px;">
+                    <label style="font-size: 12px; font-weight: bold;">Novo Título:</label>
+                    <input type="text" id="edit-tutorial-title" placeholder="Ex: Aprenda a revender">
+                    
+                    <label style="font-size: 12px; font-weight: bold;">Link do Vídeo:</label>
+                    <input type="text" id="edit-tutorial-link" placeholder="https://...">
+                    
+                    <button onclick="salvarConfigTutorial()" class="btn-auto" style="width: 100% !important; background: var(--primary);">💾 Salvar Alterações</button>
+                </div>
             </div>
         </div>
     </div>
@@ -386,10 +393,10 @@
         // VARIÁVEIS TEMPORÁRIAS
         let tempUser="", tempPass="", tempWa="", tempDate="", tempVal="";
 
-        // CONFIG TUTORIAL PADRÃO (Caso não tenha salvo ainda)
+        // CONFIG TUTORIAL PADRÃO
         let tutorialData = {
             title: "Como usar o sistema",
-            link: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" // Link Exemplo
+            link: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         };
 
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -403,7 +410,7 @@
                 document.querySelector('.theme-toggle').innerText = '☀️';
             }
             
-            // CARREGA TUTORIAL SALVO NO LOCALSTORAGE (Cache Local)
+            // Carrega Tutorial Salvo Localmente (backup)
             const savedTut = localStorage.getItem('zapflow_tutorial_config');
             if(savedTut) tutorialData = JSON.parse(savedTut);
 
@@ -418,24 +425,39 @@
             }
         };
 
-        // --- LÓGICA TUTORIAL ---
+        // --- LÓGICA TUTORIAL (ATUALIZADA) ---
         function abrirModalTutorial() {
-            // Atualiza o display com os dados atuais
+            // 1. Atualiza visualização para todos
             document.getElementById('display-tutorial-title').innerText = tutorialData.title;
             document.getElementById('btn-watch-video').onclick = function() {
                 window.open(tutorialData.link, '_blank');
             };
 
-            // Se for Admin/Sub-Admin, mostra painel de edição
-            if (currentUserData && (currentUserData.cargo === 'Admin' || currentUserData.cargo === 'Sub-Admin')) {
-                document.getElementById('admin-tutorial-edit').style.display = 'block';
+            // 2. Lógica de Controle: Apenas ADMIN (Master) vê os controles
+            // "Sub-Admin" cai no 'else' e não vê nada.
+            if (currentUserData && currentUserData.cargo === 'Admin') {
+                document.getElementById('admin-tutorial-controls').style.display = 'block';
+                // Preenche inputs
                 document.getElementById('edit-tutorial-title').value = tutorialData.title;
                 document.getElementById('edit-tutorial-link').value = tutorialData.link;
             } else {
-                document.getElementById('admin-tutorial-edit').style.display = 'none';
+                // Esconde para Sub-Admin e User
+                document.getElementById('admin-tutorial-controls').style.display = 'none';
             }
 
+            // Garante que o formulário comece fechado
+            document.getElementById('admin-edit-form').style.display = 'none';
+            
             document.getElementById('modal-tutorial-video').classList.add('show');
+        }
+
+        function toggleEditForm() {
+            const form = document.getElementById('admin-edit-form');
+            if (form.style.display === 'none') {
+                form.style.display = 'block';
+            } else {
+                form.style.display = 'none';
+            }
         }
 
         async function salvarConfigTutorial() {
@@ -444,28 +466,28 @@
             
             if(!t || !l) return alert("Preencha título e link!");
 
-            // Salva localmente para teste imediato
             tutorialData = { title: t, link: l };
             localStorage.setItem('zapflow_tutorial_config', JSON.stringify(tutorialData));
             
-            // Tenta salvar no banco (Usando save_message como improviso ou nova action se suportada)
             try {
                 const req = await fetch(API_URL, {
                     method: 'POST',
                     body: JSON.stringify({
-                        action: 'save_tutorial_config', // Nome da action sugerida
+                        action: 'save_tutorial_config', 
                         user: currentUserData.user,
                         pass: currentUserData.pass,
                         title: t,
                         link: l
                     })
                 });
-                // Não bloqueamos se der erro no servidor, pois salvamos local
                 alert("Tutorial atualizado!");
-                abrirModalTutorial(); // Atualiza a view
+                // Fecha o formulário e atualiza a view
+                document.getElementById('admin-edit-form').style.display = 'none';
+                document.getElementById('display-tutorial-title').innerText = t;
             } catch(e) {
                 alert("Salvo localmente (Erro ao conectar com servidor).");
-                abrirModalTutorial();
+                document.getElementById('admin-edit-form').style.display = 'none';
+                document.getElementById('display-tutorial-title').innerText = t;
             }
         }
 
@@ -801,23 +823,29 @@
         
         function baixarArquivoGeral() { if(currentFileUrl) { const link = document.createElement("a"); link.href = currentFileUrl; link.setAttribute("download", ""); link.setAttribute("target", "_blank"); document.body.appendChild(link); link.click(); document.body.removeChild(link); } }
         
+        // --- CRIAÇÃO DE USUÁRIO COM OPÇÕES DINÂMICAS ---
         function abrirModalCreate() { 
             document.getElementById('new-user').value = ''; 
             document.getElementById('new-pass').value = ''; 
             document.getElementById('new-days').value = '30'; 
             document.getElementById('new-wa').value = ''; 
             document.getElementById('new-val').value = ''; 
+            
             const roleSelect = document.getElementById('new-role');
             roleSelect.innerHTML = ''; 
+
             const optUser = document.createElement('option'); optUser.value = 'User'; optUser.innerText = 'Usuário Comum'; roleSelect.appendChild(optUser);
             const optTest = document.createElement('option'); optTest.value = 'Teste'; optTest.innerText = 'Teste (1 Hora)'; roleSelect.appendChild(optTest);
+
             if (currentUserData.cargo === 'Sub-Admin') { 
                 document.getElementById('new-pix').value = ''; 
             } else { 
                 const optSub = document.createElement('option'); optSub.value = 'Sub-Admin'; optSub.innerText = 'Sub-Admin'; roleSelect.appendChild(optSub);
                 const optAdmin = document.createElement('option'); optAdmin.value = 'Admin'; optAdmin.innerText = 'Admin Master'; roleSelect.appendChild(optAdmin);
+                
                 document.getElementById('new-pix').value = currentUserData.pix || ''; 
             } 
+            
             document.getElementById('role-container').style.display = 'block';
             document.getElementById('days-container').style.display = 'flex';
             document.getElementById('msg-create').innerText = ''; 
@@ -834,19 +862,26 @@
             const v = document.getElementById('new-val').value; 
             const x = document.getElementById('new-pix').value; 
             const cargo = document.getElementById('new-role').value; 
+            
             if(!u || !p || (!d && cargo !== 'Teste')) { msg.innerText = "Preencha os campos."; return; } 
+            
             const dataVenc = new Date(); 
             dataVenc.setDate(dataVenc.getDate() + (d||0)); 
             const dia = ("0" + dataVenc.getDate()).slice(-2); 
             const mes = ("0" + (dataVenc.getMonth() + 1)).slice(-2); 
             const ano = dataVenc.getFullYear(); 
             const dataFinal = `${dia}/${mes}/${ano}`; 
+            
             const payload = { user: u, pass: p, date: dataFinal, wa: w, val: v, pix: x, cargo: cargo }; 
+            
             btn.disabled = true; btn.innerText = "Salvando..."; 
+            
             try { 
                 const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'create_user', user: currentUserData.user, pass: currentUserData.pass, novoUsuario: payload }) }); 
                 const res = await req.json(); 
+                
                 if(res.success) { 
+                    // SUCESSO: Guarda dados temp e abre modal de escolha
                     tempUser = u; tempPass = p; tempDate = (cargo === 'Teste' ? "1 Hora (Teste)" : dataFinal); tempWa = w; tempVal = v;
                     fecharModal('modal-create');
                     document.getElementById('modal-created-success').classList.add('show');
@@ -869,6 +904,8 @@
         function prepararEnvioWhatsApp(u, p, w, d, v) {
             tempUser = u; tempPass = p; tempWa = w; tempDate = d; tempVal = v;
             document.getElementById('send-dest').innerText = u;
+            
+            // PREVIEW DOS DADOS
             const previewHtml = `
                 👤 <b>Usuário:</b> ${u}<br>
                 🔑 <b>Senha:</b> ${p}<br>
@@ -876,6 +913,7 @@
                 🌐 <b>Site:</b> www.gerenciadorwa.com.br
             `;
             document.getElementById('preview-msg-content').innerHTML = previewHtml;
+
             document.getElementById('whatsapp-extra-msg').value = ""; 
             document.getElementById('modal-send-whatsapp').classList.add('show');
         }
@@ -883,7 +921,9 @@
         function finalizarEnvioWhatsApp() {
             const extra = document.getElementById('whatsapp-extra-msg').value;
             const quebra = extra ? `\n\n${extra}` : "";
+            
             const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${tempUser}\n🔑 *Senha:* ${tempPass}\n📅 *Vencimento:* ${tempDate}\n🌐 *Site:* www.gerenciadorwa.com.br${quebra}`;
+            
             window.open(`https://wa.me/55${String(tempWa).replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
             fecharModal('modal-send-whatsapp');
         }
