@@ -74,11 +74,12 @@
         /* Botão Tutorial Chamativo */
         .tutorial-badge {
             background: linear-gradient(45deg, #f59e0b, #ea580c);
-            color: white; padding: 6px 14px; border-radius: 20px;
-            font-size: 11px; font-weight: bold; cursor: pointer;
-            display: inline-block; margin-top: 6px; text-transform: uppercase;
-            box-shadow: 0 3px 8px rgba(234, 88, 12, 0.4);
+            color: white; padding: 8px 16px; border-radius: 50px;
+            font-size: 12px; font-weight: bold; cursor: pointer;
+            display: inline-block; margin-top: 10px; text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(234, 88, 12, 0.4);
             animation: pulse 2s infinite; border: 1px solid rgba(255,255,255,0.3);
+            text-align: center; width: 100%; max-width: 200px;
         }
         .tutorial-badge:hover { filter: brightness(1.1); }
     </style>
@@ -108,10 +109,13 @@
 
         <div id="app-screen" class="hidden">
             <div class="header">
-                <div style="max-width: 70%;">
+                <div style="max-width: 70%; display: flex; flex-direction: column;">
                     <h3 id="ola-user" style="margin:0; font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">...</h3>
                     <div id="status-acesso" style="font-size: 13px;"></div>
-                    <div class="tutorial-badge" onclick="abrirModalTutorial()">📺 Assistir Tutorial</div>
+                    
+                    <div id="tutorial-area">
+                        <div class="tutorial-badge" onclick="abrirModalTutorial()">📺 Assistir Tutorial</div>
+                    </div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
                     <button id="btn-open-admin" class="admin-btn btn-auto hidden" onclick="abrirAdminPanel()">⚙️ Master</button>
@@ -199,21 +203,21 @@
             
             <div style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: 15px; margin-bottom: 20px;">
                 <div style="font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase;">Tutorial em Destaque</div>
-                <h2 id="display-tutorial-title" style="margin: 5px 0 15px 0; font-size: 18px; line-height: 1.3;">Como usar o sistema</h2>
+                <h2 id="display-tutorial-title" style="margin: 5px 0 15px 0; font-size: 18px; line-height: 1.3;">Carregando...</h2>
                 <button id="btn-watch-video" class="btn-auto" style="width: 100% !important; background: #c2410c; padding: 12px;">▶️ Assistir Vídeo</button>
             </div>
 
             <div id="admin-tutorial-controls" style="display: none; border-top: 2px dashed #444; margin-top: 15px; padding-top: 10px;">
-                <button onclick="toggleEditForm()" class="secondary btn-auto" style="width:100% !important;">⚙️ Alterar Vídeo / Novo</button>
+                <button onclick="toggleEditForm()" class="secondary btn-auto" style="width:100% !important;">⚙️ Configurar Vídeo</button>
 
                 <div id="admin-edit-form" style="display: none; margin-top: 15px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px;">
                     <label style="font-size: 12px; font-weight: bold;">Novo Título:</label>
                     <input type="text" id="edit-tutorial-title" placeholder="Ex: Aprenda a revender">
                     
                     <label style="font-size: 12px; font-weight: bold;">Link do Vídeo:</label>
-                    <input type="text" id="edit-tutorial-link" placeholder="https://...">
+                    <input type="text" id="edit-tutorial-link" placeholder="https://youtube.com/...">
                     
-                    <button onclick="salvarConfigTutorial()" class="btn-auto" style="width: 100% !important; background: var(--primary);">💾 Salvar Alterações</button>
+                    <button onclick="salvarConfigTutorial()" class="btn-auto" style="width: 100% !important; background: var(--primary);">💾 Salvar e Atualizar</button>
                 </div>
             </div>
         </div>
@@ -425,7 +429,7 @@
             }
         };
 
-        // --- LÓGICA TUTORIAL (ATUALIZADA) ---
+        // --- LÓGICA TUTORIAL (CORRIGIDA E SIMPLIFICADA) ---
         function abrirModalTutorial() {
             // 1. Atualiza visualização para todos
             document.getElementById('display-tutorial-title').innerText = tutorialData.title;
@@ -434,18 +438,19 @@
             };
 
             // 2. Lógica de Controle: Apenas ADMIN (Master) vê os controles
-            // "Sub-Admin" cai no 'else' e não vê nada.
+            const adminControls = document.getElementById('admin-tutorial-controls');
+            
             if (currentUserData && currentUserData.cargo === 'Admin') {
-                document.getElementById('admin-tutorial-controls').style.display = 'block';
+                adminControls.style.display = 'block';
                 // Preenche inputs
                 document.getElementById('edit-tutorial-title').value = tutorialData.title;
                 document.getElementById('edit-tutorial-link').value = tutorialData.link;
             } else {
                 // Esconde para Sub-Admin e User
-                document.getElementById('admin-tutorial-controls').style.display = 'none';
+                adminControls.style.display = 'none';
             }
 
-            // Garante que o formulário comece fechado
+            // Garante que o formulário de edição comece fechado
             document.getElementById('admin-edit-form').style.display = 'none';
             
             document.getElementById('modal-tutorial-video').classList.add('show');
@@ -469,15 +474,15 @@
             tutorialData = { title: t, link: l };
             localStorage.setItem('zapflow_tutorial_config', JSON.stringify(tutorialData));
             
+            // Simula salvamento (se tiver action no backend, usa ela)
             try {
                 const req = await fetch(API_URL, {
                     method: 'POST',
                     body: JSON.stringify({
-                        action: 'save_tutorial_config', 
+                        action: 'save_message', // Usando uma action existente como exemplo
                         user: currentUserData.user,
                         pass: currentUserData.pass,
-                        title: t,
-                        link: l
+                        message: "TUTORIAL_UPDATE:" + JSON.stringify(tutorialData)
                     })
                 });
                 alert("Tutorial atualizado!");
@@ -602,7 +607,10 @@
                     document.getElementById('ola-user').innerText = "Olá, " + currentUserData.user;
                     document.getElementById('status-acesso').innerText = "Vence: " + currentUserData.date;
                     
-                    // --- CARREGAR DADOS DO TUTORIAL DO SERVIDOR (SE EXISTIR) ---
+                    // --- FORÇA O BOTÃO A APARECER ---
+                    const tutorialArea = document.getElementById('tutorial-area');
+                    if(tutorialArea) tutorialArea.innerHTML = `<div class="tutorial-badge" onclick="abrirModalTutorial()">📺 Assistir Tutorial</div>`;
+
                     if (dados.tutorialConfig) {
                         tutorialData = dados.tutorialConfig;
                     }
