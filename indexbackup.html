@@ -12,7 +12,7 @@
         .container { max-width: 900px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .hidden { display: none !important; }
         input, textarea, select { width: 100%; padding: 14px; margin-bottom: 12px; border: 2px solid #e5e7eb; border-radius: var(--radius); font-family: inherit; background: #f9fafb; color: #333; font-size: 14px; }
-        body.dark-mode input, body.dark-mode select { background: #374151; color: white; border-color: #4b5563; }
+        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: #374151; color: white; border-color: #4b5563; }
         
         button { width: 100%; padding: 14px; border: none; border-radius: var(--radius); background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; }
         button:hover { filter: brightness(0.9); transform: translateY(-2px); }
@@ -23,6 +23,7 @@
         button.test-btn { background: var(--purple); color: white; }
         button.admin-btn { background: var(--text); color: var(--card); }
         button.chat-btn { background: #25d366; color: white; }
+        button.renew-btn { background: #8b5cf6; color: white; }
         button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
         .btn-auto { width: auto !important; padding: 8px 16px; font-size: 13px; margin: 3px; flex-shrink: 0; }
         
@@ -58,6 +59,9 @@
         .full-width { grid-column: span 2; }
         .discarded-section { margin-top: 30px; border-top: 2px dashed #e5e7eb; padding-top: 20px; }
         .card-discarded { border-left: 4px solid var(--gray); opacity: 0.8; }
+        
+        /* NOVO: Estilo para textarea expandível */
+        .msg-box { min-height: 60px; resize: vertical; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -162,6 +166,41 @@
         </div>
     </div>
 
+    <div id="modal-global-msg" class="modal-overlay" style="z-index: 1100;">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🔔</div>
+            <h3 style="margin-top:0; color: var(--primary);">Comunicado</h3>
+            <p id="msg-text" style="font-size: 14px; color: var(--text); background: #f3f4f6; padding: 15px; border-radius: 10px;"></p>
+            <button onclick="fecharModal('modal-global-msg')" class="btn-auto" style="margin-top: 15px; width: 100% !important;">Entendi</button>
+        </div>
+    </div>
+
+    <div id="modal-send-whatsapp" class="modal-overlay" style="z-index: 1200;">
+        <div class="modal-content" style="max-width: 400px;">
+            <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-send-whatsapp')">&times;</span>
+            <h3 style="margin-top:0; color: #25d366;">📲 Enviar Acesso</h3>
+            <p style="font-size:12px; margin-bottom:10px;">Para: <b id="send-dest">...</b></p>
+            
+            <label style="font-size:12px; font-weight:bold;">Mensagem Complementar:</label>
+            <textarea id="whatsapp-extra-msg" class="msg-box" placeholder="Digite algo extra (opcional)... Ex: 'Aproveite sua tela!'"></textarea>
+            
+            <button class="chat-btn" onclick="finalizarEnvioWhatsApp()">🚀 Enviar via WhatsApp</button>
+        </div>
+    </div>
+
+    <div id="modal-created-success" class="modal-overlay" style="z-index: 1300;">
+        <div class="modal-content" style="max-width: 350px; text-align:center;">
+            <div style="font-size: 50px;">✅</div>
+            <h3 style="margin: 10px 0;">Usuário Criado!</h3>
+            <p style="font-size:13px; color:#666; margin-bottom:20px;">O que deseja fazer agora?</p>
+            
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button class="chat-btn" onclick="prepararEnvioAposCriacao()">📲 Enviar Acesso</button>
+                <button class="secondary" onclick="fecharModalSucessoCriacao()">❌ Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="modal-admin" class="modal-overlay">
         <div class="modal-content">
             <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-admin')">&times;</span>
@@ -173,6 +212,12 @@
                 </div>
             </div>
             
+            <div id="admin-msg-area" style="background:#fff7ed; border:1px dashed #f97316; padding:15px; border-radius:8px; margin-bottom:10px;">
+                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#c2410c;">🔔 Mensagem Global (Popup)</div>
+                <textarea id="global-msg-input" rows="2" placeholder="Escreva um aviso para todos os usuários..." style="margin-bottom:5px; font-size:12px;"></textarea>
+                <button class="btn-auto" style="background:#f97316; width:100% !important;" onclick="salvarMensagem()">Salvar Aviso</button>
+            </div>
+
             <div id="upload-section-geral" style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:10px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#333;">📁 Arquivo OFICIAL (Todos)</div>
                 <div style="display:flex; gap:8px;">
@@ -277,6 +322,9 @@
         let userEditing = null;
         let currentFileUrl = "";
 
+        // VARIÁVEIS TEMPORÁRIAS PARA ENVIO
+        let tempUser="", tempPass="", tempWa="", tempDate="", tempVal="";
+
         window.onload = () => {
             if(localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
@@ -376,6 +424,12 @@
                         }
                     }
 
+                    // --- CHECK MENSAGEM GLOBAL ---
+                    if(dados.message && dados.message.trim() !== "") {
+                        document.getElementById('msg-text').innerText = dados.message;
+                        document.getElementById('modal-global-msg').classList.add('show');
+                    }
+
                     renderizar();
                 } else {
                     msg.innerText = res.msg || "Dados incorretos.";
@@ -442,6 +496,25 @@
             reader.readAsDataURL(file);
         }
 
+        async function salvarMensagem() {
+            const msg = document.getElementById('global-msg-input').value;
+            if (!confirm("Salvar essa mensagem para TODOS?")) return;
+            try {
+                const req = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'save_message',
+                        user: currentUserData.user,
+                        pass: currentUserData.pass,
+                        message: msg
+                    })
+                });
+                const res = await req.json();
+                if (res.success) alert("Mensagem salva!");
+                else alert("Erro ao salvar.");
+            } catch(e) { alert("Erro de conexão."); }
+        }
+
         function processarNovosLinks(listaBruta) { const u = currentUserData.user; if (!db[u]) db[u] = { links: [], salvos: [], naoSalvos: [] }; if (!db[u].salvos) db[u].salvos = []; if (!db[u].naoSalvos) db[u].naoSalvos = []; const jaExistem = new Set([...db[u].links, ...db[u].salvos, ...db[u].naoSalvos]); let adicionados = 0; let duplicados = 0; listaBruta.forEach(link => { const l = link.trim(); if (l) { if (jaExistem.has(l)) { duplicados++; } else { db[u].links.push(l); jaExistem.add(l); adicionados++; } } }); if (duplicados > 0) alert(`Filtrado: ${adicionados} novos adicionados. ${duplicados} repetidos removidos.`); renderizar(); }
         function addLinks(){ const t=document.getElementById('links-input'); const linhas = t.value.split('\n'); processarNovosLinks(linhas); t.value=''; pgPend = 0; }
         function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{ const linhas = e.target.result.split('\n'); processarNovosLinks(linhas); }; r.readAsText(i.files[0]); i.value=''; }
@@ -449,28 +522,94 @@
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
         async function alterarStatus(targetUser) { if(!confirm("Deseja alterar o status deste usuário?")) return; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'toggle_status', user: currentUserData.user, pass: currentUserData.pass, targetUser: targetUser }) }); const res = await req.json(); if(res.success) { alert("Status alterado: " + res.novoStatus); abrirAdminPanel(); } else { alert("Erro: " + res.msg); } } catch(e) { alert("Erro de conexão."); } }
         
+        async function clickRenovar(targetUser) {
+            const dias = prompt("Renovar por quantos dias?", "30");
+            if (!dias) return;
+            try {
+                const req = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'renew_user',
+                        user: currentUserData.user,
+                        pass: currentUserData.pass,
+                        targetUser: targetUser,
+                        days: dias
+                    })
+                });
+                const res = await req.json();
+                if (res.success) {
+                    alert("Usuário renovado com sucesso!");
+                    abrirAdminPanel();
+                } else {
+                    alert("Erro: " + res.msg);
+                }
+            } catch(e) {
+                alert("Erro de conexão.");
+            }
+        }
+
         async function abrirAdminPanel() { 
             document.getElementById('modal-admin').classList.add('show'); 
             const lista = document.getElementById('admin-users-list'); 
             lista.innerHTML = '<div class="loader" style="display:block; border-color:#ccc; border-top-color:#333; margin-top: 20px;"></div>'; 
             
-            // --- Ocultar áreas de upload se for Sub-Admin ---
             const isSub = currentUserData.cargo === 'Sub-Admin';
             document.getElementById('upload-section-geral').style.display = isSub ? 'none' : 'block';
             document.getElementById('upload-section-teste').style.display = isSub ? 'none' : 'block';
+            document.getElementById('admin-msg-area').style.display = isSub ? 'none' : 'block';
 
-            try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'admin_list', user: currentUserData.user, pass: currentUserData.pass }) }); const res = await req.json(); if(res.success && Array.isArray(res.list)) { const headers = res.headers || []; const dados = res.list; const hoje = new Date(); hoje.setHours(0,0,0,0); if(dados.length === 0) { lista.innerHTML = '<p style="text-align:center; color:#666;">Nenhum usuário.</p>'; return; } let html = `<div class="table-responsive"><table class="admin-table"><thead><tr><th style="width: 50px;">Status</th>`; headers.forEach(h => { html += `<th>${h}</th>`; }); html += `<th style="width: 140px;">Ações</th></tr></thead><tbody>`; const isSubAdmin = currentUserData.cargo === 'Sub-Admin'; dados.forEach((row) => { const dateVal = row[2]; const dV = formatarData(dateVal); dV.setHours(0,0,0,0); const diff = Math.ceil((dV - hoje) / 86400000); const isExpired = diff < 0; const statusClass = isExpired ? 'status-expired' : 'status-active'; const statusText = isExpired ? `Expirado` : `${diff}d`; const uUser = row[0] || ""; const uPass = row[1] || ""; const uDate = row[2] || ""; const uWa = row[3] || ""; const uVal = row[4] || ""; const statusAcc = row[8] || "Ativo"; const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : '✅'); let statusBtn = ''; if (isSubAdmin) { statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px; cursor: not-allowed; opacity: 0.6;" title="Status: ${statusAcc}">${statusIcon}</button>`; } else { statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>`; } 
-            
-            // CORREÇÃO DO "NaNd" PARA USUÁRIOS TESTE
-            let displayStatusDot = statusClass;
-            let displayStatusText = statusText;
-            
-            if (dateVal === "Teste (1h)") {
-                displayStatusDot = "status-test";
-                displayStatusText = "Teste";
-            }
+            try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'admin_list', user: currentUserData.user, pass: currentUserData.pass }) }); const res = await req.json(); if(res.success && Array.isArray(res.list)) { const headers = res.headers || []; const dados = res.list; const hoje = new Date(); hoje.setHours(0,0,0,0); if(dados.length === 0) { lista.innerHTML = '<p style="text-align:center; color:#666;">Nenhum usuário.</p>'; return; } let html = `<div class="table-responsive"><table class="admin-table"><thead><tr><th style="width: 50px;">Status</th>`; headers.forEach(h => { html += `<th>${h}</th>`; }); html += `<th style="width: 140px;">Ações</th></tr></thead><tbody>`; const isSubAdmin = currentUserData.cargo === 'Sub-Admin'; dados.forEach((row) => { 
+                
+                const dateVal = row[2]; 
+                let statusText = "";
+                let displayStatusDot = "status-active";
+                let statusBtn = '';
+                const uUser = row[0] || ""; 
+                const uPass = row[1] || ""; 
+                const uDate = row[2] || ""; 
+                const uWa = row[3] || ""; 
+                const uVal = row[4] || ""; 
+                const statusAcc = row[8] || "Ativo"; 
+                const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : (statusAcc === 'Expirado' ? '🛑' : '✅'));
 
-            html += `<tr><td><span class="status-dot ${displayStatusDot}" title="${displayStatusText}"></span><small>${displayStatusText}</small></td>`; row.forEach(cell => { html += `<td>${cell}</td>`; }); html += `<td><div style="display:flex; gap:5px;">${statusBtn}<button class="chat-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button><button class="vip-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button><button class="edit-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button></div></td></tr>`; }); html += `</tbody></table></div>`; lista.innerHTML = html; } else { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } } catch(e) { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } }
+                if (dateVal === "Teste (1h)") {
+                    if (statusAcc === 'Expirado') {
+                        displayStatusDot = "status-expired";
+                        statusText = "Expirado";
+                    } else {
+                        displayStatusDot = "status-test";
+                        statusText = "Teste";
+                    }
+                } else {
+                    if (statusAcc === 'Expirado') {
+                         displayStatusDot = "status-expired";
+                         statusText = "Expirado";
+                    } else {
+                        const dV = formatarData(dateVal); dV.setHours(0,0,0,0);
+                        const diff = Math.ceil((dV - hoje) / 86400000);
+                        if (isNaN(diff)) {
+                            statusText = "-";
+                        } else {
+                            if (diff < 0) {
+                                displayStatusDot = "status-expired";
+                                statusText = "Expirado";
+                            } else {
+                                displayStatusDot = "status-active";
+                                statusText = `${diff}d`;
+                            }
+                        }
+                    }
+                }
+
+                if (isSubAdmin) { 
+                    statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px; cursor: not-allowed; opacity: 0.6;" title="Status: ${statusAcc}">${statusIcon}</button>`; 
+                } else { 
+                    statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>`; 
+                } 
+                
+                const renewBtn = `<button class="renew-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Renovar" onclick="clickRenovar('${uUser}')">📅</button>`;
+
+                html += `<tr><td><span class="status-dot ${displayStatusDot}" title="${statusText}"></span><small>${statusText}</small></td>`; row.forEach(cell => { html += `<td>${cell}</td>`; }); html += `<td><div style="display:flex; gap:5px;">${statusBtn}${renewBtn}<button class="chat-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button><button class="vip-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Enviar Dados" onclick="prepararEnvioWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button><button class="edit-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button></div></td></tr>`; }); html += `</tbody></table></div>`; lista.innerHTML = html; } else { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } } catch(e) { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } }
         
         function baixarArquivoGeral() { if(currentFileUrl) { const link = document.createElement("a"); link.href = currentFileUrl; link.setAttribute("download", ""); link.setAttribute("target", "_blank"); document.body.appendChild(link); link.click(); document.body.removeChild(link); } }
         
@@ -483,17 +622,14 @@
             document.getElementById('new-val').value = ''; 
             
             const roleSelect = document.getElementById('new-role');
-            roleSelect.innerHTML = ''; // Limpa opções anteriores
+            roleSelect.innerHTML = ''; 
 
-            // Opções Básicas (Todos vêem)
             const optUser = document.createElement('option'); optUser.value = 'User'; optUser.innerText = 'Usuário Comum'; roleSelect.appendChild(optUser);
             const optTest = document.createElement('option'); optTest.value = 'Teste'; optTest.innerText = 'Teste (1 Hora)'; roleSelect.appendChild(optTest);
 
             if (currentUserData.cargo === 'Sub-Admin') { 
                 document.getElementById('new-pix').value = ''; 
-                // Sub-Admin só vê as 2 opções acima
             } else { 
-                // Master vê opções extras
                 const optSub = document.createElement('option'); optSub.value = 'Sub-Admin'; optSub.innerText = 'Sub-Admin'; roleSelect.appendChild(optSub);
                 const optAdmin = document.createElement('option'); optAdmin.value = 'Admin'; optAdmin.innerText = 'Admin Master'; roleSelect.appendChild(optAdmin);
                 
@@ -506,7 +642,72 @@
             document.getElementById('modal-create').classList.add('show'); 
         }
 
-        async function salvarNovoUsuario() { const btn = document.getElementById('btn-save-user'); const msg = document.getElementById('msg-create'); const u = document.getElementById('new-user').value; const p = document.getElementById('new-pass').value; const d = parseInt(document.getElementById('new-days').value); const w = document.getElementById('new-wa').value; const v = document.getElementById('new-val').value; const x = document.getElementById('new-pix').value; const cargo = document.getElementById('new-role').value; if(!u || !p || (!d && cargo !== 'Teste')) { msg.innerText = "Preencha os campos."; return; } const dataVenc = new Date(); dataVenc.setDate(dataVenc.getDate() + (d||0)); const dia = ("0" + dataVenc.getDate()).slice(-2); const mes = ("0" + (dataVenc.getMonth() + 1)).slice(-2); const ano = dataVenc.getFullYear(); const dataFinal = `${dia}/${mes}/${ano}`; const payload = { user: u, pass: p, date: dataFinal, wa: w, val: v, pix: x, cargo: cargo }; btn.disabled = true; btn.innerText = "Salvando..."; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'create_user', user: currentUserData.user, pass: currentUserData.pass, novoUsuario: payload }) }); const res = await req.json(); if(res.success) { alert("Sucesso!"); fecharModal('modal-create'); abrirAdminPanel(); } else { msg.innerText = res.msg; } } catch(e) { msg.innerText = "Erro."; } finally { btn.disabled = false; btn.innerText = "💾 Salvar"; } }
+        async function salvarNovoUsuario() { 
+            const btn = document.getElementById('btn-save-user'); 
+            const msg = document.getElementById('msg-create'); 
+            const u = document.getElementById('new-user').value; 
+            const p = document.getElementById('new-pass').value; 
+            const d = parseInt(document.getElementById('new-days').value); 
+            const w = document.getElementById('new-wa').value; 
+            const v = document.getElementById('new-val').value; 
+            const x = document.getElementById('new-pix').value; 
+            const cargo = document.getElementById('new-role').value; 
+            
+            if(!u || !p || (!d && cargo !== 'Teste')) { msg.innerText = "Preencha os campos."; return; } 
+            
+            const dataVenc = new Date(); 
+            dataVenc.setDate(dataVenc.getDate() + (d||0)); 
+            const dia = ("0" + dataVenc.getDate()).slice(-2); 
+            const mes = ("0" + (dataVenc.getMonth() + 1)).slice(-2); 
+            const ano = dataVenc.getFullYear(); 
+            const dataFinal = `${dia}/${mes}/${ano}`; 
+            
+            const payload = { user: u, pass: p, date: dataFinal, wa: w, val: v, pix: x, cargo: cargo }; 
+            
+            btn.disabled = true; btn.innerText = "Salvando..."; 
+            
+            try { 
+                const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'create_user', user: currentUserData.user, pass: currentUserData.pass, novoUsuario: payload }) }); 
+                const res = await req.json(); 
+                
+                if(res.success) { 
+                    // SUCESSO: Guarda dados temp e abre modal de escolha
+                    tempUser = u; tempPass = p; tempDate = (cargo === 'Teste' ? "1 Hora (Teste)" : dataFinal); tempWa = w; tempVal = v;
+                    fecharModal('modal-create');
+                    document.getElementById('modal-created-success').classList.add('show');
+                    abrirAdminPanel(); 
+                } else { 
+                    msg.innerText = res.msg; 
+                } 
+            } catch(e) { msg.innerText = "Erro."; } finally { btn.disabled = false; btn.innerText = "💾 Salvar"; } 
+        }
+
+        function fecharModalSucessoCriacao() {
+            document.getElementById('modal-created-success').classList.remove('show');
+        }
+
+        function prepararEnvioAposCriacao() {
+            fecharModalSucessoCriacao();
+            prepararEnvioWhatsApp(tempUser, tempPass, tempWa, tempDate, tempVal);
+        }
+
+        function prepararEnvioWhatsApp(u, p, w, d, v) {
+            tempUser = u; tempPass = p; tempWa = w; tempDate = d; tempVal = v;
+            document.getElementById('send-dest').innerText = u;
+            document.getElementById('whatsapp-extra-msg').value = ""; // Limpa msg anterior
+            document.getElementById('modal-send-whatsapp').classList.add('show');
+        }
+
+        function finalizarEnvioWhatsApp() {
+            const extra = document.getElementById('whatsapp-extra-msg').value;
+            const quebra = extra ? `\n\n${extra}` : "";
+            
+            const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${tempUser}\n🔑 *Senha:* ${tempPass}\n📅 *Vencimento:* ${tempDate}\n🌐 *Site:* www.gerenciadorwa.com.br${quebra}`;
+            
+            window.open(`https://wa.me/55${String(tempWa).replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`);
+            fecharModal('modal-send-whatsapp');
+        }
+
         function abrirModalEdit(user, pass, date, wa, val) { userEditing = user; document.getElementById('edit-user-display').innerText = user; document.getElementById('edit-pass').value = pass; document.getElementById('edit-date').value = date; document.getElementById('edit-wa').value = wa; document.getElementById('edit-val').value = val; document.getElementById('msg-edit').innerText = ''; document.getElementById('modal-edit').classList.add('show'); }
         async function salvarEdicao() { const btn = document.getElementById('btn-save-edit'); const msg = document.getElementById('msg-edit'); const payload = { userOriginal: userEditing, pass: document.getElementById('edit-pass').value, date: document.getElementById('edit-date').value, wa: document.getElementById('edit-wa').value, val: document.getElementById('edit-val').value }; btn.disabled = true; btn.innerText = "Atualizando..."; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'edit_user', user: currentUserData.user, pass: currentUserData.pass, dadosEditados: payload }) }); const res = await req.json(); if(res.success) { alert("Atualizado!"); fecharModal('modal-edit'); abrirAdminPanel(); } else { msg.innerText = res.msg; } } catch(e) { msg.innerText = "Erro."; } finally { btn.disabled = false; btn.innerText = "💾 Atualizar Dados"; } }
         function filtrarUsuarios() { const termo = document.getElementById('search-user').value.toLowerCase(); const linhas = document.querySelectorAll('.admin-table tbody tr'); linhas.forEach(tr => { const texto = tr.innerText.toLowerCase(); tr.style.display = texto.includes(termo) ? '' : 'none'; }); }
@@ -522,7 +723,6 @@
         function lerArquivoSalvos(i) { const r=new FileReader(); r.onload=(e)=>{if(!db[currentUserData.user].salvos) db[currentUserData.user].salvos=[]; const linhas = e.target.result.split('\n'); const novos = linhas.filter(l => l.trim() && !db[currentUserData.user].salvos.includes(l.trim())); db[currentUserData.user].salvos.push(...novos); renderizar();}; r.readAsText(i.files[0]); i.value=''; }
         function tratarAberturaLink(idx, link) { if (lastOpenedLink) { if(!db[currentUserData.user].naoSalvos) db[currentUserData.user].naoSalvos = []; db[currentUserData.user].naoSalvos.push(lastOpenedLink); } lastOpenedLink = link; if(link.includes('http')) { window.open(link); } else { window.open(`whatsapp://send?phone=55${link.replace(/\D/g,'')}`); } db[currentUserData.user].links.splice(idx, 1); document.getElementById('last-link-opened').innerText = link; document.getElementById('save-prompt').style.display = 'flex'; renderizar(); }
         function confirmarSalvamento(sim) { const u = currentUserData.user; if(!db[u].salvos) db[u].salvos=[]; if(!db[u].naoSalvos) db[u].naoSalvos=[]; if(sim && lastOpenedLink) { db[u].salvos.push(lastOpenedLink); } else if (!sim && lastOpenedLink) { db[u].naoSalvos.push(lastOpenedLink); } document.getElementById('save-prompt').style.display = 'none'; lastOpenedLink = ""; renderizar(); }
-        function enviarDadosWhatsApp(u,p,w,d,v) { const msg = `🔐 *Seu Acesso Gerenciador |WA|*\n\n👤 *Usuário:* ${u}\n🔑 *Senha:* ${p}\n📅 *Vencimento:* ${d}\n💰 *Valor:* R$ ${v}`; window.open(`https://wa.me/55${String(w).replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`); }
         function toggleAuto() { /* ... */ }
     </script>
 </body>
