@@ -23,6 +23,7 @@
         button.test-btn { background: var(--purple); color: white; }
         button.admin-btn { background: var(--text); color: var(--card); }
         button.chat-btn { background: #25d366; color: white; }
+        button.renew-btn { background: #8b5cf6; color: white; }
         button.vip-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
         .btn-auto { width: auto !important; padding: 8px 16px; font-size: 13px; margin: 3px; flex-shrink: 0; }
         
@@ -162,6 +163,15 @@
         </div>
     </div>
 
+    <div id="modal-global-msg" class="modal-overlay" style="z-index: 1100;">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🔔</div>
+            <h3 style="margin-top:0; color: var(--primary);">Comunicado</h3>
+            <p id="msg-text" style="font-size: 14px; color: var(--text); background: #f3f4f6; padding: 15px; border-radius: 10px;"></p>
+            <button onclick="fecharModal('modal-global-msg')" class="btn-auto" style="margin-top: 15px; width: 100% !important;">Entendi</button>
+        </div>
+    </div>
+
     <div id="modal-admin" class="modal-overlay">
         <div class="modal-content">
             <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-admin')">&times;</span>
@@ -173,6 +183,12 @@
                 </div>
             </div>
             
+            <div id="admin-msg-area" style="background:#fff7ed; border:1px dashed #f97316; padding:15px; border-radius:8px; margin-bottom:10px;">
+                <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#c2410c;">🔔 Mensagem Global (Popup)</div>
+                <textarea id="global-msg-input" rows="2" placeholder="Escreva um aviso para todos os usuários..." style="margin-bottom:5px; font-size:12px;"></textarea>
+                <button class="btn-auto" style="background:#f97316; width:100% !important;" onclick="salvarMensagem()">Salvar Aviso</button>
+            </div>
+
             <div id="upload-section-geral" style="background:#f9fafb; border:1px dashed #ccc; padding:15px; border-radius:8px; margin-bottom:10px;">
                 <div style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#333;">📁 Arquivo OFICIAL (Todos)</div>
                 <div style="display:flex; gap:8px;">
@@ -376,6 +392,12 @@
                         }
                     }
 
+                    // --- CHECK MENSAGEM GLOBAL ---
+                    if(dados.message && dados.message.trim() !== "") {
+                        document.getElementById('msg-text').innerText = dados.message;
+                        document.getElementById('modal-global-msg').classList.add('show');
+                    }
+
                     renderizar();
                 } else {
                     msg.innerText = res.msg || "Dados incorretos.";
@@ -442,6 +464,25 @@
             reader.readAsDataURL(file);
         }
 
+        async function salvarMensagem() {
+            const msg = document.getElementById('global-msg-input').value;
+            if (!confirm("Salvar essa mensagem para TODOS?")) return;
+            try {
+                const req = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'save_message',
+                        user: currentUserData.user,
+                        pass: currentUserData.pass,
+                        message: msg
+                    })
+                });
+                const res = await req.json();
+                if (res.success) alert("Mensagem salva!");
+                else alert("Erro ao salvar.");
+            } catch(e) { alert("Erro de conexão."); }
+        }
+
         function processarNovosLinks(listaBruta) { const u = currentUserData.user; if (!db[u]) db[u] = { links: [], salvos: [], naoSalvos: [] }; if (!db[u].salvos) db[u].salvos = []; if (!db[u].naoSalvos) db[u].naoSalvos = []; const jaExistem = new Set([...db[u].links, ...db[u].salvos, ...db[u].naoSalvos]); let adicionados = 0; let duplicados = 0; listaBruta.forEach(link => { const l = link.trim(); if (l) { if (jaExistem.has(l)) { duplicados++; } else { db[u].links.push(l); jaExistem.add(l); adicionados++; } } }); if (duplicados > 0) alert(`Filtrado: ${adicionados} novos adicionados. ${duplicados} repetidos removidos.`); renderizar(); }
         function addLinks(){ const t=document.getElementById('links-input'); const linhas = t.value.split('\n'); processarNovosLinks(linhas); t.value=''; pgPend = 0; }
         function lerArquivo(i) { const r=new FileReader(); r.onload=(e)=>{ const linhas = e.target.result.split('\n'); processarNovosLinks(linhas); }; r.readAsText(i.files[0]); i.value=''; }
@@ -449,6 +490,32 @@
         function renderControles(id, total, atual, cb) { const div = document.getElementById(id), max = Math.ceil(total/ITENS_PAG); if(max <= 1) { div.innerHTML = ''; return; } div.innerHTML = `<button class="secondary btn-auto" ${atual===0?'disabled':''} onclick="(${cb})(${atual-1})">«</button><span>${atual+1}/${max}</span><button class="secondary btn-auto" ${atual>=max-1?'disabled':''} onclick="(${cb})(${atual+1})">»</button>`; }
         async function alterarStatus(targetUser) { if(!confirm("Deseja alterar o status deste usuário?")) return; try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'toggle_status', user: currentUserData.user, pass: currentUserData.pass, targetUser: targetUser }) }); const res = await req.json(); if(res.success) { alert("Status alterado: " + res.novoStatus); abrirAdminPanel(); } else { alert("Erro: " + res.msg); } } catch(e) { alert("Erro de conexão."); } }
         
+        async function clickRenovar(targetUser) {
+            const dias = prompt("Renovar por quantos dias?", "30");
+            if (!dias) return;
+            try {
+                const req = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'renew_user',
+                        user: currentUserData.user,
+                        pass: currentUserData.pass,
+                        targetUser: targetUser,
+                        days: dias
+                    })
+                });
+                const res = await req.json();
+                if (res.success) {
+                    alert("Usuário renovado com sucesso!");
+                    abrirAdminPanel();
+                } else {
+                    alert("Erro: " + res.msg);
+                }
+            } catch(e) {
+                alert("Erro de conexão.");
+            }
+        }
+
         async function abrirAdminPanel() { 
             document.getElementById('modal-admin').classList.add('show'); 
             const lista = document.getElementById('admin-users-list'); 
@@ -458,19 +525,65 @@
             const isSub = currentUserData.cargo === 'Sub-Admin';
             document.getElementById('upload-section-geral').style.display = isSub ? 'none' : 'block';
             document.getElementById('upload-section-teste').style.display = isSub ? 'none' : 'block';
+            document.getElementById('admin-msg-area').style.display = isSub ? 'none' : 'block';
 
-            try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'admin_list', user: currentUserData.user, pass: currentUserData.pass }) }); const res = await req.json(); if(res.success && Array.isArray(res.list)) { const headers = res.headers || []; const dados = res.list; const hoje = new Date(); hoje.setHours(0,0,0,0); if(dados.length === 0) { lista.innerHTML = '<p style="text-align:center; color:#666;">Nenhum usuário.</p>'; return; } let html = `<div class="table-responsive"><table class="admin-table"><thead><tr><th style="width: 50px;">Status</th>`; headers.forEach(h => { html += `<th>${h}</th>`; }); html += `<th style="width: 140px;">Ações</th></tr></thead><tbody>`; const isSubAdmin = currentUserData.cargo === 'Sub-Admin'; dados.forEach((row) => { const dateVal = row[2]; const dV = formatarData(dateVal); dV.setHours(0,0,0,0); const diff = Math.ceil((dV - hoje) / 86400000); const isExpired = diff < 0; const statusClass = isExpired ? 'status-expired' : 'status-active'; const statusText = isExpired ? `Expirado` : `${diff}d`; const uUser = row[0] || ""; const uPass = row[1] || ""; const uDate = row[2] || ""; const uWa = row[3] || ""; const uVal = row[4] || ""; const statusAcc = row[8] || "Ativo"; const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : '✅'); let statusBtn = ''; if (isSubAdmin) { statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px; cursor: not-allowed; opacity: 0.6;" title="Status: ${statusAcc}">${statusIcon}</button>`; } else { statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>`; } 
-            
-            // CORREÇÃO DO "NaNd" PARA USUÁRIOS TESTE
-            let displayStatusDot = statusClass;
-            let displayStatusText = statusText;
-            
-            if (dateVal === "Teste (1h)") {
-                displayStatusDot = "status-test";
-                displayStatusText = "Teste";
-            }
+            try { const req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'admin_list', user: currentUserData.user, pass: currentUserData.pass }) }); const res = await req.json(); if(res.success && Array.isArray(res.list)) { const headers = res.headers || []; const dados = res.list; const hoje = new Date(); hoje.setHours(0,0,0,0); if(dados.length === 0) { lista.innerHTML = '<p style="text-align:center; color:#666;">Nenhum usuário.</p>'; return; } let html = `<div class="table-responsive"><table class="admin-table"><thead><tr><th style="width: 50px;">Status</th>`; headers.forEach(h => { html += `<th>${h}</th>`; }); html += `<th style="width: 140px;">Ações</th></tr></thead><tbody>`; const isSubAdmin = currentUserData.cargo === 'Sub-Admin'; dados.forEach((row) => { 
+                
+                const dateVal = row[2]; 
+                let statusText = "";
+                let displayStatusDot = "status-active";
+                let statusBtn = '';
+                const uUser = row[0] || ""; 
+                const uPass = row[1] || ""; 
+                const uDate = row[2] || ""; 
+                const uWa = row[3] || ""; 
+                const uVal = row[4] || ""; 
+                const statusAcc = row[8] || "Ativo"; 
+                const statusIcon = statusAcc === 'Pendente' ? '⏳' : (statusAcc === 'Bloqueado' ? '🚫' : (statusAcc === 'Expirado' ? '🛑' : '✅'));
 
-            html += `<tr><td><span class="status-dot ${displayStatusDot}" title="${displayStatusText}"></span><small>${displayStatusText}</small></td>`; row.forEach(cell => { html += `<td>${cell}</td>`; }); html += `<td><div style="display:flex; gap:5px;">${statusBtn}<button class="chat-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button><button class="vip-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button><button class="edit-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button></div></td></tr>`; }); html += `</tbody></table></div>`; lista.innerHTML = html; } else { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } } catch(e) { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } }
+                // --- LÓGICA DE EXIBIÇÃO DA BOLINHA E TEXTO DE DIAS ---
+                if (dateVal === "Teste (1h)") {
+                    // É UM TESTE
+                    if (statusAcc === 'Expirado') {
+                        displayStatusDot = "status-expired";
+                        statusText = "Expirado";
+                    } else {
+                        displayStatusDot = "status-test";
+                        statusText = "Teste";
+                    }
+                } else {
+                    // É UM USUÁRIO COMUM
+                    if (statusAcc === 'Expirado') {
+                         displayStatusDot = "status-expired";
+                         statusText = "Expirado";
+                    } else {
+                        const dV = formatarData(dateVal); dV.setHours(0,0,0,0);
+                        const diff = Math.ceil((dV - hoje) / 86400000);
+                        if (isNaN(diff)) {
+                            statusText = "-";
+                        } else {
+                            if (diff < 0) {
+                                displayStatusDot = "status-expired";
+                                statusText = "Expirado";
+                            } else {
+                                displayStatusDot = "status-active";
+                                statusText = `${diff}d`;
+                            }
+                        }
+                    }
+                }
+
+                // --- LÓGICA DO BOTÃO DE STATUS ---
+                if (isSubAdmin) { 
+                    statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px; cursor: not-allowed; opacity: 0.6;" title="Status: ${statusAcc}">${statusIcon}</button>`; 
+                } else { 
+                    statusBtn = `<button class="status-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Alterar Status (${statusAcc})" onclick="alterarStatus('${uUser}')">${statusIcon}</button>`; 
+                } 
+                
+                // --- BOTÃO DE RENOVAR ---
+                const renewBtn = `<button class="renew-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Renovar" onclick="clickRenovar('${uUser}')">🔄</button>`;
+
+                html += `<tr><td><span class="status-dot ${displayStatusDot}" title="${statusText}"></span><small>${statusText}</small></td>`; row.forEach(cell => { html += `<td>${cell}</td>`; }); html += `<td><div style="display:flex; gap:5px;">${statusBtn}${renewBtn}<button class="chat-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button><button class="vip-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Enviar Dados" onclick="enviarDadosWhatsApp('${uUser}','${uPass}','${uWa}','${uDate}','${uVal}')">📨</button><button class="edit-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Editar" onclick="abrirModalEdit('${uUser}','${uPass}','${uDate}','${uWa}','${uVal}')">✏️</button></div></td></tr>`; }); html += `</tbody></table></div>`; lista.innerHTML = html; } else { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } } catch(e) { lista.innerHTML = '<p style="text-align:center; color:red">Erro.</p>'; } }
         
         function baixarArquivoGeral() { if(currentFileUrl) { const link = document.createElement("a"); link.href = currentFileUrl; link.setAttribute("download", ""); link.setAttribute("target", "_blank"); document.body.appendChild(link); link.click(); document.body.removeChild(link); } }
         
