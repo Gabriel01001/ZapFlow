@@ -39,6 +39,27 @@
         
         .btn-auto { width: auto !important; padding: 8px 16px; font-size: 13px; margin: 3px; flex-shrink: 0; }
         
+        /* Botão Chamativo de Tutorial */
+        .tutorial-btn-flashy {
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            font-size: 12px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(139, 92, 246, 0.3);
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+        }
+        .tutorial-btn-flashy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
+            filter: brightness(1.1);
+        }
+
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .card { background: var(--card); border: 1px solid #e5e7eb; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: var(--radius); align-items: center; gap: 10px; overflow: hidden; }
         .link-text { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; min-width: 0; word-break: break-all; }
@@ -122,8 +143,8 @@
                 <div style="max-width: 70%;">
                     <h3 id="ola-user" style="margin:0; font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">...</h3>
                     <small id="status-acesso"></small>
-                    <div style="margin-top: 5px;">
-                        <button class="secondary btn-auto" style="padding: 5px 12px; font-size: 11px; border: 1px solid #ccc;" onclick="abrirTutoriais()">📚 Tutoriais</button>
+                    <div style="margin-top: 8px;">
+                        <button class="tutorial-btn-flashy btn-auto" onclick="abrirTutoriais()">📺 Tutoriais</button>
                     </div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
@@ -198,7 +219,7 @@
     <div id="modal-tutorials" class="modal-overlay" style="z-index: 1500;">
         <div class="modal-content">
             <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-size:28px;" onclick="fecharModal('modal-tutorials')">&times;</span>
-            <h3 style="margin-top:0; color:var(--primary);">📚 Central de Ajuda</h3>
+            <h3 style="margin-top:0; color:var(--primary);">📺 Central de Ajuda</h3>
             
             <div id="admin-tutorial-area" style="background:#fff7ed; padding:10px; border-radius:10px; margin-bottom:15px; border:1px dashed #f97316; display:none;">
                 <h4 style="margin:0 0 10px 0; font-size:12px; color:#c2410c;">➕ Adicionar Vídeo (Admin)</h4>
@@ -339,7 +360,7 @@
     </div>
 
     <script>
-        // === URL DA SUA API - ATUALIZE AQUI SE AINDA NÃO FEZ ===
+        // === URL DA SUA API ===
         const API_URL = 'https://script.google.com/macros/s/AKfycbzh5LpH26j4OyfMINRHP0XXikBZwFHKFYseMv8eXyJKP5X4cJKbij37wNJS3wg3YUUm/exec';
 
         const DB_KEY = 'zapflow_v36';
@@ -448,10 +469,10 @@
         function marcarMensagemLida() { const msg = document.getElementById('msg-text').innerText; localStorage.setItem('zapflow_last_msg_' + currentUserData.user, msg); fecharModal('modal-global-msg'); }
         function checkRole() { const r = document.getElementById('new-role').value; document.getElementById('days-container').style.display = (r === 'Teste') ? 'none' : 'flex'; }
         
-        // --- FUNÇÕES TUTORIAIS ---
+        // --- FUNÇÕES TUTORIAIS RESTAURADAS ---
         function abrirTutoriais() {
             document.getElementById('modal-tutorials').classList.add('show');
-            const isAdmin = currentUserData.cargo === 'Admin'; // Apenas ADMIN pode adicionar
+            const isAdmin = currentUserData.cargo === 'Admin';
             document.getElementById('admin-tutorial-area').style.display = isAdmin ? 'block' : 'none';
             carregarListaTutoriais(isAdmin);
         }
