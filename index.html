@@ -91,6 +91,27 @@
             min-width: 140px;
         }
         .tutorial-badge:hover { filter: brightness(1.1); }
+
+        /* Estilo para o botão "Assistir" mais fino e elegante */
+        .btn-watch-elegant {
+            background: #ea580c; 
+            color: white; 
+            border: none;
+            padding: 8px 24px; 
+            border-radius: 50px; 
+            font-size: 14px; 
+            font-weight: 500;
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3);
+            transition: 0.3s;
+            width: auto !important; 
+            min-width: 150px;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .btn-watch-elegant:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4); }
     </style>
 </head>
 <body>
@@ -122,8 +143,10 @@
                     <h3 id="ola-user" style="margin:0; font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">...</h3>
                     <div id="status-acesso" style="font-size: 13px; margin-bottom: 5px;"></div>
                     
-                    <div class="tutorial-badge" onclick="abrirModalTutorial()">
-                        📺 Assistir Tutorial
+                    <div id="tutorial-area" style="display:none;">
+                        <div class="tutorial-badge" onclick="abrirModalTutorial()">
+                            📺 Assistir Tutorial
+                        </div>
                     </div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
@@ -210,23 +233,44 @@
             
             <h3 style="margin-top:0; color: var(--gold);">🎓 Central de Ajuda</h3>
             
-            <div style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: 15px; margin-bottom: 20px;">
-                <div style="font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase;">Tutorial em Destaque</div>
-                <h2 id="display-tutorial-title" style="margin: 5px 0 15px 0; font-size: 18px; line-height: 1.3;">Carregando...</h2>
-                <button id="btn-watch-video" class="btn-auto" style="width: 100% !important; background: #c2410c; padding: 12px;">▶️ Assistir Vídeo</button>
+            <div id="tutorial-view-container" style="display: none;">
+                <div style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: 15px; margin-bottom: 10px; text-align: center;">
+                    <div style="font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase;">Tutorial em Destaque</div>
+                    <h2 id="display-tutorial-title" style="margin: 10px 0 20px 0; font-size: 18px; line-height: 1.3;">...</h2>
+                    
+                    <button id="btn-watch-video" class="btn-watch-elegant">
+                        <span style="font-size: 18px;">▶</span> Assistir Vídeo
+                    </button>
+                </div>
             </div>
 
-            <div id="admin-tutorial-controls" style="display: none; border-top: 2px dashed #444; margin-top: 15px; padding-top: 10px;">
-                <button onclick="toggleEditForm()" class="secondary btn-auto" style="width:100% !important;">⚙️ Configurar Vídeo</button>
+            <div id="tutorial-empty-state" style="display: none; text-align: center; padding: 20px; border: 2px dashed #ccc; border-radius: 15px; margin-bottom: 15px;">
+                <div style="font-size: 30px; margin-bottom: 10px;">📹</div>
+                <div style="color: #666; font-size: 13px;">Nenhum tutorial configurado.</div>
+            </div>
 
-                <div id="admin-edit-form" style="display: none; margin-top: 15px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 10px;">
-                    <label style="font-size: 12px; font-weight: bold;">Novo Título:</label>
-                    <input type="text" id="edit-tutorial-title" placeholder="Ex: Aprenda a revender">
+            <div id="admin-tutorial-controls" style="display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                
+                <div id="admin-actions-bar" style="display: flex; gap: 10px; justify-content: center;">
+                    <button id="btn-admin-add" class="btn-auto" style="background: var(--primary);" onclick="mostrarFormulario('add')">➕ Adicionar Novo</button>
                     
-                    <label style="font-size: 12px; font-weight: bold;">Link do Vídeo:</label>
-                    <input type="text" id="edit-tutorial-link" placeholder="https://youtube.com/...">
+                    <button id="btn-admin-edit" class="btn-auto secondary" onclick="mostrarFormulario('edit')">✏️ Editar</button>
+                    <button id="btn-admin-del" class="btn-auto danger" onclick="apagarTutorial()">🗑️ Apagar</button>
+                </div>
+
+                <div id="admin-edit-form" style="display: none; margin-top: 15px; background: #f9fafb; padding: 15px; border-radius: 10px; border: 1px solid #e5e7eb;">
+                    <h4 style="margin:0 0 10px 0; color: var(--dark);">Configurar Tutorial</h4>
                     
-                    <button onclick="salvarConfigTutorial()" class="btn-auto" style="width: 100% !important; background: var(--primary);">💾 Salvar e Atualizar</button>
+                    <label style="font-size: 11px; font-weight: bold;">Título do Vídeo:</label>
+                    <input type="text" id="edit-tutorial-title" placeholder="Ex: Como configurar o sistema">
+                    
+                    <label style="font-size: 11px; font-weight: bold;">Link do YouTube/Drive:</label>
+                    <input type="text" id="edit-tutorial-link" placeholder="https://...">
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button onclick="cancelarEdicao()" class="secondary btn-auto" style="flex: 1;">Cancelar</button>
+                        <button onclick="salvarConfigTutorial()" class="btn-auto" style="background: var(--primary); flex: 1;">💾 Salvar</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -397,6 +441,8 @@
         let currentUserData = null; 
         let lastOpenedLink = "";
         let pgPend = 0, pgSalv = 0, pgDesc = 0; const ITENS_PAG = 5;
+        let autoTimer = null;
+        let countdownRef = null;
         let userEditing = null;
         let currentFileUrl = "";
         let deferredPrompt; 
@@ -404,11 +450,8 @@
         // VARIÁVEIS TEMPORÁRIAS
         let tempUser="", tempPass="", tempWa="", tempDate="", tempVal="";
 
-        // CONFIG TUTORIAL PADRÃO
-        let tutorialData = {
-            title: "Como usar o sistema",
-            link: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        };
+        // CONFIG TUTORIAL PADRÃO (Inicia nulo para testar a lógica de "vazio")
+        let tutorialData = null; 
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -436,40 +479,70 @@
             }
         };
 
-        // --- LÓGICA TUTORIAL (REVISADA) ---
+        // --- LÓGICA TUTORIAL (CRUD COMPLETO) ---
         function abrirModalTutorial() {
-            // 1. Atualiza visualização para todos
-            document.getElementById('display-tutorial-title').innerText = tutorialData.title;
-            document.getElementById('btn-watch-video').onclick = function() {
-                window.open(tutorialData.link, '_blank');
-            };
-
-            // 2. Lógica de Controle: Apenas ADMIN (Master) vê os controles
-            const adminControls = document.getElementById('admin-tutorial-controls');
-            
-            if (currentUserData && currentUserData.cargo === 'Admin') {
-                adminControls.style.display = 'block';
-                // Preenche inputs
-                document.getElementById('edit-tutorial-title').value = tutorialData.title;
-                document.getElementById('edit-tutorial-link').value = tutorialData.link;
-            } else {
-                // Esconde para Sub-Admin e User
-                adminControls.style.display = 'none';
-            }
-
-            // Garante que o formulário de edição comece fechado
-            document.getElementById('admin-edit-form').style.display = 'none';
-            
+            atualizarInterfaceTutorial();
             document.getElementById('modal-tutorial-video').classList.add('show');
         }
 
-        function toggleEditForm() {
-            const form = document.getElementById('admin-edit-form');
-            if (form.style.display === 'none') {
-                form.style.display = 'block';
+        function atualizarInterfaceTutorial() {
+            const hasVideo = (tutorialData && tutorialData.title && tutorialData.link);
+            const isAdmin = (currentUserData && currentUserData.cargo === 'Admin');
+
+            // 1. ÁREA DE VISUALIZAÇÃO (Vídeo)
+            if (hasVideo) {
+                document.getElementById('tutorial-view-container').style.display = 'block';
+                document.getElementById('tutorial-empty-state').style.display = 'none';
+                document.getElementById('display-tutorial-title').innerText = tutorialData.title;
+                document.getElementById('btn-watch-video').onclick = function() {
+                    window.open(tutorialData.link, '_blank');
+                };
             } else {
-                form.style.display = 'none';
+                // Sem vídeo
+                document.getElementById('tutorial-view-container').style.display = 'none';
+                if (isAdmin) {
+                    document.getElementById('tutorial-empty-state').style.display = 'block';
+                } else {
+                    document.getElementById('tutorial-empty-state').style.display = 'none';
+                }
             }
+
+            // 2. CONTROLES DO ADMIN
+            if (isAdmin) {
+                document.getElementById('admin-tutorial-controls').style.display = 'block';
+                document.getElementById('admin-edit-form').style.display = 'none'; // Reseta formulário
+                document.getElementById('admin-actions-bar').style.display = 'flex';
+
+                if (hasVideo) {
+                    document.getElementById('btn-admin-add').style.display = 'none';
+                    document.getElementById('btn-admin-edit').style.display = 'block';
+                    document.getElementById('btn-admin-del').style.display = 'block';
+                } else {
+                    document.getElementById('btn-admin-add').style.display = 'block';
+                    document.getElementById('btn-admin-edit').style.display = 'none';
+                    document.getElementById('btn-admin-del').style.display = 'none';
+                }
+            } else {
+                document.getElementById('admin-tutorial-controls').style.display = 'none';
+            }
+        }
+
+        function mostrarFormulario(modo) {
+            document.getElementById('admin-actions-bar').style.display = 'none';
+            document.getElementById('admin-edit-form').style.display = 'block';
+            
+            if (modo === 'edit' && tutorialData) {
+                document.getElementById('edit-tutorial-title').value = tutorialData.title;
+                document.getElementById('edit-tutorial-link').value = tutorialData.link;
+            } else {
+                document.getElementById('edit-tutorial-title').value = '';
+                document.getElementById('edit-tutorial-link').value = '';
+            }
+        }
+
+        function cancelarEdicao() {
+            document.getElementById('admin-edit-form').style.display = 'none';
+            document.getElementById('admin-actions-bar').style.display = 'flex';
         }
 
         async function salvarConfigTutorial() {
@@ -478,10 +551,10 @@
             
             if(!t || !l) return alert("Preencha título e link!");
 
+            // Atualiza Local e Backend
             tutorialData = { title: t, link: l };
             localStorage.setItem('zapflow_tutorial_config', JSON.stringify(tutorialData));
             
-            // Simula salvamento (se tiver action no backend, usa ela)
             try {
                 const req = await fetch(API_URL, {
                     method: 'POST',
@@ -493,14 +566,63 @@
                         link: l
                     })
                 });
-                alert("Tutorial atualizado!");
-                // Fecha o formulário e atualiza a view
-                document.getElementById('admin-edit-form').style.display = 'none';
-                document.getElementById('display-tutorial-title').innerText = t;
+                const res = await req.json();
+                if(res.success) {
+                    alert("Tutorial salvo!");
+                    atualizarInterfaceTutorial();
+                    atualizarBotaoHome(); 
+                } else {
+                    alert("Erro: " + res.msg);
+                }
             } catch(e) {
-                alert("Salvo localmente (Erro ao conectar com servidor).");
-                document.getElementById('admin-edit-form').style.display = 'none';
-                document.getElementById('display-tutorial-title').innerText = t;
+                alert("Salvo localmente (Erro de conexão).");
+                atualizarInterfaceTutorial();
+                atualizarBotaoHome();
+            }
+        }
+
+        async function apagarTutorial() {
+            if(!confirm("Tem certeza que deseja remover o tutorial? Ninguém mais verá.")) return;
+
+            tutorialData = null;
+            localStorage.removeItem('zapflow_tutorial_config');
+
+            try {
+                const req = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'delete_tutorial_config', 
+                        user: currentUserData.user,
+                        pass: currentUserData.pass
+                    })
+                });
+                const res = await req.json();
+                if(res.success) {
+                    alert("Tutorial removido!");
+                    atualizarInterfaceTutorial();
+                    atualizarBotaoHome();
+                } else {
+                    alert("Erro ao apagar: " + res.msg);
+                }
+            } catch(e) {
+                alert("Erro de conexão ao apagar.");
+                atualizarInterfaceTutorial();
+                atualizarBotaoHome();
+            }
+        }
+
+        // Função para mostrar/esconder o botão na Home baseado se existe tutorial
+        function atualizarBotaoHome() {
+            const area = document.getElementById('tutorial-area');
+            const hasData = (tutorialData && tutorialData.title);
+            const isAdmin = (currentUserData && currentUserData.cargo === 'Admin');
+
+            // Se for Admin SEMPRE mostra (para ele poder adicionar).
+            // Se for User, só mostra se tiver dados.
+            if (isAdmin || hasData) {
+                area.style.display = 'block';
+            } else {
+                area.style.display = 'none';
             }
         }
 
@@ -615,10 +737,11 @@
                     document.getElementById('ola-user').innerText = "Olá, " + currentUserData.user;
                     document.getElementById('status-acesso').innerText = "Vence: " + currentUserData.date;
                     
-                    // --- ATUALIZA DADOS DO TUTORIAL SE VIER DO SERVER ---
+                    // --- CARREGAR DADOS DO TUTORIAL ---
                     if (dados.tutorialConfig) {
                         tutorialData = dados.tutorialConfig;
                     }
+                    atualizarBotaoHome(); // Decide se mostra botão ou não
 
                     if(diff <= 5 && !dados.isMaster && dados.cargo !== 'Teste') {
                         document.getElementById('vencimento-alert').style.display = 'block';
