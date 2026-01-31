@@ -244,7 +244,8 @@
                 <div class="full-width"><label style="font-size:11px; font-weight:bold;">Vencimento:</label><input type="text" id="edit-date" placeholder="DD/MM/AAAA"></div> 
                 <div class="full-width"><label style="font-size:11px; font-weight:bold;">WhatsApp:</label><input type="text" id="edit-wa"></div> 
                 <div class="full-width"><label style="font-size:11px; font-weight:bold;">Valor:</label><input type="text" id="edit-val"></div> 
-                <div class="full-width">
+                
+                <div class="full-width" id="div-edit-role">
                     <label style="font-size:11px; font-weight:bold;">Função (Cargo):</label>
                     <select id="edit-role">
                         <option value="User">Usuário</option>
@@ -333,12 +334,10 @@
                         if(diff < 0 && !dados.isMaster) { msg.innerText = "Acesso expirado."; localStorage.removeItem(SESSION_KEY); btn.disabled = false; txt.style.display = 'block'; loader.style.display = 'none'; return; }
                     }
                     currentUserData = dados; 
-                    // Se a senha veio no login, atualizamos (pode ser útil se houver troca)
                     if(dados.pass) {
                         currentUserData.pass = dados.pass;
                         localStorage.setItem(SESSION_KEY, JSON.stringify({user: u, pass: dados.pass}));
                     } else {
-                        // Se não veio, usa a que digitamos
                         currentUserData.pass = p;
                         localStorage.setItem(SESSION_KEY, JSON.stringify({user: u, pass: p}));
                     }
@@ -485,7 +484,7 @@
             });
         }
 
-        // --- NOVA FUNÇÃO DE ABRIR EDIÇÃO (SEM MOSTRAR SENHA) ---
+        // --- FUNÇÃO DE ABRIR EDIÇÃO (SEM MOSTRAR SENHA e SEM MOSTRAR CARGO P/ SUB) ---
         function abrirModalEdit(user, date, wa, val, role) {
             userEditing = user;
             document.getElementById('edit-user-display').innerText = user;
@@ -494,6 +493,16 @@
             document.getElementById('edit-wa').value = wa;
             document.getElementById('edit-val').value = val;
             document.getElementById('edit-role').value = role;
+
+            // Lógica para esconder o select de Cargo se for Sub-Admin
+            const isSub = currentUserData.cargo === 'Sub-Admin';
+            const divRole = document.getElementById('div-edit-role');
+            if (isSub) {
+                divRole.style.display = 'none';
+            } else {
+                divRole.style.display = 'block';
+            }
+
             document.getElementById('msg-edit').innerText = '';
             document.getElementById('modal-edit').classList.add('show');
         }
@@ -501,8 +510,6 @@
         async function salvarEdicao() {
             const btn = document.getElementById('btn-save-edit');
             const msg = document.getElementById('msg-edit');
-            
-            // Se o campo senha estiver vazio, não enviamos nada (backend ignora)
             const novaSenha = document.getElementById('edit-pass').value.trim();
             
             const payload = {
@@ -522,7 +529,6 @@
             } catch(e) { msg.innerText = "Erro."; } finally { btn.disabled = false; btn.innerText = "💾 Atualizar Dados"; }
         }
 
-        // --- FUNÇÃO AUXILIAR PARA LER DATA PT-BR (COM HORA) ---
         function parsePtBrDate(str) {
             if(!str) return null;
             let parts = str.split(' ');
@@ -564,10 +570,8 @@
                     
                     const isSubAdmin = currentUserData.cargo === 'Sub-Admin'; 
                     dados.forEach((row) => { 
-                        // Mapeamento baseado no array vindo do backend
-                        // Ordem: 0=User, 1=Pass, 2=Date, 3=Wa, 4=Val, 5=Role, 6=Pix, 7=Status, 8=Creator
                         const uUser = row[0] || ""; 
-                        const uPass = row[1] || ""; // Agora vem "******"
+                        const uPass = row[1] || "";
                         const uDate = row[2] || "";
                         const uWa   = row[3] || "";
                         const uVal  = row[4] || "";
@@ -579,7 +583,6 @@
                         let statusText = ""; let displayStatusDot = "status-active"; let statusBtn = '';
                         const statusIcon = uStatus === 'Pendente' ? '⏳' : (uStatus === 'Bloqueado' ? '🚫' : (uStatus === 'Expirado' ? '🛑' : '✅')); 
                         
-                        // LÓGICA DE STATUS
                         if (uRole === 'Teste') { 
                             let isExpired = false;
                             if (uStatus === 'Expirado') isExpired = true;
@@ -588,14 +591,8 @@
                                 const agora = new Date();
                                 if (dTeste && dTeste < agora) isExpired = true;
                             }
-
-                            if (isExpired) { 
-                                displayStatusDot = "status-expired"; 
-                                statusText = "Vencido"; 
-                            } else { 
-                                displayStatusDot = "status-test"; 
-                                statusText = "Teste"; 
-                            } 
+                            if (isExpired) { displayStatusDot = "status-expired"; statusText = "Vencido"; } 
+                            else { displayStatusDot = "status-test"; statusText = "Teste"; } 
                         } 
                         else if (uDate === 'Vitalício') {
                              displayStatusDot = "status-active"; statusText = "Vitalício";
@@ -626,7 +623,6 @@
                             html += `<td ${hiddenClass}>${cell}</td>`; 
                         }); 
                         
-                        // IMPORTANTE: Passamos uRole para abrirModalEdit
                         html += `<td><div style="display:flex; gap:5px;">${statusBtn}${renewBtn}<button class="chat-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Chat" onclick="window.open('https://wa.me/55${String(uWa).replace(/\D/g,'')}')">💬</button><button class="vip-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Enviar Dados" onclick="prepararEnvioWhatsApp('${uUser}','******','${uWa}','${uDate}','${uVal}')">📨</button><button class="edit-btn btn-auto" style="width:35px; height:35px; padding:0; font-size:16px;" title="Editar" onclick="abrirModalEdit('${uUser}','${uDate}','${uWa}','${uVal}', '${uRole}')">✏️</button></div></td></tr>`; 
                     }); 
                     html += `</tbody></table></div>`; lista.innerHTML = html; 
